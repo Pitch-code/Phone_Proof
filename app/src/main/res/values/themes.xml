@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Deliberately parented on the framework theme rather than a Material Components XML
+      theme: the entire UI is Compose, so pulling in the XML Material library would add
+      weight for nothing. Colour and typography live in Compose, not here.
+    -->
+    <style name="Theme.PhoneProof" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

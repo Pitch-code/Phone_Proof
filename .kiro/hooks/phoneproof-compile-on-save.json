@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Compile gate on Kotlin save",
+      "trigger": "PostFileSave",
+      "description": "Compiles PhoneProof after any Kotlin or Gradle file is written, so typos and broken references surface in seconds instead of on the user's phone.",
+      "matcher": "PhoneProof/.*\\.(kt|kts)$",
+      "action": {
+        "type": "command",
+        "command": "cd /projects/sandbox/PhoneProof && export ANDROID_HOME=/projects/sandbox/.android-sdk && ./gradlew --offline -q compileDebugKotlin :core:model:compileKotlin :checks:touch:compileKotlin 2>&1 | tail -25",
+        "timeout": 300
+      }
+    }
+  ]
+}

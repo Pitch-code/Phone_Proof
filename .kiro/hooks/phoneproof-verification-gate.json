@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Verification gate before claiming done",
+      "trigger": "Stop",
+      "description": "Blocks any claim of completion until build, tests and screenshots have actually been run and inspected. This is the gate that replaces the user installing 50 APKs.",
+      "action": {
+        "type": "agent",
+        "prompt": "Before you finish, verify against .kiro/steering/verification.md. Do not describe work as done, complete, or working unless you have run the commands and seen the output in THIS session:\n\n1. Did every touched module compile? (./gradlew compileDebugKotlin / compileKotlin)\n2. Did the unit tests run and pass? Report the real counts, e.g. \"37 tests, 0 failures\" - never just \"tests pass\".\n3. If any Compose UI changed, is there a freshly rendered PNG in screenshots/ that you actually looked at? A UI change without a screenshot has not been reviewed.\n4. Is anything in the diff unused, duplicated, or leftover scaffolding?\n\nIf you have not verified an item, say so plainly to the user instead of implying it passed. A command exiting 0 proves the command exited, not that the feature works. Anything that genuinely cannot be verified in this sandbox (instrumented tests, real hardware sensor behaviour, actual battery discharge) must be called out explicitly as unverified."
+      }
+    }
+  ]
+}

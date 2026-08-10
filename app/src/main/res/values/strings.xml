@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PhoneProof</string>
+
+    <!--
+      Privacy copy. This wording is deliberate and must not be strengthened.
+      The app shows ads, which means an advertising ID leaves the device, so any claim
+      that "nothing leaves this device" would be false. Say what is actually true:
+      the test results themselves stay local.
+    -->
+    <string name="privacy_tagline">Your test results stay on this device</string>
+</resources>

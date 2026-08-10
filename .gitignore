@@ -1,0 +1,21 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+**/build/
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+*.jks
+*.keystore
+keystore.properties
+/.kotlin
+
+# Roborazzi writes rendered screens here. They ARE committed on purpose so the UI can be
+# reviewed on GitHub without installing anything, but the diff/compare output is noise.
+**/build/outputs/roborazzi/
+screenshots/diff/
+screenshots/compare/

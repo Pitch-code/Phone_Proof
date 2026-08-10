@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mirrors PhoneProofColors.Background in the design system. Used only for the
+         pre-Compose window background so there is no white flash on cold start. -->
+    <color name="window_background">#FF0A0A0B</color>
+    <color name="ic_launcher_background">#FF0A0A0B</color>
+</resources>

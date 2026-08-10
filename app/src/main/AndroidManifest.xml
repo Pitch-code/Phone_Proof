@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      No permissions are declared yet, and that is deliberate.
+      Every permission gets added only when the check that needs it is built, and is
+      requested at the moment of use with the reason shown on screen.
+      Never declared: READ_PHONE_STATE (IMEI is unreadable since Android 10 anyway) and
+      QUERY_ALL_PACKAGES (a <queries> element is used instead).
+    -->
+
+    <application
+        android:name=".PhoneProofApplication"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PhoneProof">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:theme="@style/Theme.PhoneProof">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
