@@ -224,6 +224,10 @@ private fun CoverageCanvas(
         }
     }
 
+    // Falls back to Fail only when there is no verdict yet, which is a state where nothing is
+    // flagged anyway.
+    val flagColour = state.result?.outcome?.accent() ?: PhoneProofColors.Fail
+
     Canvas(modifier = modifier.then(gestureModifier)) {
         val cellWidth = size.width / state.spec.columns
         val cellHeight = size.height / state.spec.rows
@@ -241,8 +245,11 @@ private fun CoverageCanvas(
 
                 val colour: Color = when {
                     // Flagged first: an uncovered cell that the verdict cares about must read as
-                    // the loudest thing on screen.
-                    flagged -> PhoneProofColors.Fail.copy(alpha = 0.45f + 0.40f * highlight)
+                    // the loudest thing on screen. The colour comes from the verdict itself so
+                    // the map cannot contradict the badge — marking scattered finger-skips in
+                    // fail-red next to an amber "CHECK AGAIN" would tell the buyer the screen is
+                    // broken when the app is only asking for another pass.
+                    flagged -> flagColour.copy(alpha = 0.45f + 0.40f * highlight)
                     // Strong enough to be unmistakable at arm's length in a shop. The earlier
                     // 12% fill was invisible against the background in a rendered check.
                     covered -> PhoneProofColors.Accent.copy(alpha = 0.34f)
