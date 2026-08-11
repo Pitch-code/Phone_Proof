@@ -42,10 +42,19 @@ export ANDROID_HOME=/projects/sandbox/.android-sdk
 
 If a UI change ships without a fresh screenshot, the change has not been reviewed.
 
-## Environment gotchas that will otherwise waste a cycle
+## Environment
 
-- mise pins `java=25` globally; AGP rejects it. `~/.gradle/gradle.properties` (machine-level,
-  never committed) sets `org.gradle.java.home` to JDK 21 and lists mise's JDK paths in
-  `org.gradle.java.installations.paths` so toolchain 17 resolves.
-- `ANDROID_HOME=/projects/sandbox/.android-sdk` must be exported for every Gradle invocation.
-- `local.properties` holds `sdk.dir` and is gitignored.
+Two environment variables, and nothing else:
+
+```
+export JAVA_HOME=/root/.local/share/mise/installs/java/21
+export ANDROID_HOME=/projects/sandbox/.android-sdk
+```
+
+`./gradlew` honours `JAVA_HOME` for the daemon, and the foojay resolver in `settings.gradle.kts`
+downloads the JDK 17 toolchain the modules ask for. **No machine-level `~/.gradle/gradle.properties`
+is needed** — that was a previous workaround, and it silently disappeared once, which cost a cycle
+and produced a failure message consisting only of the string `25.0.2`. If a build ever fails with a
+bare JDK version and no explanation, the daemon picked up a JDK that AGP rejects: export `JAVA_HOME`.
+
+`local.properties` holds `sdk.dir` and is gitignored.

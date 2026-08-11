@@ -12,6 +12,14 @@ pluginManagement {
     }
 }
 
+plugins {
+    // Lets Gradle download the JDK the build asks for instead of relying on whatever happens to be
+    // installed. Without this, a machine whose default JDK is too new for AGP fails with a bare
+    // version number and no explanation, and the workaround has to be repeated on every machine.
+    // Paired with gradle/gradle-daemon-jvm.properties, which pins the daemon's own JVM.
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
