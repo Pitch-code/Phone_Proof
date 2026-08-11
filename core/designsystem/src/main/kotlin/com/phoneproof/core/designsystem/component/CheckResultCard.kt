@@ -1,5 +1,11 @@
 package com.phoneproof.core.designsystem.component
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -21,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.designsystem.theme.PhoneProofType
+import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
 
 /**
@@ -34,19 +41,56 @@ import com.phoneproof.core.model.CheckResult
  * PASS and CAN'T TELL, because `CheckResult` refuses to be constructed without them for anything
  * negative. This composable cannot render a bare verdict even if someone tries.
  */
+/**
+ * @param emphasise when true, a `FAIL` card breathes slowly so a walk-away finding cannot be
+ *   scrolled past. Set false anywhere a measurement is running — a continuously animating surface is
+ *   an uncontrolled CPU and screen load, and the battery check measures discharge under a load it
+ *   controls.
+ */
 @Composable
 fun CheckResultCard(
     result: CheckResult,
     modifier: Modifier = Modifier,
+    emphasise: Boolean = true,
 ) {
     val accent = result.outcome.accent()
     val category = CheckCategory.forCheckId(result.id)
+    val isProblem = result.outcome == CheckOutcome.FAIL
+
+    // A slow breathe, not a flash. W3C WCAG 2.3.1 puts the photosensitive-seizure threshold at three
+    // flashes per second and notes people are *more* sensitive to red flashing than any other
+    // colour, with a separate stricter test for saturated red. A 1.4 second cycle is 0.7 Hz — an
+    // order of magnitude below that line — and it ramps smoothly rather than switching on and off,
+    // so it never reads as a flash at all. It still cannot be ignored, which is the point.
+    val pulse: Float = if (isProblem && emphasise) {
+        val transition = rememberInfiniteTransition(label = "problemPulse")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 700, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+            label = "problemPulseAlpha",
+        ).value
+    } else {
+        0f
+    }
+
+    val borderColour = when (result.outcome) {
+        CheckOutcome.FAIL -> accent.copy(alpha = 0.45f + 0.45f * pulse)
+        CheckOutcome.PASS -> accent.copy(alpha = 0.38f)
+        CheckOutcome.CAUTION -> accent.copy(alpha = 0.34f)
+        CheckOutcome.UNKNOWN -> PhoneProofColors.Border
+    }
+    val borderWidth = if (isProblem) 2.dp else 1.dp
+    val fill = if (isProblem) accent.copy(alpha = 0.07f) else PhoneProofColors.Surface
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(PhoneProofColors.Surface, RoundedCornerShape(14.dp))
-            .border(1.dp, PhoneProofColors.Border, RoundedCornerShape(14.dp))
+            .background(fill, RoundedCornerShape(14.dp))
+            .border(borderWidth, borderColour, RoundedCornerShape(14.dp))
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {

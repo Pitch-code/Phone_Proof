@@ -61,11 +61,30 @@ Verdict reveal        spring(dampingRatio = 0.60f) — the one overshoot in the 
 Haptics               CONFIRM on pass, REJECT on fail
 ```
 
-### Hard rule: no looping or continuous animation, anywhere
+### Rule: no looping animation, with exactly one documented exception
 
 This is not a style preference. The app measures battery discharge under a load it controls.
 A perpetually animating background is an uncontrolled load and **would corrupt the measurement**.
-An infinite animation is a correctness bug in this codebase.
+
+#### The exception: a `FAIL` card breathes
+
+A result card with outcome `FAIL` pulses its border continuously, because a walk-away finding —
+a rooted phone, an unlocked bootloader, a lender's device-owner lock — must not be scrollable past.
+
+It is constrained, and the constraints are the reason it is allowed:
+
+- **0.7 Hz** (a 700 ms tween on `RepeatMode.Reverse`, so a 1.4 second cycle).
+  [W3C WCAG 2.3.1](https://www.w3.org/WAI/WCAG21/Understanding/three-flashes-or-below-threshold)
+  sets the photosensitive-seizure threshold at **three flashes per second**, and notes that people
+  are *more* sensitive to red flashing than to any other colour, with a separate stricter test for
+  saturated red. This runs an order of magnitude below that line.
+- **It ramps smoothly rather than switching on and off**, so it reads as a breathe, not a flash.
+- **It is a border and a faint fill**, never the whole card and never the text.
+- `CheckResultCard(emphasise = false)` **must** be used anywhere a measurement is running. That is
+  not optional: the battery check cannot produce an honest reading next to an animating surface.
+
+Nothing else in the app loops. If a second exception is ever wanted, it needs the same three things:
+a rate below the flash threshold, a way to switch it off during measurement, and a written reason.
 
 ## Window insets — every screen, every time
 
