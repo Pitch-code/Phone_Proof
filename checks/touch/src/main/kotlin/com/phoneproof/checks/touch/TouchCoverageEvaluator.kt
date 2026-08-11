@@ -37,12 +37,20 @@ object TouchCoverageEvaluator {
 
     fun evaluate(coverage: TouchCoverage): CheckResult {
         val percent = (coverage.coverageRatio * 100f)
-        val measurements = listOf(
-            Measurement("Cells covered", "${coverage.touchedCount} / ${coverage.cellCount}"),
-            Measurement("Coverage", String.format("%.1f", percent), "%"),
-        )
+        val untestable = coverage.untestedReservedCells.size
+        val measurements = buildList {
+            add(Measurement("Cells covered", "${coverage.touchedCount} / ${coverage.cellCount}"))
+            add(Measurement("Coverage", String.format("%.1f", percent), "%"))
+            // Disclosed on every outcome, including FAIL and PASS, so the report always states the
+            // limits of what was actually measured rather than only when it flatters the phone.
+            if (untestable > 0) {
+                add(Measurement("Not testable", "$untestable", "cells"))
+            }
+        }
 
-        if (coverage.coverageRatio < MIN_COVERAGE_TO_JUDGE) {
+        // Judged on reachable cells only. Against the raw ratio, a phone with wide gesture strips
+        // could never reach the threshold however carefully the tester swiped.
+        if (coverage.testableCoverageRatio < MIN_COVERAGE_TO_JUDGE) {
             val needed = (MIN_COVERAGE_TO_JUDGE * 100).toInt()
             return CheckResult(
                 id = CHECK_ID,
@@ -57,7 +65,9 @@ object TouchCoverageEvaluator {
             )
         }
 
-        val zones = coverage.deadZones()
+        // testableDeadZones, not deadZones: a gap the platform caused is not evidence about the
+        // digitiser, and counting it was what made a perfect screen report CAUTION.
+        val zones = coverage.testableDeadZones()
         val realDefects = zones.filter { it.size >= DEAD_ZONE_MIN_CELLS }
 
         if (realDefects.isNotEmpty()) {
@@ -98,6 +108,24 @@ object TouchCoverageEvaluator {
                 measurements = measurements +
                     Measurement("Missed spots", "$skipped", "cells"),
                 falsePositiveCauses = FALSE_POSITIVE_CAUSES,
+            )
+        }
+
+        // A pass, but an honest one. Confidence drops to MEDIUM when part of the screen was never
+        // readable, because a defect could be hiding in exactly the strip the app could not see.
+        // Claiming HIGH here would be the same overstatement the Confidence type exists to prevent.
+        if (untestable > 0) {
+            return CheckResult(
+                id = CHECK_ID,
+                title = "Touch response",
+                outcome = CheckOutcome.PASS,
+                confidence = Confidence.MEDIUM,
+                headline = "Every part of the screen the app can read responded.",
+                consequence = "${plural(untestable, "cell")} sit under a strip Android keeps for " +
+                    "its own swipes, so no app can test them. Nothing suggests a fault there.",
+                action = "Check those edges by hand: type a message, and pull the notification " +
+                    "shade down from the top.",
+                measurements = measurements,
             )
         }
 

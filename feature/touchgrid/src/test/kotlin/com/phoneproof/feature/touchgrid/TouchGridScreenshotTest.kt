@@ -11,6 +11,9 @@ import com.phoneproof.checks.touch.TouchCoverage
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.ThemeMode
+import com.phoneproof.core.model.CheckOutcome
+import com.phoneproof.core.model.Confidence
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,6 +63,10 @@ class TouchGridScreenshotTest {
                     onTouch = { _, _ -> },
                     onFinish = {},
                     onRetest = {},
+                    // Ignored on purpose. Robolectric reports no system bars, so the live inset
+                    // reading always yields an empty set here; the reserved states below are built
+                    // by hand instead, which is why reservedCells lives in the state.
+                    onReservedCellsChanged = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -115,6 +122,60 @@ class TouchGridScreenshotTest {
                 touchedCells = covered,
                 phase = TouchTestPhase.FINISHED,
                 result = TouchCoverageEvaluator.evaluate(coverage),
+            ),
+        )
+    }
+
+    /**
+     * Roughly what a gesture-navigation phone reserves: a band top and bottom for the shade and the
+     * home swipe, and a column each side for the back swipe.
+     */
+    private fun gestureStrips(): Set<Cell> =
+        block(0, 0, spec.columns, 2) +
+            block(0, spec.rows - 2, spec.columns, 2) +
+            block(0, 0, 1, spec.rows) +
+            block(spec.columns - 1, 0, 1, spec.rows)
+
+    @Test
+    fun sweeping_with_reserved_edges_shown() {
+        val reserved = gestureStrips()
+        val covered = block(0, 0, spec.columns, (spec.rows * 2) / 3) - reserved
+        render(
+            "touchgrid-6-reserved-edges",
+            TouchGridUiState(
+                spec = spec,
+                touchedCells = covered,
+                phase = TouchTestPhase.IN_PROGRESS,
+                reservedCells = reserved,
+            ),
+        )
+    }
+
+    @Test
+    fun three_cells_missed_inside_a_reserved_strip_is_a_pass() {
+        // The realme RMX5110 false alarm, as a picture. Three cells along the top edge stayed
+        // uncovered because the system took those swipes to open the notification shade, and the
+        // app reported CAUTION on a screen with nothing wrong with it.
+        val reserved = gestureStrips()
+        val missed = setOf(Cell(4, 0), Cell(5, 0), Cell(6, 0))
+        val covered = allCells() - missed
+        val coverage = TouchCoverage(spec, covered, reserved)
+        val result = TouchCoverageEvaluator.evaluate(coverage)
+
+        // Asserted as well as rendered. A screenshot shows the wording, but only this catches a
+        // regression that quietly turns the verdict back into an accusation.
+        assertEquals(CheckOutcome.PASS, result.outcome)
+        assertEquals(Confidence.MEDIUM, result.confidence)
+
+        render(
+            "touchgrid-7-reserved-pass",
+            TouchGridUiState(
+                spec = spec,
+                touchedCells = covered,
+                phase = TouchTestPhase.FINISHED,
+                result = result,
+                highlightedCells = coverage.untouchedCells - reserved,
+                reservedCells = reserved,
             ),
         )
     }
