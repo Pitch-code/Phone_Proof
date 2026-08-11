@@ -25,21 +25,25 @@ That is the gap this fills.
 
 ## Status
 
-Early. Two checks are implemented end to end:
+Six checks run as one **instant scan** — no permission prompt, nothing for the buyer to do, done in
+under a second:
 
-- **Remote lock control** — asks the platform which apps hold device-owner, profile-owner or
-  device-administrator control. This is how phones sold on instalments in India are locked when
-  payments stop, which makes it the check that catches the loss of the whole purchase price rather
-  than a negotiation.
-- **Touch coverage** — maps the screen into a grid and finds contiguous unresponsive patches.
+| Check | What it catches |
+|---|---|
+| **Remote lock control** | Device-owner or device-admin control: how a phone bought on instalments gets bricked weeks after you pay |
+| **Genuine software** | `test-keys` builds, and a `Build.FINGERPRINT` that disagrees with the model name — what a cloned handset looks like |
+| **Security updates** | Months since the last patch, from `Build.VERSION.SECURITY_PATCH` |
+| **Storage** | Usable capacity against the tier it is sold as, catching downgraded chips |
+| **Sensors** | A missing gyroscope or proximity sensor: invisible in a spec argument, checkable in a second |
+| **Display** | Real resolution and the highest refresh rate the panel supports, versus the rate it is running at |
 
-Plus an in-app **diagnostics log** that captures errors and uncaught exceptions and can be copied in
-one tap, so a bug report is an exact log rather than a remembered symptom.
+Plus **touch coverage**, which maps the screen into a grid and finds contiguous unresponsive
+patches, and an in-app **diagnostics log** that captures errors and uncaught exceptions and copies
+in one tap — so a bug report is an exact log rather than a remembered symptom.
 
-Still to build: claimed vs measured hardware, real storage size and speed, security patch age, dead
-pixel and burn-in patterns, measured battery discharge with cycle count, sensor inventory,
-camera/mic/speaker with waveform analysis, IMEI capture with checksum and CEIR deep link, and a
-coached physical walkthrough.
+Still to build: measured battery discharge with cycle count, dead-pixel and burn-in patterns,
+camera/mic/speaker with waveform analysis, IMEI capture with checksum and CEIR deep link, and the
+coached physical walkthrough with photo capture.
 
 ## Screens
 
@@ -47,7 +51,8 @@ Rendered straight from the code, not mockups. See [`screenshots/`](screenshots/)
 
 | | |
 |---|---|
-| ![home](screenshots/home.png) | ![remote lock failure](screenshots/emilock-2-device-owner.png) |
+| ![home](screenshots/home.png) | ![scan finding real problems](screenshots/scan-2-problems.png) |
+| ![remote lock failure](screenshots/emilock-2-device-owner.png) | ![clean scan](screenshots/scan-1-clean.png) |
 | ![touch test in progress](screenshots/touchgrid-2-in-progress.png) | ![dead zone found](screenshots/touchgrid-3-dead-zone.png) |
 | ![caution](screenshots/touchgrid-5-caution.png) | ![diagnostics](screenshots/diagnostics-2-with-crash.png) |
 
