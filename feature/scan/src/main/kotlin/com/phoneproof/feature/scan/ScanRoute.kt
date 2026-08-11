@@ -12,12 +12,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.checks.device.BuildIntegrityCheck
 import com.phoneproof.checks.device.DeviceFacts
 import com.phoneproof.checks.device.DisplayCheck
+import com.phoneproof.checks.device.RootCheck
 import com.phoneproof.checks.device.SecurityPatchCheck
 import com.phoneproof.checks.device.SensorInventoryCheck
 import com.phoneproof.checks.device.StorageCheck
 import com.phoneproof.checks.emilock.EmiLockEvaluator
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
+import com.phoneproof.core.device.RootSignalsReader
 import com.phoneproof.core.diagnostics.Diagnostics
 
 @Composable
@@ -61,6 +63,12 @@ private fun tasks(context: Context, facts: DeviceFacts?): List<ScanTask> {
 
     tasks += ScanTask(EmiLockEvaluator.CHECK_ID, "Checking for remote lock control") {
         EmiLockEvaluator.evaluate(DeviceAdminInspector(context, diagnostics).snapshot())
+    }
+
+    // Second, because a rooted or unlocked phone undermines every measurement that follows it —
+    // and because banking apps refusing to run is a problem the buyer discovers far too late.
+    tasks += ScanTask(RootCheck.CHECK_ID, "Looking for root and an unlocked bootloader") {
+        RootCheck.evaluate(RootSignalsReader(context, diagnostics).read())
     }
 
     if (facts != null) {

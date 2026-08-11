@@ -15,6 +15,23 @@
         <intent>
             <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
         </intent>
+
+        <!--
+          Root manager apps, listed individually so the root check can see whether one is installed.
+          A named list rather than QUERY_ALL_PACKAGES: this is the entire set the check asks about,
+          and blanket package visibility would be disproportionate and would invite review scrutiny.
+
+          These apps commonly hide themselves, so a negative result here proves nothing on its own.
+          It is one of three independent signals, alongside the su binary scan and verified-boot
+          state, which is why the check never reports a clean pass on this evidence alone.
+        -->
+        <package android:name="com.topjohnwu.magisk" />
+        <package android:name="io.github.huskydg.magisk" />
+        <package android:name="eu.chainfire.supersu" />
+        <package android:name="com.noshufou.android.su" />
+        <package android:name="com.thirdparty.superuser" />
+        <package android:name="com.koushikdutta.superuser" />
+        <package android:name="me.weishu.kernelsu" />
     </queries>
 
     <!--

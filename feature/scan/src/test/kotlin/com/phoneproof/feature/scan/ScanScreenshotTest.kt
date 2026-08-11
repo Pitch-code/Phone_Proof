@@ -8,6 +8,8 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.checks.device.BuildIntegrityCheck
 import com.phoneproof.checks.device.DeviceFacts
 import com.phoneproof.checks.device.DisplayCheck
+import com.phoneproof.checks.device.RootCheck
+import com.phoneproof.checks.device.RootSignals
 import com.phoneproof.checks.device.SecurityPatchCheck
 import com.phoneproof.checks.device.SensorFact
 import com.phoneproof.checks.device.SensorInventoryCheck
@@ -71,9 +73,14 @@ class ScanScreenshotTest {
         sensors = sensors(1, 2, 5),
     )
 
-    private fun finishedState(facts: DeviceFacts, admins: DeviceAdminSnapshot): ScanUiState {
+    private fun finishedState(
+        facts: DeviceFacts,
+        admins: DeviceAdminSnapshot,
+        rootSignals: RootSignals,
+    ): ScanUiState {
         val results = listOf(
             EmiLockEvaluator.evaluate(admins),
+            RootCheck.evaluate(rootSignals),
             BuildIntegrityCheck.evaluate(facts),
             SecurityPatchCheck.evaluate(facts, today),
             StorageCheck.evaluate(facts),
@@ -103,12 +110,32 @@ class ScanScreenshotTest {
 
     @Test
     fun a_clean_phone() {
-        render("scan-1-clean", finishedState(healthy, DeviceAdminSnapshot.from(emptyList())))
+        render(
+            "scan-1-clean",
+            finishedState(
+                healthy,
+                DeviceAdminSnapshot.from(emptyList()),
+                RootSignals(verifiedBootState = "green"),
+            ),
+        )
     }
 
     @Test
     fun a_phone_with_real_problems() {
-        render("scan-2-problems", finishedState(suspicious, DeviceAdminSnapshot.from(emptyList())))
+        render(
+            "scan-2-problems",
+            finishedState(
+                suspicious,
+                DeviceAdminSnapshot.from(emptyList()),
+                // A rooted phone with an unlocked bootloader, which is the combination that makes
+                // every other reading on the screen untrustworthy.
+                RootSignals(
+                    suBinaryPaths = listOf("/system/xbin/su"),
+                    rootManagerPackages = listOf("com.topjohnwu.magisk"),
+                    verifiedBootState = "orange",
+                ),
+            ),
+        )
     }
 
     @Test

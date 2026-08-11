@@ -42,6 +42,7 @@ import com.phoneproof.core.designsystem.component.glyph
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.model.CheckOutcome
+import com.phoneproof.core.model.nounFor
 
 /**
  * The scan.
@@ -175,15 +176,17 @@ private fun Tally(state: ScanUiState) {
     val results = state.results
     if (results.isEmpty()) return
 
+    // "problem" is the only countable noun here, so it is the only one that needs a plural.
+    // "to check", "can't tell" and "fine" read correctly at any count.
     val order = listOf(
-        CheckOutcome.FAIL to "problem",
-        CheckOutcome.CAUTION to "to check",
-        CheckOutcome.UNKNOWN to "can't tell",
-        CheckOutcome.PASS to "fine",
+        Triple(CheckOutcome.FAIL, "problem", true),
+        Triple(CheckOutcome.CAUTION, "to check", false),
+        Triple(CheckOutcome.UNKNOWN, "can't tell", false),
+        Triple(CheckOutcome.PASS, "fine", false),
     )
 
     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        order.forEach { (outcome, label) ->
+        order.forEach { (outcome, label, countable) ->
             val count = results.count { it.outcome == outcome }
             if (count > 0) {
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
@@ -193,7 +196,7 @@ private fun Tally(state: ScanUiState) {
                         color = outcome.accent(),
                     )
                     Text(
-                        text = label,
+                        text = if (countable) nounFor(count, label) else label,
                         style = MaterialTheme.typography.labelSmall,
                         color = PhoneProofColors.TextTertiary,
                     )
