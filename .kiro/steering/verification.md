@@ -58,3 +58,16 @@ and produced a failure message consisting only of the string `25.0.2`. If a buil
 bare JDK version and no explanation, the daemon picked up a JDK that AGP rejects: export `JAVA_HOME`.
 
 `local.properties` holds `sdk.dir` and is gitignored.
+
+## Trust the build, and make the build trustworthy
+
+If a build fails for a reason unrelated to the change, fix the build rather than re-running it. A
+flaky build teaches you to retry instead of to read the error, and then a real failure gets
+retried too.
+
+One instance is already handled: the Kotlin compile daemon runs in its own JVM and does not inherit
+`org.gradle.jvmargs`. At its default heap it died under parallel compilation with
+`Daemon compilation failed: null`, which then surfaced as a bogus "unresolved reference" in whichever
+module happened to be compiling. `kotlin.daemon.jvmargs` in `gradle.properties` fixes it. Verify
+changes to build configuration by running the full pipeline **twice** with `--rerun-tasks`; a single
+green run does not prove a race is gone.
