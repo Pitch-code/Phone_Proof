@@ -61,6 +61,17 @@ class EmiLockEvaluatorTest {
     }
 
     @Test
+    fun `a single admin reads as one app, not one app-bracket-s`() {
+        // "1 app(s)" was on screen and it reads like unfinished software, which is corrosive in an
+        // app asking a stranger to trust its verdict about money.
+        val result = EmiLockEvaluator.evaluate(
+            DeviceAdminSnapshot(listOf(admin("com.one", "Guard"))),
+        )
+        assertThat(result.headline).contains("1 app can control")
+        assertThat(result.headline).doesNotContain("(s)")
+    }
+
+    @Test
     fun `a plain administrator is CAUTION rather than FAIL`() {
         // Genuinely ambiguous: this is how finance locks work and also how antivirus and
         // find-my-phone apps work. Failing it outright would kill honest deals.
@@ -104,7 +115,7 @@ class EmiLockEvaluatorTest {
             listOf(admin("a.one", "One"), admin("b.two", "Two")),
         )
         val result = EmiLockEvaluator.evaluate(snapshot)
-        assertThat(result.headline).contains("2 app(s)")
+        assertThat(result.headline).contains("2 apps")
         assertThat(result.headline).contains("One")
         assertThat(result.headline).contains("Two")
     }

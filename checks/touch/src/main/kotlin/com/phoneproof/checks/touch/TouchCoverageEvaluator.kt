@@ -4,6 +4,7 @@ import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.model.Confidence
 import com.phoneproof.core.model.Measurement
+import com.phoneproof.core.model.plural
 
 /**
  * Turns raw coverage into a report row.
@@ -63,7 +64,7 @@ object TouchCoverageEvaluator {
             val worst = realDefects.first()
             val region = worst.region(coverage.spec).label
             val others = realDefects.size - 1
-            val extra = if (others > 0) " Plus $others more area(s)." else ""
+            val extra = if (others > 0) " Plus ${plural(others, "more area")}." else ""
 
             return CheckResult(
                 id = CHECK_ID,
@@ -90,7 +91,7 @@ object TouchCoverageEvaluator {
                 title = "Touch response",
                 outcome = CheckOutcome.CAUTION,
                 confidence = Confidence.MEDIUM,
-                headline = "$skipped small spot(s) were missed, scattered rather than grouped.",
+                headline = "${plural(skipped, "small spot")} missed, scattered rather than grouped.",
                 consequence = "Scattered gaps usually mean the finger skipped, not that the " +
                     "screen is faulty — but it cannot be ruled out without another pass.",
                 action = "Swipe slowly over the highlighted spots once more.",

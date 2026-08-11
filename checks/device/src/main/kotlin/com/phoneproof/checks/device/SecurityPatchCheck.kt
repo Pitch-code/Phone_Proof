@@ -4,6 +4,8 @@ import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.model.Confidence
 import com.phoneproof.core.model.Measurement
+import com.phoneproof.core.model.nounFor
+import com.phoneproof.core.model.plural
 
 /**
  * How long ago this phone last received a security update.
@@ -54,7 +56,7 @@ object SecurityPatchCheck {
         val ageMonths = (ageDays / 30.44).toInt()
         val measurements = listOf(
             Measurement("Patch date", patch),
-            Measurement("Age", "$ageMonths", "months"),
+            Measurement("Age", "$ageMonths", nounFor(ageMonths, "month")),
             Measurement("Android", "${facts.androidRelease} (API ${facts.sdkInt})"),
         )
 
@@ -83,7 +85,7 @@ object SecurityPatchCheck {
                 title = TITLE,
                 outcome = CheckOutcome.FAIL,
                 confidence = Confidence.HIGH,
-                headline = "No security update for $ageMonths months.",
+                headline = "No security update for ${plural(ageMonths, "month")}.",
                 consequence = "This phone has almost certainly been dropped by its manufacturer. " +
                     "Known security holes will never be fixed, and banking apps may start " +
                     "refusing to run on it.",
@@ -97,7 +99,7 @@ object SecurityPatchCheck {
                 title = TITLE,
                 outcome = CheckOutcome.CAUTION,
                 confidence = Confidence.MEDIUM,
-                headline = "Last security update was $ageMonths months ago.",
+                headline = "Last security update was ${plural(ageMonths, "month")} ago.",
                 consequence = "It is behind, though probably still supported. Support may end soon.",
                 action = "Connect it to wifi and check for a system update before you pay.",
                 measurements = measurements,
@@ -112,7 +114,7 @@ object SecurityPatchCheck {
                 headline = if (ageMonths <= 0) {
                     "Security updates are current."
                 } else {
-                    "Security updates are current, last one $ageMonths month(s) ago."
+                    "Security updates are current, last one ${plural(ageMonths, "month")} ago."
                 },
                 measurements = measurements,
             )

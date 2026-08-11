@@ -4,6 +4,7 @@ import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.model.Confidence
 import com.phoneproof.core.model.Measurement
+import com.phoneproof.core.model.plural
 
 /**
  * Decides what administrative control over a phone means for someone buying it.
@@ -92,7 +93,7 @@ object EmiLockEvaluator {
                 // wolf stops being believed.
                 outcome = CheckOutcome.CAUTION,
                 confidence = Confidence.MEDIUM,
-                headline = "${plain.size} app(s) can control this phone remotely: $names.",
+                headline = "${plural(plain.size, "app")} can control this phone remotely: $names.",
                 consequence = "A device administrator can lock the screen or wipe the phone. It " +
                     "might be an antivirus or a find-my-phone app — or it might be a lender's lock.",
                 action = "Have the seller factory reset the phone in front of you, then run this " +
