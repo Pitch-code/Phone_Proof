@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:touchgrid"))
     implementation(project(":feature:emilock"))
+    implementation(project(":feature:scan"))
     implementation(project(":feature:diagnostics"))
 
     implementation(libs.androidx.core.ktx)

@@ -26,6 +26,7 @@ kotlin {
 
 dependencies {
     api(project(":checks:emilock"))
+    api(project(":checks:device"))
     implementation(project(":core:diagnostics"))
     implementation(libs.androidx.core.ktx)
 }

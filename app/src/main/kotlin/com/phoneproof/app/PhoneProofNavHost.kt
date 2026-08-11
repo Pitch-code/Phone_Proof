@@ -11,12 +11,14 @@ import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
+import com.phoneproof.feature.scan.ScanRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 
 private object Routes {
     const val HOME = "home"
     const val TOUCH = "touch"
     const val LOCK = "lock"
+    const val SCAN = "scan"
     const val DIAGNOSTICS = "diagnostics"
 }
 
@@ -38,6 +40,11 @@ fun PhoneProofNavHost(
             HomeScreen(
                 checks = listOf(
                     HomeCheck(
+                        title = "Instant scan",
+                        subtitle = "Software, storage, sensors and screen — no waiting",
+                        onClick = { navController.navigate(Routes.SCAN) },
+                    ),
+                    HomeCheck(
                         title = "Remote lock control",
                         subtitle = "Can a lender brick this phone after you pay?",
                         onClick = { navController.navigate(Routes.LOCK) },
@@ -48,9 +55,9 @@ fun PhoneProofNavHost(
                         onClick = { navController.navigate(Routes.TOUCH) },
                     ),
                 ),
-                // Only two checks exist, so the primary action opens the one that catches the most
-                // expensive problem rather than pretending a full guided run is ready.
-                onStartFullTest = { navController.navigate(Routes.LOCK) },
+                // The instant scan is the closest thing to the full guided run that exists, and
+                // it already includes the remote-lock check, so the primary action opens it.
+                onStartFullTest = { navController.navigate(Routes.SCAN) },
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -58,6 +65,10 @@ fun PhoneProofNavHost(
 
         composable(Routes.TOUCH) {
             TouchGridRoute(modifier = Modifier.fillMaxSize())
+        }
+
+        composable(Routes.SCAN) {
+            ScanRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.LOCK) {

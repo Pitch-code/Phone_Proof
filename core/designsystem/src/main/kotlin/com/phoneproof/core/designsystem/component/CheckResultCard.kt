@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.designsystem.theme.PhoneProofType
@@ -84,17 +85,23 @@ fun CheckResultCard(
                 result.measurements.forEach { measurement ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        // Weighted halves with an explicit gap, rather than SpaceBetween. With
+                        // SpaceBetween a long value such as a build fingerprint consumed all the
+                        // free space and ran straight into its own label with no separation.
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         Text(
                             text = measurement.label,
                             style = MaterialTheme.typography.bodyMedium,
                             color = PhoneProofColors.TextTertiary,
+                            modifier = Modifier.weight(1f),
                         )
                         Text(
                             text = measurement.display,
                             style = PhoneProofType.Numeric,
                             color = PhoneProofColors.TextPrimary,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
