@@ -5,6 +5,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemGestures
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Button
@@ -22,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,7 +36,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.touch.Cell
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
@@ -64,6 +71,7 @@ fun TouchGridScreen(
     onTouch: (Float, Float) -> Unit,
     onFinish: () -> Unit,
     onRetest: () -> Unit,
+    onReservedCellsChanged: (Set<Cell>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.phase == TouchTestPhase.FINISHED) {
@@ -73,6 +81,7 @@ fun TouchGridScreen(
             state = state,
             onTouch = onTouch,
             onFinish = onFinish,
+            onReservedCellsChanged = onReservedCellsChanged,
             modifier = modifier,
         )
     }
@@ -83,14 +92,39 @@ private fun TestingLayout(
     state: TouchGridUiState,
     onTouch: (Float, Float) -> Unit,
     onFinish: () -> Unit,
+    onReservedCellsChanged: (Set<Cell>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var pointerDown by remember { mutableStateOf(false) }
+    var canvasSize by remember { mutableStateOf(IntSize.Zero) }
+
+    // Measured, not assumed. These insets differ between a gesture-navigation phone and a
+    // three-button one, and between portrait and landscape.
+    val gestureInsets = WindowInsets.systemGestures
+    val density = LocalDensity.current
+    val layoutDirection = LocalLayoutDirection.current
+
+    val reserved = remember(state.spec, canvasSize, gestureInsets, density, layoutDirection) {
+        reservedCells(
+            spec = state.spec,
+            width = canvasSize.width,
+            height = canvasSize.height,
+            left = gestureInsets.getLeft(density, layoutDirection),
+            top = gestureInsets.getTop(density),
+            right = gestureInsets.getRight(density, layoutDirection),
+            bottom = gestureInsets.getBottom(density),
+        )
+    }
+
+    // Reported rather than used locally, because the verdict is produced by the ViewModel and has
+    // to be built from the same set that is drawn.
+    LaunchedEffect(reserved) { onReservedCellsChanged(reserved) }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofTheme.colors.background),
+            .background(PhoneProofTheme.colors.background)
+            .onSizeChanged { canvasSize = it },
     ) {
         CoverageCanvas(
             state = state,
@@ -107,7 +141,17 @@ private fun TestingLayout(
                 // it would leave the strips under the status and navigation bars untestable, and
                 // those edges are where dead touch zones usually are.
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+                // A scrim, because this text sits directly on the grid and the grid changes colour
+                // underneath it as cells fill in. Without it the smaller lines were unreadable over
+                // covered cells. It costs a few rows of visible grid state, which is the lesser
+                // problem: the counter above reports progress, whereas unreadable instructions
+                // leave the tester with no idea what to do.
+                .background(
+                    PhoneProofTheme.colors.background.copy(alpha = 0.82f),
+                    RoundedCornerShape(18.dp),
+                )
+                .padding(horizontal = 18.dp, vertical = 14.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -116,7 +160,10 @@ private fun TestingLayout(
 
             // Appears only once there is enough coverage to reach a verdict, and only while the
             // finger is lifted. Until then the whole screen stays sweepable.
-            val enoughToJudge = state.coverageRatio >= TouchCoverageEvaluator.MIN_COVERAGE_TO_JUDGE
+            // Measured against reachable cells, matching the evaluator. Gating on raw coverage would
+            // hide this button on exactly the phones whose gesture strips make 90% unreachable.
+            val enoughToJudge =
+                state.testableCoverageRatio >= TouchCoverageEvaluator.MIN_COVERAGE_TO_JUDGE
             if (enoughToJudge && !pointerDown) {
                 Button(
                     onClick = onFinish,
@@ -215,9 +262,16 @@ private fun CoverageCanvas(
                     report(change.position)
                 }
 
+                // After awaitFirstDown, not before it. awaitEachGesture starts a fresh iteration of
+                // this block the instant the previous gesture ends and then suspends here waiting
+                // for the next finger, so flagging "down" above the suspend left the flag true from
+                // first composition onwards and true again immediately after every lift. The one
+                // control gated on the finger being up — "See the result" — could therefore never
+                // appear, and the test had no way to finish.
+                val firstDown = awaitFirstDown(requireUnconsumed = false)
                 onPointerDownChange(true)
                 try {
-                    report(awaitFirstDown(requireUnconsumed = false))
+                    report(firstDown)
                     do {
                         val event = awaitPointerEvent()
                         event.changes.forEach { change ->
@@ -242,6 +296,8 @@ private fun CoverageCanvas(
     val coveredColour = PhoneProofTheme.colors.accent.copy(alpha = 0.34f)
     val emptyColour = PhoneProofTheme.colors.gridEmpty
 
+    val reservedColour = PhoneProofTheme.colors.gridReserved
+
     Canvas(modifier = modifier.then(gestureModifier)) {
         val cellWidth = size.width / state.spec.columns
         val cellHeight = size.height / state.spec.rows
@@ -257,7 +313,13 @@ private fun CoverageCanvas(
                 val covered = cell in state.touchedCells
                 val flagged = highlight > 0f && cell in state.highlightedCells
 
+                val reserved = cell in state.reservedCells
+
                 val colour: Color = when {
+                    // Before covered, so a reserved cell the finger did reach still reads as
+                    // untestable. Its coverage was luck — the system could have taken that swipe —
+                    // and showing it as confirmed would overstate what was measured.
+                    reserved && !flagged -> reservedColour
                     // Flagged first: an uncovered cell that the verdict cares about must read as
                     // the loudest thing on screen. The colour comes from the verdict itself so
                     // the map cannot contradict the badge — marking scattered finger-skips in
@@ -287,10 +349,14 @@ private fun Readout(state: TouchGridUiState) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = if (state.phase == TouchTestPhase.READY) {
-                "Drag your finger over every part of the screen"
-            } else {
-                "Keep going — cover the edges and corners"
+            text = when {
+                state.phase == TouchTestPhase.READY ->
+                    "Drag your finger over every part of the screen"
+                // Telling someone to cover the edges while the app is also telling them the edges
+                // cannot be tested is a straight contradiction, and it was on screen together.
+                state.reservedCells.isNotEmpty() ->
+                    "Keep going — cover everything inside the dimmed border"
+                else -> "Keep going — cover the edges and corners"
             },
             style = MaterialTheme.typography.titleMedium,
             color = PhoneProofTheme.colors.textPrimary,
@@ -313,5 +379,17 @@ private fun Readout(state: TouchGridUiState) {
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofTheme.colors.textTertiary,
         )
+        // Shown only when the phone actually reserves something, and said before the verdict rather
+        // than after it. A tester who cannot cover the top edge needs to know why at the moment
+        // they are struggling with it, not in a footnote once the result is already on screen.
+        if (state.reservedCells.isNotEmpty()) {
+            Text(
+                text = "The dimmed edges belong to Android's own swipes. No app can test them, " +
+                    "and they are left out of the result.",
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textSecondary,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }

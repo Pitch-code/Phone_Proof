@@ -180,3 +180,91 @@ class TouchCoverageTrackerTest {
         assertThat(small.snapshot().coverageRatio).isEqualTo(1f)
     }
 }
+
+
+class TouchCoverageReservedCellsTest {
+
+    private val spec = GridSpec(columns = 4, rows = 4)
+
+    private fun coverage(untouched: Set<Cell>, reserved: Set<Cell>): TouchCoverage {
+        val all = buildSet {
+            for (row in 0 until spec.rows) {
+                for (column in 0 until spec.columns) add(Cell(column, row))
+            }
+        }
+        return TouchCoverage(spec, all - untouched, reserved)
+    }
+
+    private val topRow: Set<Cell> = (0 until spec.columns).map { Cell(it, 0) }.toSet()
+
+    @Test
+    fun `the two groupings differ exactly by the reserved cells`() {
+        // This is the mechanism behind the false CAUTION, stated as an assertion. The same three
+        // uncovered cells are one group of three when the platform's strip is ignored, and no
+        // group at all once it is accounted for. The old code read the first number.
+        val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
+        val subject = coverage(untouched, topRow)
+
+        assertThat(subject.deadZones()).hasSize(1)
+        assertThat(subject.deadZones().first().size).isEqualTo(3)
+        assertThat(subject.testableDeadZones()).isEmpty()
+    }
+
+    @Test
+    fun `removing reserved cells can split one apparent patch into two real ones`() {
+        // Three uncovered cells in a row where only the middle one is reserved. That middle cell is
+        // the sole thing joining the outer two, so grouping before removal reports a single
+        // three-cell patch, while the honest reading is two unrelated single-cell skips. This is
+        // why reserved cells are removed before grouping rather than subtracted from the totals
+        // afterwards.
+        val untouched = setOf(Cell(0, 1), Cell(1, 1), Cell(2, 1))
+        val subject = coverage(untouched, setOf(Cell(1, 1)))
+
+        assertThat(subject.deadZones()).hasSize(1)
+        assertThat(subject.deadZones().first().size).isEqualTo(3)
+
+        val testable = subject.testableDeadZones()
+        assertThat(testable).hasSize(2)
+        assertThat(testable.map { it.size }).containsExactly(1, 1)
+    }
+
+    @Test
+    fun `untested reserved cells count only the reserved ones left uncovered`() {
+        val untouched = setOf(Cell(0, 0), Cell(2, 2))
+        val subject = coverage(untouched, topRow)
+
+        // Cell(2,2) is uncovered but not reserved, and the other three reserved cells were covered.
+        assertThat(subject.untestedReservedCells).containsExactly(Cell(0, 0))
+    }
+
+    @Test
+    fun `testable coverage ignores reserved cells in both halves of the fraction`() {
+        val subject = coverage(topRow, topRow)
+
+        assertThat(subject.testableCellCount).isEqualTo(12)
+        assertThat(subject.coverageRatio).isEqualTo(0.75f)
+        assertThat(subject.testableCoverageRatio).isEqualTo(1f)
+    }
+
+    @Test
+    fun `a grid that is entirely reserved reports zero rather than dividing by zero`() {
+        val all = buildSet {
+            for (row in 0 until spec.rows) {
+                for (column in 0 until spec.columns) add(Cell(column, row))
+            }
+        }
+        val subject = TouchCoverage(spec, all, all)
+
+        assertThat(subject.testableCellCount).isEqualTo(0)
+        assertThat(subject.testableCoverageRatio).isEqualTo(0f)
+    }
+
+    @Test
+    fun `default reserved set is empty so existing behaviour is untouched`() {
+        val subject = TouchCoverage(spec, emptySet())
+
+        assertThat(subject.reservedCells).isEmpty()
+        assertThat(subject.testableCellCount).isEqualTo(subject.cellCount)
+        assertThat(subject.testableDeadZones()).isEqualTo(subject.deadZones())
+    }
+}

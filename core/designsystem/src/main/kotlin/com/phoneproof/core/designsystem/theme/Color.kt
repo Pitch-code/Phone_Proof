@@ -32,6 +32,16 @@ data class PhoneProofPalette(
     val accent: Color,
     /** An untouched cell in the coverage grid: visible as an outline, clearly not yet covered. */
     val gridEmpty: Color,
+    /**
+     * A coverage-grid cell Android reserves for its own edge gestures, so no app can test it.
+     *
+     * Neutral grey and clearly lighter than [gridEmpty], which is the whole requirement: it has to
+     * be distinguishable at a glance from a cell that still needs covering, without borrowing an
+     * outcome colour and implying a verdict about a strip that was never measured. A first attempt
+     * derived this from `textTertiary` with a low alpha and was invisible — a mid-grey at 16% lands
+     * on almost exactly [gridEmpty]'s luminance.
+     */
+    val gridReserved: Color,
     val isDark: Boolean,
 ) {
     fun fill(base: Color): Color = base.copy(alpha = if (isDark) 0.12f else 0.10f)
@@ -58,6 +68,7 @@ val DarkPalette = PhoneProofPalette(
     unknown = Color(0xFF52525B),
     accent = Color(0xFF3B82F6),
     gridEmpty = Color(0x0FFFFFFF),
+    gridReserved = Color(0x38FFFFFF),
     isDark = true,
 )
 
@@ -83,6 +94,7 @@ val LightPalette = PhoneProofPalette(
     unknown = Color(0xFF71717A),
     accent = Color(0xFF2563EB),
     gridEmpty = Color(0x0D000000),
+    gridReserved = Color(0x30000000),
     isDark = false,
 )
 

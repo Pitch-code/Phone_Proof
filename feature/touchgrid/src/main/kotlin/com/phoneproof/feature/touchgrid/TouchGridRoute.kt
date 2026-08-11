@@ -22,6 +22,7 @@ fun TouchGridRoute(
         onTouch = viewModel::onTouch,
         onFinish = viewModel::onFinish,
         onRetest = viewModel::onRetest,
+        onReservedCellsChanged = viewModel::onReservedCellsChanged,
         modifier = modifier,
     )
 }

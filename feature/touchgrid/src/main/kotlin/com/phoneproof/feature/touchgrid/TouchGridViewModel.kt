@@ -1,6 +1,7 @@
 package com.phoneproof.feature.touchgrid
 
 import androidx.lifecycle.ViewModel
+import com.phoneproof.checks.touch.Cell
 import com.phoneproof.checks.touch.GridSpec
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
 import com.phoneproof.checks.touch.TouchCoverageTracker
@@ -26,6 +27,22 @@ class TouchGridViewModel(
     val uiState: StateFlow<TouchGridUiState> = _uiState.asStateFlow()
 
     /**
+     * Records which cells sit under Android's own gesture strips, as measured from the live window
+     * insets by the screen.
+     *
+     * Survives [onRetest] on purpose: the strips belong to the phone, not to the attempt, and
+     * clearing them would make the first moments of a retest briefly judge cells it already knows
+     * are unreadable.
+     */
+    private var reservedCells: Set<Cell> = emptySet()
+
+    fun onReservedCellsChanged(cells: Set<Cell>) {
+        if (cells == reservedCells) return
+        reservedCells = cells
+        _uiState.value = _uiState.value.copy(reservedCells = cells)
+    }
+
+    /**
      * Records a touch at a normalised position.
      *
      * Out-of-range values are rejected by the tracker rather than clamped, so a finger sliding
@@ -47,18 +64,24 @@ class TouchGridViewModel(
     }
 
     fun onFinish() {
-        val coverage = tracker.snapshot()
+        // The reserved set is attached here, at the point of judgement, so the evaluator can tell a
+        // gap the platform caused from a gap the digitiser caused.
+        val coverage = tracker.snapshot().copy(reservedCells = reservedCells)
         val result = TouchCoverageEvaluator.evaluate(coverage)
         _uiState.value = _uiState.value.copy(
             touchedCells = coverage.touchedCells,
             phase = TouchTestPhase.FINISHED,
             result = result,
-            highlightedCells = coverage.untouchedCells,
+            // Reserved cells are excluded from the highlight as well as from the verdict. They are
+            // drawn in their own right, and flagging them in the verdict's colour would contradict
+            // a PASS badge by painting the top of the screen as though it had failed.
+            highlightedCells = coverage.untouchedCells - reservedCells,
         )
     }
 
     fun onRetest() {
         tracker.reset()
-        _uiState.value = TouchGridUiState(spec = tracker.spec)
+        // Carries the reserved set across, since it describes the phone rather than the attempt.
+        _uiState.value = TouchGridUiState(spec = tracker.spec, reservedCells = reservedCells)
     }
 }

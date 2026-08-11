@@ -83,6 +83,21 @@ data class DeadZone(val cells: Set<Cell>) {
 data class TouchCoverage(
     val spec: GridSpec,
     val touchedCells: Set<Cell>,
+    /**
+     * Cells sitting under a strip Android reserves for its own edge gestures — the pull-down for
+     * the notification shade at the top, the home swipe at the bottom, the back swipe at the sides.
+     *
+     * These exist because of a false alarm on real hardware. A flawless screen reported CAUTION
+     * for three cells along the top edge: the tester swiped over them, the system swallowed the
+     * gesture to open the shade, and the app never saw the touch. Blaming the phone for the
+     * platform's behaviour is the worst thing a trust tool can do, because the buyer learns to
+     * discount every result the app gives them afterwards.
+     *
+     * Reserved cells are therefore excluded from the verdict but still *shown*, and the count of
+     * ones left uncovered is disclosed. Empty by default so every existing caller and test keeps
+     * its previous meaning.
+     */
+    val reservedCells: Set<Cell> = emptySet(),
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
@@ -97,6 +112,24 @@ data class TouchCoverage(
             }
         }
 
+    /** Reserved cells the tester never managed to cover. Disclosed, never counted against the phone. */
+    val untestedReservedCells: Set<Cell>
+        get() = untouchedCells intersect reservedCells
+
+    /** Cells the tester can fairly be expected to reach. */
+    val testableCellCount: Int get() = cellCount - reservedCells.size
+
+    /**
+     * Coverage over the cells that can actually be reached, which is what the judging threshold
+     * has to be measured against. Using the raw ratio would make a 100% target unreachable on a
+     * phone whose gesture strips are wide, leaving the buyer stuck short of a verdict forever.
+     */
+    val testableCoverageRatio: Float
+        get() {
+            if (testableCellCount <= 0) return 0f
+            return (touchedCells - reservedCells).size.toFloat() / testableCellCount.toFloat()
+        }
+
     /** 0f to 1f. */
     val coverageRatio: Float
         get() = touchedCount.toFloat() / cellCount.toFloat()
@@ -107,8 +140,29 @@ data class TouchCoverage(
      * Diagonal adjacency is deliberately excluded: two cells touching only at a corner are
      * far more likely to be two separate finger skips than one physical defect.
      */
-    fun deadZones(): List<DeadZone> {
-        val remaining = untouchedCells.toHashSet()
+    /**
+     * Every gap, including ones the platform caused.
+     *
+     * The verdict deliberately does **not** use this — see [testableDeadZones]. It is kept as the
+     * raw view because the difference between the two is exactly the bug that was fixed here, and
+     * the tests assert on both to hold that distinction in place. Reaching for this one when
+     * judging a phone is how a flawless screen gets accused.
+     */
+    fun deadZones(): List<DeadZone> = connectedZones(untouchedCells)
+
+    /**
+     * Dead zones over the cells that could actually be tested.
+     *
+     * Reserved cells are removed *before* grouping rather than after, which matters: a patch
+     * straddling the top edge would otherwise be measured including its unreachable part and be
+     * promoted to a defect on the strength of cells the app never had a chance to read. Removing
+     * them first also lets a straddling patch split into two smaller pieces, each judged on the
+     * evidence that genuinely exists.
+     */
+    fun testableDeadZones(): List<DeadZone> = connectedZones(untouchedCells - reservedCells)
+
+    private fun connectedZones(cells: Set<Cell>): List<DeadZone> {
+        val remaining = cells.toHashSet()
         val zones = mutableListOf<DeadZone>()
 
         while (remaining.isNotEmpty()) {

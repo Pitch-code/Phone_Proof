@@ -32,9 +32,32 @@ data class TouchGridUiState(
     val result: CheckResult? = null,
     /** Cells to emphasise after finishing. Highlighted once, never on a loop. */
     val highlightedCells: Set<Cell> = emptySet(),
+    /**
+     * Cells under a strip Android keeps for its own edge gestures, so touches there may never
+     * reach the app.
+     *
+     * Part of the state rather than something the canvas works out for itself, for two reasons: the
+     * verdict needs the same set the drawing uses, and Robolectric reports no system bars at all,
+     * so a screenshot test can only show this case if it can hand the set in directly.
+     */
+    val reservedCells: Set<Cell> = emptySet(),
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
     val coverageRatio: Float get() = touchedCount.toFloat() / cellCount.toFloat()
     val coveragePercent: Int get() = (coverageRatio * 100f).toInt()
+
+    /** Cells the tester can fairly be asked to reach. Mirrors `TouchCoverage.testableCellCount`. */
+    val testableCellCount: Int get() = cellCount - reservedCells.size
+
+    /**
+     * Progress against reachable cells, which is what gates the finish control. The readout still
+     * shows raw coverage, because that is what the tester sees themselves doing; gating on it
+     * would strand them short of a verdict on a phone with wide gesture strips.
+     */
+    val testableCoverageRatio: Float
+        get() {
+            if (testableCellCount <= 0) return 0f
+            return (touchedCells - reservedCells).size.toFloat() / testableCellCount.toFloat()
+        }
 }
