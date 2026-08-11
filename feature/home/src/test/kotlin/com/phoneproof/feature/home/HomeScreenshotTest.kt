@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +28,7 @@ class HomeScreenshotTest {
     @Test
     fun home() {
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 HomeScreen(
                     checks = listOf(
                         HomeCheck(
@@ -42,7 +43,7 @@ class HomeScreenshotTest {
                         ),
                     ),
                     onStartFullTest = {},
-                    onOpenDiagnostics = {},
+                    onOpenSettings = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }

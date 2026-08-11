@@ -23,7 +23,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import org.junit.Rule
 import org.junit.Test
@@ -101,14 +101,14 @@ class IconPreviewTest {
                         AdaptiveIconPreview(
                             size = it,
                             drawableRes = R.drawable.ic_launcher_foreground,
-                            background = PhoneProofColors.Background,
+                            background = PhoneProofTheme.colors.background,
                         )
                     }
                 }
                 Text(
                     text = "24  36  48  64  96 dp  ·  ic_launcher_foreground",
                     style = PhoneProofType.NumericSmall,
-                    color = PhoneProofColors.TextSecondary,
+                    color = PhoneProofTheme.colors.textSecondary,
                 )
 
                 Row(
@@ -129,7 +129,7 @@ class IconPreviewTest {
                 Text(
                     text = "ic_launcher_monochrome  ·  themed-icon, colour stripped",
                     style = PhoneProofType.NumericSmall,
-                    color = PhoneProofColors.TextSecondary,
+                    color = PhoneProofTheme.colors.textSecondary,
                 )
             }
         }

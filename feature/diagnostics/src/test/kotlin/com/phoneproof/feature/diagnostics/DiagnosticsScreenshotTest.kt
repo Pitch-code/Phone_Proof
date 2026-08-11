@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import com.phoneproof.core.diagnostics.DiagEntry
 import com.phoneproof.core.diagnostics.DiagLevel
 import org.junit.Rule
@@ -35,7 +36,7 @@ class DiagnosticsScreenshotTest {
         dropped: Int = 0,
     ) {
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 DiagnosticsScreen(
                     entries = entries,
                     droppedCount = dropped,

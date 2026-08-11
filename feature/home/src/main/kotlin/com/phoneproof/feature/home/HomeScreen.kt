@@ -24,7 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
  * Home.
@@ -39,13 +39,13 @@ import com.phoneproof.core.designsystem.theme.PhoneProofColors
 fun HomeScreen(
     checks: List<HomeCheck>,
     onStartFullTest: () -> Unit,
-    onOpenDiagnostics: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background)
+            .background(PhoneProofTheme.colors.background)
             // safeDrawing, not statusBars: it also covers the navigation bar, gesture areas and
             // display cutouts, so this holds on a notch phone and a 3-button phone alike rather
             // than being tuned to one handset.
@@ -58,12 +58,12 @@ fun HomeScreen(
         Text(
             text = "PhoneProof",
             style = MaterialTheme.typography.displaySmall,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
         Text(
             text = "Find the faults before you pay for them.",
             style = MaterialTheme.typography.bodyLarge,
-            color = PhoneProofColors.TextSecondary,
+            color = PhoneProofTheme.colors.textSecondary,
         )
 
         Spacer(Modifier.height(8.dp))
@@ -75,8 +75,8 @@ fun HomeScreen(
                 .height(72.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = PhoneProofColors.Accent,
-                contentColor = PhoneProofColors.TextPrimary,
+                containerColor = PhoneProofTheme.colors.accent,
+                contentColor = PhoneProofTheme.colors.textPrimary,
             ),
         ) {
             Text(text = "Test this phone", style = MaterialTheme.typography.titleLarge)
@@ -88,7 +88,7 @@ fun HomeScreen(
             // false, and overclaiming privacy is worse than not claiming it.
             text = "Your test results stay on this device",
             style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofColors.TextTertiary,
+            color = PhoneProofTheme.colors.textTertiary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )
@@ -98,15 +98,15 @@ fun HomeScreen(
         Text(
             text = "Individual checks",
             style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofColors.TextTertiary,
+            color = PhoneProofTheme.colors.textTertiary,
         )
 
         checks.forEach { check ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(PhoneProofColors.Surface, RoundedCornerShape(12.dp))
-                    .border(1.dp, PhoneProofColors.Border, RoundedCornerShape(12.dp))
+                    .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
+                    .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
                     .clickable(onClick = check.onClick)
                     .padding(14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -116,18 +116,18 @@ fun HomeScreen(
                     Text(
                         text = check.title,
                         style = MaterialTheme.typography.titleMedium,
-                        color = PhoneProofColors.TextPrimary,
+                        color = PhoneProofTheme.colors.textPrimary,
                     )
                     Text(
                         text = check.subtitle,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = PhoneProofColors.TextTertiary,
+                        color = PhoneProofTheme.colors.textTertiary,
                     )
                 }
                 Text(
                     text = "›",
                     style = MaterialTheme.typography.titleLarge,
-                    color = PhoneProofColors.TextTertiary,
+                    color = PhoneProofTheme.colors.textTertiary,
                 )
             }
         }
@@ -135,12 +135,12 @@ fun HomeScreen(
         Spacer(Modifier.weight(1f))
 
         Text(
-            text = "Diagnostics",
+            text = "Settings",
             style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofColors.TextTertiary,
+            color = PhoneProofTheme.colors.textTertiary,
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onOpenDiagnostics)
+                .clickable(onClick = onOpenSettings)
                 .padding(vertical = 8.dp),
             textAlign = TextAlign.Center,
         )

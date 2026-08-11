@@ -17,6 +17,7 @@ import com.phoneproof.checks.device.StorageCheck
 import com.phoneproof.checks.emilock.DeviceAdminSnapshot
 import com.phoneproof.checks.emilock.EmiLockEvaluator
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -97,7 +98,7 @@ class ScanScreenshotTest {
 
     private fun render(name: String, state: ScanUiState) {
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 ScanScreen(
                     state = state,
                     onRescan = {},

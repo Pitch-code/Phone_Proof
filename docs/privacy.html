@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PhoneProof — Privacy Policy</title>
+<style>
+  :root { color-scheme: dark light; }
+  body {
+    margin: 0 auto; padding: 2rem 1.25rem 4rem; max-width: 44rem;
+    font: 16px/1.65 -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #0a0a0b; color: #fafafa;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+  h2 { font-size: 1.1rem; margin-top: 2.25rem; }
+  .updated { color: #a1a1aa; font-size: .9rem; margin-top: 0; }
+  .box { border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 1rem 1.15rem; margin: 1.5rem 0; }
+  code { background: rgba(255,255,255,.08); padding: .1rem .35rem; border-radius: 4px; font-size: .9em; }
+  a { color: #3b82f6; }
+  ul { padding-left: 1.2rem; }
+  @media (prefers-color-scheme: light) {
+    body { background: #fafafa; color: #18181b; }
+    .box { border-color: rgba(0,0,0,.12); }
+    .updated { color: #52525b; }
+    code { background: rgba(0,0,0,.06); }
+    a { color: #2563eb; }
+  }
+</style>
+</head>
+<body>
+
+<h1>PhoneProof — Privacy Policy</h1>
+<p class="updated">Last updated 11 August 2026 · applies to version 0.1.0</p>
+
+<div class="box">
+  <strong>The short version.</strong> PhoneProof has no account, no server and no analytics. It
+  inspects the phone it is installed on and keeps the results on that phone. Nothing you test is
+  sent anywhere.
+</div>
+
+<h2>What the app collects</h2>
+<p>Nothing is collected by us, because there is nowhere for it to go. The app has no backend.</p>
+<p>What it <em>reads</em> from the phone, in order to inspect it:</p>
+<ul>
+  <li>Model, manufacturer, chipset, Android version and security patch date</li>
+  <li>Storage size and free space</li>
+  <li>The list of sensors present</li>
+  <li>Display resolution and supported refresh rates</li>
+  <li>Whether any app holds device-administrator control</li>
+  <li>Whether the phone shows signs of root or an unlocked bootloader</li>
+  <li>Which parts of the screen respond to touch during the touch test</li>
+</ul>
+<p>
+  All of it stays in the app's private storage on the device. It is not transmitted, and it is
+  deleted when you uninstall the app.
+</p>
+
+<h2>What the app cannot read</h2>
+<p>
+  Some things are worth naming because people reasonably assume an inspection app reads them.
+  It does not, and on modern Android it cannot: your <strong>IMEI or serial number</strong>
+  (restricted to system apps since Android 10), your contacts, your messages, your call log, your
+  photos, your location, and your accounts.
+</p>
+
+<h2>Permissions</h2>
+<p>
+  Version 0.1.0 requests <strong>no runtime permissions at all</strong> and has no internet
+  permission. If a future version adds the camera — for reading an IMEI from a box label, for
+  example — it will be requested at the moment it is used, with the reason on screen, and this
+  page will be updated first.
+</p>
+
+<h2>Advertising</h2>
+<p>
+  This version contains <strong>no advertising and no advertising SDK</strong>. When ads are
+  introduced, Google's advertising identifier will leave the device as part of serving them, this
+  page will be updated to say so before that version ships, and the app's own wording will change
+  from "nothing leaves this device" to "your test results stay on this device". We would rather
+  under-claim privacy than overstate it.
+</p>
+
+<h2>Backups</h2>
+<p>
+  Cloud backup and device-to-device transfer are switched off in the app's manifest, so inspection
+  reports are not copied off the device by Android's backup system either.
+</p>
+
+<h2>Children</h2>
+<p>PhoneProof is a tool for buying second-hand phones and is not directed at children.</p>
+
+<h2>Changes</h2>
+<p>
+  This page is versioned alongside the app in
+  <a href="https://github.com/Pitch-code/Phone_Proof">the public repository</a>, so every change to
+  it is visible in the commit history.
+</p>
+
+<h2>Contact</h2>
+<p>
+  Questions or a privacy concern:
+  <a href="https://github.com/Pitch-code/Phone_Proof/issues">open an issue on GitHub</a>.
+</p>
+
+</body>
+</html>
