@@ -54,6 +54,22 @@ class EmiLockScreenshotTest {
     }
 
     @Test
+    fun the_running_state_before_a_verdict_exists() {
+        // A null result is what the screen shows for the first 320ms of every visit. It had no
+        // render at all until now, which by this project's own rule means it was never reviewed.
+        composeRule.setContent {
+            PhoneProofTheme(darkTheme = true) {
+                EmiLockScreen(
+                    result = null,
+                    onRecheck = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/emilock-5-checking.png")
+    }
+
+    @Test
     fun device_owner_is_the_expensive_one() {
         render(
             "emilock-2-device-owner",
