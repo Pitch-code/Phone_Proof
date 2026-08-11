@@ -33,6 +33,9 @@ android {
 
     buildFeatures {
         compose = true
+        // Needed so the diagnostics report can state which build produced it. A log without a
+        // version is guesswork.
+        buildConfig = true
     }
 
     compileOptions {
@@ -48,7 +51,11 @@ kotlin {
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
+    implementation(project(":core:diagnostics"))
+    implementation(project(":feature:home"))
     implementation(project(":feature:touchgrid"))
+    implementation(project(":feature:emilock"))
+    implementation(project(":feature:diagnostics"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

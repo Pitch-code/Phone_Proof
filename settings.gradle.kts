@@ -32,9 +32,15 @@ rootProject.name = "PhoneProof"
 
 // Pure-Kotlin logic modules. No Android dependency, so their tests run in milliseconds.
 include(":core:model")
+include(":core:diagnostics")
 include(":checks:touch")
+include(":checks:emilock")
 
 // Android modules.
 include(":core:designsystem")
+include(":core:device")
 include(":feature:touchgrid")
+include(":feature:home")
+include(":feature:diagnostics")
+include(":feature:emilock")
 include(":app")

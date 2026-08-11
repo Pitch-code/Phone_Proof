@@ -25,14 +25,21 @@ That is the gap this fills.
 
 ## Status
 
-Early. One check is implemented end to end: **touch coverage**, which maps the screen into a grid
-and finds contiguous unresponsive patches.
+Early. Two checks are implemented end to end:
 
-The remaining v1 checks are specified but not yet built: EMI/device-admin lock detection, claimed
-vs measured hardware, real storage size and speed, security patch age, dead pixel and burn-in
-patterns, measured battery discharge with cycle count, sensor inventory, camera/mic/speaker with
-waveform analysis, IMEI capture with checksum and CEIR deep link, and a coached physical
-walkthrough.
+- **Remote lock control** — asks the platform which apps hold device-owner, profile-owner or
+  device-administrator control. This is how phones sold on instalments in India are locked when
+  payments stop, which makes it the check that catches the loss of the whole purchase price rather
+  than a negotiation.
+- **Touch coverage** — maps the screen into a grid and finds contiguous unresponsive patches.
+
+Plus an in-app **diagnostics log** that captures errors and uncaught exceptions and can be copied in
+one tap, so a bug report is an exact log rather than a remembered symptom.
+
+Still to build: claimed vs measured hardware, real storage size and speed, security patch age, dead
+pixel and burn-in patterns, measured battery discharge with cycle count, sensor inventory,
+camera/mic/speaker with waveform analysis, IMEI capture with checksum and CEIR deep link, and a
+coached physical walkthrough.
 
 ## Screens
 
@@ -40,8 +47,12 @@ Rendered straight from the code, not mockups. See [`screenshots/`](screenshots/)
 
 | | |
 |---|---|
-| ![ready](screenshots/touchgrid-1-ready.png) | ![in progress](screenshots/touchgrid-2-in-progress.png) |
-| ![dead zone found](screenshots/touchgrid-3-dead-zone.png) | ![clean screen](screenshots/touchgrid-4-pass.png) |
+| ![home](screenshots/home.png) | ![remote lock failure](screenshots/emilock-2-device-owner.png) |
+| ![touch test in progress](screenshots/touchgrid-2-in-progress.png) | ![dead zone found](screenshots/touchgrid-3-dead-zone.png) |
+| ![caution](screenshots/touchgrid-5-caution.png) | ![diagnostics](screenshots/diagnostics-2-with-crash.png) |
+
+Launcher icon at the sizes it is actually seen at, including the Android 13+ themed variant that
+strips colour: [`icon-sizes.png`](screenshots/icon-sizes.png).
 
 ## Building
 

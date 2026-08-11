@@ -3,7 +3,6 @@ package com.phoneproof.feature.touchgrid
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -36,12 +34,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.touch.Cell
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
-import com.phoneproof.core.designsystem.component.OutcomeBadge
+import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.accent
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.designsystem.theme.PhoneProofMotion
 import com.phoneproof.core.designsystem.theme.PhoneProofType
-import com.phoneproof.core.model.CheckResult
 
 /**
  * The touch coverage test.
@@ -158,7 +155,7 @@ private fun FinishedLayout(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            state.result?.let { ResultPanel(it) }
+            state.result?.let { CheckResultCard(it) }
             OutlinedButton(
                 onClick = onRetest,
                 modifier = Modifier
@@ -299,84 +296,5 @@ private fun Readout(state: TouchGridUiState) {
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofColors.TextTertiary,
         )
-    }
-}
-
-@Composable
-private fun ResultPanel(result: CheckResult) {
-    val accent = result.outcome.accent()
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(PhoneProofColors.Surface, RoundedCornerShape(14.dp))
-            .border(1.dp, PhoneProofColors.Border, RoundedCornerShape(14.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = result.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = PhoneProofColors.TextPrimary,
-            )
-            OutcomeBadge(result.outcome)
-        }
-
-        Text(
-            text = result.headline,
-            style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofColors.TextPrimary,
-        )
-
-        // Consequence and action are absent only for PASS and UNKNOWN: for anything negative the
-        // model refuses to be constructed without them, so a bare verdict cannot reach this UI.
-        result.consequence?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodyMedium,
-                color = PhoneProofColors.TextSecondary,
-            )
-        }
-        result.action?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.labelLarge,
-                color = accent,
-            )
-        }
-
-        if (result.measurements.isNotEmpty()) {
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                result.measurements.forEach { measurement ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = measurement.label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PhoneProofColors.TextTertiary,
-                        )
-                        Text(
-                            text = measurement.display,
-                            style = PhoneProofType.Numeric,
-                            color = PhoneProofColors.TextPrimary,
-                        )
-                    }
-                }
-            }
-        }
-
-        if (result.falsePositiveCauses.isNotEmpty()) {
-            Text(
-                text = "Could this be wrong? " + result.falsePositiveCauses.first(),
-                style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextTertiary,
-            )
-        }
     }
 }

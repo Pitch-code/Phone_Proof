@@ -9,7 +9,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
-import com.phoneproof.feature.touchgrid.TouchGridRoute
 
 class MainActivity : ComponentActivity() {
 
@@ -26,9 +25,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = PhoneProofColors.Background,
                 ) {
-                    // Only the touch check exists so far, so it is the whole app for now.
-                    // Navigation arrives with the second check rather than being invented early.
-                    TouchGridRoute(modifier = Modifier.fillMaxSize())
+                    PhoneProofNavHost(modifier = Modifier.fillMaxSize())
                 }
             }
         }
