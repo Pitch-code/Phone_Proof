@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A coverage grid with one cell dead: the app's whole idea in one mark, and nothing else in the
+  category looks like it. Competitors all use a phone outline, a magnifier or a tick, none of which
+  survive being seen small in a crowded search result.
+
+  Geometry: 16px cells with 6px gaps at x/y = 24, 46, 68. That spans 24..84 of the 108 viewport,
+  which is centred and sits inside the 66px adaptive-icon safe zone (21..87). An earlier version
+  spanned only 44px and rendered noticeably weak at 24dp.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M24,24h16v16h-16z M46,24h16v16h-16z M68,24h16v16h-16z M24,46h16v16h-16z M68,46h16v16h-16z M24,68h16v16h-16z M46,68h16v16h-16z M68,68h16v16h-16z" />
+
+    <!-- The dead cell. -->
+    <path
+        android:fillColor="#F43F5E"
+        android:pathData="M46,46h16v16h-16z" />
+</vector>

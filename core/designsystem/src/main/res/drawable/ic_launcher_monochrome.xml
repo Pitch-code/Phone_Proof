@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Themed-icon variant for Android 13+, which strips all colour to a single tint.
+
+  The centre cell is omitted rather than recoloured. Reusing the colour artwork here flattens the
+  red cell to the tint and the mark collapses into a plain 3x3 grid, indistinguishable from a
+  calculator or an app drawer. An absence survives losing colour and still says "one is dead".
+
+  Geometry matches ic_launcher_foreground exactly so the two variants register identically.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,24h16v16h-16z M46,24h16v16h-16z M68,24h16v16h-16z M24,46h16v16h-16z M68,46h16v16h-16z M24,68h16v16h-16z M46,68h16v16h-16z M68,68h16v16h-16z" />
+</vector>
