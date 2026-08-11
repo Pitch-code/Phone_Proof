@@ -13,6 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -99,7 +102,12 @@ private fun TestingLayout(
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+                // Only the overlay is inset. The canvas above deliberately keeps no inset at all,
+                // because the test has to reach the true physical edges of the screen — insetting
+                // it would leave the strips under the status and navigation bars untestable, and
+                // those edges are where dead touch zones usually are.
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -134,7 +142,10 @@ private fun FinishedLayout(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background),
+            .background(PhoneProofColors.Background)
+            // Safe to inset the whole thing here: once the test is over the grid is a map of what
+            // was found, not a surface anyone is still touching.
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Box(
             modifier = Modifier

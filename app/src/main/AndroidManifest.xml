@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <queries>
+        <!--
+          Makes device-administrator apps visible so their real name can be shown instead of a raw
+          package id. On a test device the lock check reported "com.microsoft.office.outlook", which
+          is accurate but reads like a fault to anyone who is not a developer; with this it reads
+          "Outlook".
+
+          Deliberately scoped to apps declaring a device-admin receiver — exactly the set this check
+          reports on — rather than requesting QUERY_ALL_PACKAGES, which Play treats as sensitive and
+          which would be wildly disproportionate for resolving a handful of names.
+        -->
+        <intent>
+            <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+        </intent>
+    </queries>
+
     <!--
       No permissions are declared yet, and that is deliberate.
       Every permission gets added only when the check that needs it is built, and is

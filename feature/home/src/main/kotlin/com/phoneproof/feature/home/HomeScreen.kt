@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,6 +46,10 @@ fun HomeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(PhoneProofColors.Background)
+            // safeDrawing, not statusBars: it also covers the navigation bar, gesture areas and
+            // display cutouts, so this holds on a notch phone and a 3-button phone alike rather
+            // than being tuned to one handset.
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {

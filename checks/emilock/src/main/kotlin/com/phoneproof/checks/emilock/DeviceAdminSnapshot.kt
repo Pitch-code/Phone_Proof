@@ -33,6 +33,25 @@ data class DeviceAdminSnapshot(
     val admins: List<AdminApp> = emptyList(),
     val queryFailed: Boolean = false,
 ) {
+    companion object {
+        /**
+         * Builds a snapshot from a platform result where **null means the call failed** and an
+         * empty list means the platform answered and found nothing.
+         *
+         * This distinction exists as its own named function because getting it backwards is
+         * exactly what happened on a real device: `DevicePolicyManager.getActiveAdmins()` returns
+         * null when there are no administrators, that null was treated as a failed query, and a
+         * perfectly clean phone reported "can't tell" instead of passing. A user checking a phone
+         * they were about to buy got no answer at all.
+         */
+        fun from(admins: List<AdminApp>?): DeviceAdminSnapshot =
+            if (admins == null) {
+                DeviceAdminSnapshot(queryFailed = true)
+            } else {
+                DeviceAdminSnapshot(admins = admins)
+            }
+    }
+
     val deviceOwners: List<AdminApp> get() = admins.filter { it.isDeviceOwner }
     val profileOwners: List<AdminApp> get() = admins.filter { it.isProfileOwner }
 

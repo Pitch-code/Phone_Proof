@@ -128,4 +128,42 @@ class EmiLockEvaluatorTest {
     fun `a blank package name is rejected outright`() {
         assertThat(runCatching { AdminApp("  ") }.isFailure).isTrue()
     }
+
+    // --- The null-versus-empty distinction, which a real device got wrong. ---
+    //
+    // DevicePolicyManager.getActiveAdmins() returns null when there are no administrators. That
+    // null was being read as "the query failed", so a clean phone reported "can't tell" instead of
+    // passing — the least useful possible answer for someone standing there with cash. These tests
+    // pin the semantics down so it cannot drift back.
+
+    @Test
+    fun `an empty list means the platform answered and found nothing - that is a pass`() {
+        val snapshot = DeviceAdminSnapshot.from(emptyList())
+        assertThat(snapshot.queryFailed).isFalse()
+        assertThat(EmiLockEvaluator.evaluate(snapshot).outcome).isEqualTo(CheckOutcome.PASS)
+    }
+
+    @Test
+    fun `null means the platform could not be asked - that is CAN'T TELL`() {
+        val snapshot = DeviceAdminSnapshot.from(null)
+        assertThat(snapshot.queryFailed).isTrue()
+        assertThat(EmiLockEvaluator.evaluate(snapshot).outcome).isEqualTo(CheckOutcome.UNKNOWN)
+    }
+
+    @Test
+    fun `a populated list is carried through unchanged`() {
+        val admins = listOf(admin("com.a", "A"), admin("com.b", deviceOwner = true))
+        val snapshot = DeviceAdminSnapshot.from(admins)
+        assertThat(snapshot.queryFailed).isFalse()
+        assertThat(snapshot.admins).isEqualTo(admins)
+        assertThat(EmiLockEvaluator.evaluate(snapshot).outcome).isEqualTo(CheckOutcome.FAIL)
+    }
+
+    @Test
+    fun `empty and null produce genuinely different outcomes`() {
+        // The whole point: these two must never collapse into the same answer.
+        val fromEmpty = EmiLockEvaluator.evaluate(DeviceAdminSnapshot.from(emptyList())).outcome
+        val fromNull = EmiLockEvaluator.evaluate(DeviceAdminSnapshot.from(null)).outcome
+        assertThat(fromEmpty).isNotEqualTo(fromNull)
+    }
 }

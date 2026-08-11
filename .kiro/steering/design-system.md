@@ -67,6 +67,31 @@ This is not a style preference. The app measures battery discharge under a load 
 A perpetually animating background is an uncontrolled load and **would corrupt the measurement**.
 An infinite animation is a correctness bug in this codebase.
 
+## Window insets — every screen, every time
+
+`MainActivity` calls `enableEdgeToEdge()`, so **nothing is inset for you**. A screen that does not
+consume insets draws its content underneath the status bar and the navigation bar. That shipped
+once: the app title collided with the clock, and the bottom row of buttons sat on top of the
+navigation keys.
+
+Every screen root applies:
+
+```kotlin
+Modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+```
+
+`safeDrawing` rather than `statusBars`, because it also covers the navigation bar, gesture areas
+and display cutouts — so it holds on a notch phone, a punch-hole phone and a 3-button phone
+without being tuned to any one handset.
+
+**The one deliberate exception:** the touch-coverage canvas takes *no* inset. The test must reach
+the true physical edges of the screen, and insetting it would leave the strips beneath the system
+bars untestable — which is exactly where dead touch zones tend to be. Only the overlay on top of
+that canvas is inset.
+
+⚠️ Robolectric reports no system bars, so **inset behaviour cannot be verified by screenshot
+test.** It has to be checked on a device. Do not claim an inset fix is verified from a render.
+
 ## Screen-level notes
 
 - **Home** — not a dashboard. One 72 dp primary action. Privacy line beneath it.
