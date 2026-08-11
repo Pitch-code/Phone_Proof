@@ -71,7 +71,7 @@ class ScanScreenshotTest {
         sensors = sensors(1, 2, 5),
     )
 
-    private fun render(name: String, facts: DeviceFacts, admins: DeviceAdminSnapshot) {
+    private fun finishedState(facts: DeviceFacts, admins: DeviceAdminSnapshot): ScanUiState {
         val results = listOf(
             EmiLockEvaluator.evaluate(admins),
             BuildIntegrityCheck.evaluate(facts),
@@ -80,10 +80,19 @@ class ScanScreenshotTest {
             SensorInventoryCheck.evaluate(facts),
             DisplayCheck.evaluate(facts),
         )
+        return ScanUiState(
+            steps = results.map {
+                ScanStep(id = it.id, label = it.title, state = StepState.DONE, result = it)
+            },
+            finished = true,
+        )
+    }
+
+    private fun render(name: String, state: ScanUiState) {
         composeRule.setContent {
             PhoneProofTheme(darkTheme = true) {
                 ScanScreen(
-                    results = results,
+                    state = state,
                     onRescan = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -94,21 +103,43 @@ class ScanScreenshotTest {
 
     @Test
     fun a_clean_phone() {
-        render("scan-1-clean", healthy, DeviceAdminSnapshot.from(emptyList()))
+        render("scan-1-clean", finishedState(healthy, DeviceAdminSnapshot.from(emptyList())))
     }
 
     @Test
     fun a_phone_with_real_problems() {
-        render("scan-2-problems", suspicious, DeviceAdminSnapshot.from(emptyList()))
+        render("scan-2-problems", finishedState(suspicious, DeviceAdminSnapshot.from(emptyList())))
     }
 
     @Test
-    fun still_reading() {
-        composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
-                ScanScreen(results = emptyList(), onRescan = {}, modifier = Modifier.fillMaxSize())
-            }
-        }
-        composeRule.onRoot().captureRoboImage("$outputDir/scan-3-empty.png")
+    fun mid_scan_with_two_done_one_running_and_three_waiting() {
+        // The state that only exists for about two seconds on a real device, and therefore the one
+        // most likely to ship wrong without a render of it.
+        val done = listOf(
+            EmiLockEvaluator.evaluate(DeviceAdminSnapshot.from(emptyList())),
+            BuildIntegrityCheck.evaluate(healthy),
+        )
+        val steps = done.map {
+            ScanStep(id = it.id, label = it.title, state = StepState.DONE, result = it)
+        } + listOf(
+            ScanStep(SecurityPatchCheck.CHECK_ID, "Reading the security patch date", StepState.RUNNING),
+            ScanStep(StorageCheck.CHECK_ID, "Measuring storage"),
+            ScanStep(SensorInventoryCheck.CHECK_ID, "Counting sensors"),
+            ScanStep(DisplayCheck.CHECK_ID, "Testing the display"),
+        )
+        render("scan-3-running", ScanUiState(steps = steps, finished = false))
+    }
+
+    @Test
+    fun the_very_first_frame_before_anything_has_run() {
+        val steps = listOf(
+            ScanStep(EmiLockEvaluator.CHECK_ID, "Checking for remote lock control", StepState.RUNNING),
+            ScanStep(BuildIntegrityCheck.CHECK_ID, "Verifying the software is genuine"),
+            ScanStep(SecurityPatchCheck.CHECK_ID, "Reading the security patch date"),
+            ScanStep(StorageCheck.CHECK_ID, "Measuring storage"),
+            ScanStep(SensorInventoryCheck.CHECK_ID, "Counting sensors"),
+            ScanStep(DisplayCheck.CHECK_ID, "Testing the display"),
+        )
+        render("scan-4-starting", ScanUiState(steps = steps, finished = false))
     }
 }

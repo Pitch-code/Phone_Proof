@@ -1,14 +1,16 @@
 package com.phoneproof.feature.scan
 
+import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.checks.device.BuildIntegrityCheck
+import com.phoneproof.checks.device.DeviceFacts
 import com.phoneproof.checks.device.DisplayCheck
 import com.phoneproof.checks.device.SecurityPatchCheck
 import com.phoneproof.checks.device.SensorInventoryCheck
@@ -17,59 +19,68 @@ import com.phoneproof.checks.emilock.EmiLockEvaluator
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.diagnostics.Diagnostics
-import com.phoneproof.core.model.CheckResult
 
 @Composable
-fun ScanRoute(modifier: Modifier = Modifier) {
+fun ScanRoute(
+    modifier: Modifier = Modifier,
+    viewModel: ScanViewModel = viewModel(),
+) {
     val context = LocalContext.current
-    var revision by remember { mutableIntStateOf(0) }
-    var results by remember { mutableStateOf<List<CheckResult>>(emptyList()) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    remember(revision) {
-        results = runCatching { runScan(context) }
-            .onFailure { Diagnostics.error(TAG, "scan failed", it) }
-            .getOrDefault(emptyList())
-        revision
+    // The facts are read once per scan attempt and shared by the checks that need them, so six
+    // checks do not each re-read the same platform values.
+    val startScan = remember(context) {
+        {
+            val facts = runCatching { DeviceFactsReader(context, Diagnostics.recorder).read() }
+                .onFailure { Diagnostics.error("ScanRoute", "reading device facts failed", it) }
+                .getOrNull()
+            viewModel.start(tasks(context, facts))
+        }
     }
 
+    LaunchedEffect(Unit) { startScan() }
+
     ScanScreen(
-        results = results,
-        onRescan = { revision++ },
+        state = state,
+        onRescan = startScan,
         modifier = modifier,
     )
 }
 
 /**
- * Runs every check that needs nothing from the user.
+ * The scan, in the order a buyer should see it.
  *
- * Ordered worst-first is tempting, but the list is ordered by *importance to a buyer* instead: the
- * remote-lock check leads because it is the one that can cost the entire purchase price. The tally
- * at the top of the screen is what directs attention to failures.
- *
- * Each check is wrapped individually so one misbehaving read cannot empty the whole report — the
- * least cooperative phone would otherwise produce the least information, which is backwards.
+ * Ordered by what it costs to get wrong, not by how fast each check runs: remote lock leads because
+ * it is the only one here that can cost the entire purchase price. Every task is individually
+ * fallible — the ViewModel catches per check — so one uncooperative read cannot empty the report.
  */
-private fun runScan(context: android.content.Context): List<CheckResult> {
+private fun tasks(context: Context, facts: DeviceFacts?): List<ScanTask> {
     val diagnostics = Diagnostics.recorder
-    val facts = DeviceFactsReader(context, diagnostics).read()
-    val todayEpochDay = System.currentTimeMillis() / 86_400_000L
+    val tasks = mutableListOf<ScanTask>()
 
-    val checks: List<Pair<String, () -> CheckResult>> = listOf(
-        "emilock" to {
-            EmiLockEvaluator.evaluate(DeviceAdminInspector(context, diagnostics).snapshot())
-        },
-        "integrity" to { BuildIntegrityCheck.evaluate(facts) },
-        "patch" to { SecurityPatchCheck.evaluate(facts, todayEpochDay) },
-        "storage" to { StorageCheck.evaluate(facts) },
-        "sensors" to { SensorInventoryCheck.evaluate(facts) },
-        "display" to { DisplayCheck.evaluate(facts) },
-    )
-
-    return checks.mapNotNull { (name, run) ->
-        runCatching(run)
-            .onFailure { Diagnostics.error(TAG, "check '$name' threw", it) }
-            .getOrNull()
+    tasks += ScanTask(EmiLockEvaluator.CHECK_ID, "Checking for remote lock control") {
+        EmiLockEvaluator.evaluate(DeviceAdminInspector(context, diagnostics).snapshot())
     }
-}
 
-private const val TAG = "ScanRoute"
+    if (facts != null) {
+        val todayEpochDay = System.currentTimeMillis() / 86_400_000L
+        tasks += ScanTask(BuildIntegrityCheck.CHECK_ID, "Verifying the software is genuine") {
+            BuildIntegrityCheck.evaluate(facts)
+        }
+        tasks += ScanTask(SecurityPatchCheck.CHECK_ID, "Reading the security patch date") {
+            SecurityPatchCheck.evaluate(facts, todayEpochDay)
+        }
+        tasks += ScanTask(StorageCheck.CHECK_ID, "Measuring storage") {
+            StorageCheck.evaluate(facts)
+        }
+        tasks += ScanTask(SensorInventoryCheck.CHECK_ID, "Counting sensors") {
+            SensorInventoryCheck.evaluate(facts)
+        }
+        tasks += ScanTask(DisplayCheck.CHECK_ID, "Testing the display") {
+            DisplayCheck.evaluate(facts)
+        }
+    }
+
+    return tasks
+}

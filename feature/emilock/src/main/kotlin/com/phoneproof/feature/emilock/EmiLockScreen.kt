@@ -1,6 +1,12 @@
 package com.phoneproof.feature.emilock
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.phoneproof.core.designsystem.component.CategoryChip
+import com.phoneproof.core.designsystem.component.CheckCategory
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.theme.PhoneProofColors
 import com.phoneproof.core.model.CheckResult
@@ -54,11 +62,7 @@ fun EmiLockScreen(
         )
 
         if (result == null) {
-            Text(
-                text = "Checking…",
-                style = MaterialTheme.typography.bodyMedium,
-                color = PhoneProofColors.TextTertiary,
-            )
+            CheckingRow()
         } else {
             CheckResultCard(result)
         }
@@ -73,5 +77,34 @@ fun EmiLockScreen(
             // again", so re-running has to be one obvious tap.
             Text("Check again")
         }
+    }
+}
+
+/** Mirrors the running row used by the full scan, so the two screens read as one instrument. */
+@Composable
+private fun CheckingRow() {
+    val category = CheckCategory.SECURITY
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PhoneProofColors.Surface, RoundedCornerShape(12.dp))
+            .border(1.dp, category.tint.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(16.dp)
+                .background(category.tint, RoundedCornerShape(2.dp)),
+        )
+        Text(
+            text = "Asking who controls this phone…",
+            style = MaterialTheme.typography.titleMedium,
+            color = PhoneProofColors.TextPrimary,
+            modifier = Modifier.weight(1f),
+        )
+        CategoryChip(category)
     }
 }

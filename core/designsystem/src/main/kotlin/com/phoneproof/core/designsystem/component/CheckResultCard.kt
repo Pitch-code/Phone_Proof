@@ -2,6 +2,10 @@ package com.phoneproof.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +40,7 @@ fun CheckResultCard(
     modifier: Modifier = Modifier,
 ) {
     val accent = result.outcome.accent()
+    val category = CheckCategory.forCheckId(result.id)
 
     Column(
         modifier = modifier
@@ -50,13 +55,28 @@ fun CheckResultCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = result.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = PhoneProofColors.TextPrimary,
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // A tinted bar keyed to the category, so the eye can find the hardware cards
+                // among the software ones without reading every title.
+                Box(
+                    modifier = Modifier
+                        .width(3.dp)
+                        .height(18.dp)
+                        .background(category.tint, RoundedCornerShape(2.dp)),
+                )
+                Text(
+                    text = result.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = PhoneProofColors.TextPrimary,
+                )
+            }
             OutcomeBadge(result.outcome)
         }
+
+        CategoryChip(category)
 
         Text(
             text = result.headline,

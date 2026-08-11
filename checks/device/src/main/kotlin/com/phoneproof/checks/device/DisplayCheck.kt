@@ -16,7 +16,7 @@ import kotlin.math.roundToInt
  */
 object DisplayCheck {
 
-    const val CHECK_ID: String = "hardware.display"
+    const val CHECK_ID: String = "screen.display"
     private const val TITLE = "Display"
 
     /** Rates above this are marketed as "high refresh". */
