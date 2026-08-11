@@ -39,7 +39,7 @@ import com.phoneproof.checks.touch.Cell
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.accent
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofMotion
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 
@@ -90,7 +90,7 @@ private fun TestingLayout(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background),
+            .background(PhoneProofTheme.colors.background),
     ) {
         CoverageCanvas(
             state = state,
@@ -122,8 +122,8 @@ private fun TestingLayout(
                     onClick = onFinish,
                     modifier = Modifier.height(48.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = PhoneProofColors.Accent,
-                        contentColor = PhoneProofColors.TextPrimary,
+                        containerColor = PhoneProofTheme.colors.accent,
+                        contentColor = PhoneProofTheme.colors.textPrimary,
                     ),
                 ) {
                     Text("See the result")
@@ -142,7 +142,7 @@ private fun FinishedLayout(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background)
+            .background(PhoneProofTheme.colors.background)
             // Safe to inset the whole thing here: once the test is over the grid is a map of what
             // was found, not a surface anyone is still touching.
             .windowInsetsPadding(WindowInsets.safeDrawing),
@@ -234,7 +234,13 @@ private fun CoverageCanvas(
 
     // Falls back to Fail only when there is no verdict yet, which is a state where nothing is
     // flagged anyway.
-    val flagColour = state.result?.outcome?.accent() ?: PhoneProofColors.Fail
+    val flagColour = state.result?.outcome?.accent() ?: PhoneProofTheme.colors.fail
+
+    // Hoisted out of the Canvas: the draw lambda is not a composable scope, so it cannot read the
+    // palette. Reading them once per composition is also cheaper than once per cell — this loop
+    // runs 512 times.
+    val coveredColour = PhoneProofTheme.colors.accent.copy(alpha = 0.34f)
+    val emptyColour = PhoneProofTheme.colors.gridEmpty
 
     Canvas(modifier = modifier.then(gestureModifier)) {
         val cellWidth = size.width / state.spec.columns
@@ -260,8 +266,8 @@ private fun CoverageCanvas(
                     flagged -> flagColour.copy(alpha = 0.45f + 0.40f * highlight)
                     // Strong enough to be unmistakable at arm's length in a shop. The earlier
                     // 12% fill was invisible against the background in a rendered check.
-                    covered -> PhoneProofColors.Accent.copy(alpha = 0.34f)
-                    else -> PhoneProofColors.GridEmpty
+                    covered -> coveredColour
+                    else -> emptyColour
                 }
 
                 drawRect(
@@ -287,25 +293,25 @@ private fun Readout(state: TouchGridUiState) {
                 "Keep going — cover the edges and corners"
             },
             style = MaterialTheme.typography.titleMedium,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
             textAlign = TextAlign.Center,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
                 text = "${state.touchedCount} / ${state.cellCount}",
                 style = PhoneProofType.NumericLarge,
-                color = PhoneProofColors.TextPrimary,
+                color = PhoneProofTheme.colors.textPrimary,
             )
             Text(
                 text = "${state.coveragePercent}%",
                 style = PhoneProofType.NumericLarge,
-                color = PhoneProofColors.Accent,
+                color = PhoneProofTheme.colors.accent,
             )
         }
         Text(
             text = "cells covered",
             style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofColors.TextTertiary,
+            color = PhoneProofTheme.colors.textTertiary,
         )
     }
 }

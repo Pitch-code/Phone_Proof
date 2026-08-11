@@ -10,6 +10,7 @@ import com.phoneproof.checks.touch.GridSpec
 import com.phoneproof.checks.touch.TouchCoverage
 import com.phoneproof.checks.touch.TouchCoverageEvaluator
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,7 +54,7 @@ class TouchGridScreenshotTest {
 
     private fun render(name: String, state: TouchGridUiState) {
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 TouchGridScreen(
                     state = state,
                     onTouch = { _, _ -> },

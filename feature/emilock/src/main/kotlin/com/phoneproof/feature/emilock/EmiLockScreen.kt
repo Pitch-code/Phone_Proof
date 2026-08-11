@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CategoryChip
 import com.phoneproof.core.designsystem.component.CheckCategory
 import com.phoneproof.core.designsystem.component.CheckResultCard
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckResult
 
 /**
@@ -43,7 +43,7 @@ fun EmiLockScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background)
+            .background(PhoneProofTheme.colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -51,14 +51,14 @@ fun EmiLockScreen(
         Text(
             text = "Can anyone lock this phone remotely?",
             style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
         Text(
             text = "Phones sold on instalments are locked through Android's device administrator " +
                 "system. If a lender still controls this handset, it can be bricked weeks after " +
                 "you pay — while you are the one holding it.",
             style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofColors.TextSecondary,
+            color = PhoneProofTheme.colors.textSecondary,
         )
 
         if (result == null) {
@@ -87,7 +87,7 @@ private fun CheckingRow() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PhoneProofColors.Surface, RoundedCornerShape(12.dp))
+            .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
             .border(1.dp, category.tint.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
             .padding(14.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -102,7 +102,7 @@ private fun CheckingRow() {
         Text(
             text = "Asking who controls this phone…",
             style = MaterialTheme.typography.titleMedium,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
             modifier = Modifier.weight(1f),
         )
         CategoryChip(category)

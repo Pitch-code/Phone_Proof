@@ -39,7 +39,7 @@ import com.phoneproof.core.designsystem.component.CheckCategory
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.accent
 import com.phoneproof.core.designsystem.component.glyph
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.nounFor
@@ -61,7 +61,7 @@ fun ScanScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background)
+            .background(PhoneProofTheme.colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -81,7 +81,11 @@ fun ScanScreen(
                         enter = fadeIn(tween(220)) +
                             slideInVertically(tween(220)) { it / 6 },
                     ) {
-                        CheckResultCard(step.result)
+                        // Cards appear one at a time while later checks are still measuring, so a
+                        // FAIL found early would otherwise breathe for the rest of the scan and
+                        // compete with the row that is currently working. It starts breathing only
+                        // once everything has finished and the buyer is reading the outcome.
+                        CheckResultCard(step.result, emphasise = state.finished)
                     }
                     else -> PendingRow(step)
                 }
@@ -117,7 +121,7 @@ private fun Header(state: ScanUiState) {
                 "Checking this phone…"
             },
             style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
 
         if (state.finished) {
@@ -144,12 +148,12 @@ private fun ProgressLine(state: ScanUiState) {
             Text(
                 text = state.runningLabel ?: "Starting…",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PhoneProofColors.TextSecondary,
+                color = PhoneProofTheme.colors.textSecondary,
             )
             Text(
                 text = "${state.doneCount}/${state.steps.size}",
                 style = PhoneProofType.Numeric,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
         }
         // A determinate bar, not a spinner. The buyer can see how much is left, and it finishes
@@ -159,13 +163,13 @@ private fun ProgressLine(state: ScanUiState) {
                 .fillMaxWidth()
                 .height(3.dp)
                 .clip(RoundedCornerShape(2.dp))
-                .background(PhoneProofColors.BorderStrong),
+                .background(PhoneProofTheme.colors.borderStrong),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(target)
                     .height(3.dp)
-                    .background(PhoneProofColors.Accent),
+                    .background(PhoneProofTheme.colors.accent),
             )
         }
     }
@@ -198,7 +202,7 @@ private fun Tally(state: ScanUiState) {
                     Text(
                         text = if (countable) nounFor(count, label) else label,
                         style = MaterialTheme.typography.labelSmall,
-                        color = PhoneProofColors.TextTertiary,
+                        color = PhoneProofTheme.colors.textTertiary,
                     )
                 }
             }
@@ -222,12 +226,12 @@ private fun PendingRow(step: ScanStep) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                if (running) PhoneProofColors.Surface else PhoneProofColors.Background,
+                if (running) PhoneProofTheme.colors.surface else PhoneProofTheme.colors.background,
                 RoundedCornerShape(12.dp),
             )
             .border(
                 1.dp,
-                if (running) category.tint.copy(alpha = 0.45f) else PhoneProofColors.Border,
+                if (running) category.tint.copy(alpha = 0.45f) else PhoneProofTheme.colors.border,
                 RoundedCornerShape(12.dp),
             )
             .padding(14.dp),
@@ -246,7 +250,7 @@ private fun PendingRow(step: ScanStep) {
         Text(
             text = step.label,
             style = MaterialTheme.typography.titleMedium,
-            color = if (running) PhoneProofColors.TextPrimary else PhoneProofColors.TextTertiary,
+            color = if (running) PhoneProofTheme.colors.textPrimary else PhoneProofTheme.colors.textTertiary,
             fontWeight = if (running) FontWeight.Medium else FontWeight.Normal,
             modifier = Modifier.weight(1f),
         )
@@ -256,7 +260,7 @@ private fun PendingRow(step: ScanStep) {
             Text(
                 text = CheckOutcome.UNKNOWN.glyph(),
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
                 modifier = Modifier.size(14.dp),
             )
         }

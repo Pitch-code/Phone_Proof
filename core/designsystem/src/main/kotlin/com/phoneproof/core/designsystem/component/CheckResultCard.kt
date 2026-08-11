@@ -25,7 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
@@ -81,10 +81,10 @@ fun CheckResultCard(
         CheckOutcome.FAIL -> accent.copy(alpha = 0.45f + 0.45f * pulse)
         CheckOutcome.PASS -> accent.copy(alpha = 0.38f)
         CheckOutcome.CAUTION -> accent.copy(alpha = 0.34f)
-        CheckOutcome.UNKNOWN -> PhoneProofColors.Border
+        CheckOutcome.UNKNOWN -> PhoneProofTheme.colors.border
     }
     val borderWidth = if (isProblem) 2.dp else 1.dp
-    val fill = if (isProblem) accent.copy(alpha = 0.07f) else PhoneProofColors.Surface
+    val fill = if (isProblem) accent.copy(alpha = 0.07f) else PhoneProofTheme.colors.surface
 
     Column(
         modifier = modifier
@@ -114,7 +114,7 @@ fun CheckResultCard(
                 Text(
                     text = result.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = PhoneProofColors.TextPrimary,
+                    color = PhoneProofTheme.colors.textPrimary,
                 )
             }
             OutcomeBadge(result.outcome)
@@ -125,14 +125,14 @@ fun CheckResultCard(
         Text(
             text = result.headline,
             style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
 
         result.consequence?.let {
             Text(
                 text = it,
                 style = MaterialTheme.typography.bodyMedium,
-                color = PhoneProofColors.TextSecondary,
+                color = PhoneProofTheme.colors.textSecondary,
             )
         }
 
@@ -157,13 +157,13 @@ fun CheckResultCard(
                         Text(
                             text = measurement.label,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = PhoneProofColors.TextTertiary,
+                            color = PhoneProofTheme.colors.textTertiary,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
                             text = measurement.display,
                             style = PhoneProofType.Numeric,
-                            color = PhoneProofColors.TextPrimary,
+                            color = PhoneProofTheme.colors.textPrimary,
                             textAlign = TextAlign.End,
                             modifier = Modifier.weight(1f),
                         )
@@ -179,7 +179,7 @@ fun CheckResultCard(
             Text(
                 text = "Could this be wrong? " + result.falsePositiveCauses.first(),
                 style = MaterialTheme.typography.labelSmall,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
         }
     }

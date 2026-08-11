@@ -21,10 +21,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.diagnostics.DiagEntry
 import com.phoneproof.core.diagnostics.DiagLevel
@@ -54,7 +55,7 @@ fun DiagnosticsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(PhoneProofColors.Background)
+            .background(PhoneProofTheme.colors.background)
             // Without this the Copy / Share / Clear row sat on top of the navigation bar.
             .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(16.dp),
@@ -63,21 +64,21 @@ fun DiagnosticsScreen(
         Text(
             text = "Diagnostics",
             style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(PhoneProofColors.Surface, RoundedCornerShape(12.dp))
-                .border(1.dp, PhoneProofColors.Border, RoundedCornerShape(12.dp))
+                .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
                 .padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = header,
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextSecondary,
+                color = PhoneProofTheme.colors.textSecondary,
             )
         }
 
@@ -85,7 +86,7 @@ fun DiagnosticsScreen(
             Text(
                 text = "${entries.size} events",
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
             if (droppedCount > 0) {
                 // Surfaced rather than hidden: a truncated log that looks complete sends whoever
@@ -93,7 +94,7 @@ fun DiagnosticsScreen(
                 Text(
                     text = "$droppedCount dropped",
                     style = PhoneProofType.NumericSmall,
-                    color = PhoneProofColors.Caution,
+                    color = PhoneProofTheme.colors.caution,
                 )
             }
         }
@@ -102,7 +103,7 @@ fun DiagnosticsScreen(
             Text(
                 text = "Nothing recorded yet. Errors and crashes will appear here automatically.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
         }
 
@@ -127,8 +128,8 @@ fun DiagnosticsScreen(
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PhoneProofColors.Accent,
-                    contentColor = PhoneProofColors.TextPrimary,
+                    containerColor = PhoneProofTheme.colors.accent,
+                    contentColor = PhoneProofTheme.colors.textPrimary,
                 ),
             ) {
                 Text("Copy log")
@@ -162,8 +163,8 @@ private fun EntryRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(PhoneProofColors.Surface, RoundedCornerShape(10.dp))
-            .border(1.dp, PhoneProofColors.Border, RoundedCornerShape(10.dp))
+            .background(PhoneProofTheme.colors.surface, RoundedCornerShape(10.dp))
+            .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(10.dp))
             .padding(10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -176,32 +177,34 @@ private fun EntryRow(
             Text(
                 text = formatTimestamp(entry.timestampMillis),
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
             Text(
                 text = entry.tag,
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextSecondary,
+                color = PhoneProofTheme.colors.textSecondary,
             )
         }
         Text(
             text = entry.message,
             style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofColors.TextPrimary,
+            color = PhoneProofTheme.colors.textPrimary,
         )
         entry.stackTrace?.let {
             Text(
                 text = it,
                 style = PhoneProofType.NumericSmall,
-                color = PhoneProofColors.TextTertiary,
+                color = PhoneProofTheme.colors.textTertiary,
             )
         }
     }
 }
 
+@Composable
+@ReadOnlyComposable
 private fun DiagLevel.accent(): Color = when (this) {
-    DiagLevel.INFO -> PhoneProofColors.TextSecondary
-    DiagLevel.WARN -> PhoneProofColors.Caution
-    DiagLevel.ERROR -> PhoneProofColors.Fail
-    DiagLevel.CRASH -> PhoneProofColors.Fail
+    DiagLevel.INFO -> PhoneProofTheme.colors.textSecondary
+    DiagLevel.WARN -> PhoneProofTheme.colors.caution
+    DiagLevel.ERROR -> PhoneProofTheme.colors.fail
+    DiagLevel.CRASH -> PhoneProofTheme.colors.fail
 }

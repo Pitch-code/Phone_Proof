@@ -12,6 +12,7 @@ import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.scan.ScanRoute
+import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 
 private object Routes {
@@ -20,6 +21,7 @@ private object Routes {
     const val LOCK = "lock"
     const val SCAN = "scan"
     const val DIAGNOSTICS = "diagnostics"
+    const val SETTINGS = "settings"
 }
 
 /**
@@ -58,7 +60,7 @@ fun PhoneProofNavHost(
                 // The instant scan is the closest thing to the full guided run that exists, and
                 // it already includes the remote-lock check, so the primary action opens it.
                 onStartFullTest = { navController.navigate(Routes.SCAN) },
-                onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -73,6 +75,15 @@ fun PhoneProofNavHost(
 
         composable(Routes.LOCK) {
             EmiLockRoute(modifier = Modifier.fillMaxSize())
+        }
+
+        composable(Routes.SETTINGS) {
+            SettingsRoute(
+                versionName = BuildConfig.VERSION_NAME,
+                versionCode = BuildConfig.VERSION_CODE.toLong(),
+                onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         composable(Routes.DIAGNOSTICS) {

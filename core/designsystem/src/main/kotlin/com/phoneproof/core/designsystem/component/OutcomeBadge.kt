@@ -8,13 +8,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.phoneproof.core.designsystem.theme.PhoneProofColors
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 
 /**
@@ -33,8 +34,8 @@ fun OutcomeBadge(
     val accent = outcome.accent()
     Row(
         modifier = modifier
-            .background(PhoneProofColors.fill(accent), RoundedCornerShape(6.dp))
-            .border(1.dp, PhoneProofColors.outline(accent), RoundedCornerShape(6.dp))
+            .background(PhoneProofTheme.colors.fill(accent), RoundedCornerShape(6.dp))
+            .border(1.dp, PhoneProofTheme.colors.outline(accent), RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -55,11 +56,18 @@ fun OutcomeBadge(
     }
 }
 
+/**
+ * Composable because the outcome colours now come from the active palette: green that reads on
+ * near-black is far too pale on near-white, so each theme carries its own. [glyph] and [label] stay
+ * plain functions — a tick is a tick in any theme.
+ */
+@Composable
+@ReadOnlyComposable
 fun CheckOutcome.accent(): Color = when (this) {
-    CheckOutcome.PASS -> PhoneProofColors.Pass
-    CheckOutcome.CAUTION -> PhoneProofColors.Caution
-    CheckOutcome.FAIL -> PhoneProofColors.Fail
-    CheckOutcome.UNKNOWN -> PhoneProofColors.Unknown
+    CheckOutcome.PASS -> PhoneProofTheme.colors.pass
+    CheckOutcome.CAUTION -> PhoneProofTheme.colors.caution
+    CheckOutcome.FAIL -> PhoneProofTheme.colors.fail
+    CheckOutcome.UNKNOWN -> PhoneProofTheme.colors.unknown
 }
 
 fun CheckOutcome.glyph(): String = when (this) {

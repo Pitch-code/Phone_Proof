@@ -9,6 +9,7 @@ import com.phoneproof.checks.emilock.AdminApp
 import com.phoneproof.checks.emilock.DeviceAdminSnapshot
 import com.phoneproof.checks.emilock.EmiLockEvaluator
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,7 +38,7 @@ class EmiLockScreenshotTest {
     private fun render(name: String, snapshot: DeviceAdminSnapshot) {
         val result = EmiLockEvaluator.evaluate(snapshot)
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 EmiLockScreen(
                     result = result,
                     onRecheck = {},
@@ -58,7 +59,7 @@ class EmiLockScreenshotTest {
         // A null result is what the screen shows for the first 320ms of every visit. It had no
         // render at all until now, which by this project's own rule means it was never reviewed.
         composeRule.setContent {
-            PhoneProofTheme(darkTheme = true) {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 EmiLockScreen(
                     result = null,
                     onRecheck = {},
