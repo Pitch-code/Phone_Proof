@@ -1,5 +1,7 @@
 package com.phoneproof.core.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * The verdict for a single check.
  *
@@ -7,6 +9,7 @@ package com.phoneproof.core.model
  * cannot be determined on Android — battery state of health is privileged, IMEI is unreadable
  * since Android 10 — and saying so is more useful to a buyer than inventing a number.
  */
+@Serializable
 enum class CheckOutcome {
     PASS,
     CAUTION,
@@ -21,6 +24,7 @@ enum class CheckOutcome {
  * proximity sensor as broken during a trade-in, and the wrong answer cost the seller money.
  * A check that cries wolf is worse than no check.
  */
+@Serializable
 enum class Confidence {
     HIGH,
     MEDIUM,
@@ -28,6 +32,7 @@ enum class Confidence {
 }
 
 /** A single measured value, rendered in tabular monospace so digits never shift. */
+@Serializable
 data class Measurement(
     val label: String,
     val value: String,
@@ -47,6 +52,7 @@ data class Measurement(
  *  2. An estimate must never masquerade as a measurement, so low confidence and a FAIL cannot
  *     be combined — that has to be reported as CAUTION instead.
  */
+@Serializable
 data class CheckResult(
     val id: String,
     val title: String,

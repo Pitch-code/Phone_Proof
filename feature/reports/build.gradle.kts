@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.phoneproof.feature.scan"
+    namespace = "com.phoneproof.feature.reports"
     compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
@@ -33,10 +33,8 @@ kotlin {
     jvmToolchain(17)
 }
 
-// Screenshot tests need androidx.compose.ui:ui-test-manifest, which is deliberately a
-// debug-only dependency — shipping a test manifest into a release build would be wrong. The
-// release variant therefore has no activity for Robolectric to launch, so its unit tests are
-// not run. Screenshot verification is a debug-variant concern by design.
+// See feature:settings for why the release variant's unit tests are disabled: ui-test-manifest is
+// debug-only by design, so there is no activity for Robolectric to launch in release.
 tasks.matching { it.name == "testReleaseUnitTest" }.configureEach { enabled = false }
 
 val screenshotDir: String =
@@ -51,9 +49,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
     implementation(project(":core:diagnostics"))
-    implementation(project(":core:device"))
     implementation(project(":core:reports"))
-    implementation(project(":checks:device"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)

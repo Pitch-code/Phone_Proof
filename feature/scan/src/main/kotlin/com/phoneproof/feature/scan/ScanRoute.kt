@@ -1,6 +1,7 @@
 package com.phoneproof.feature.scan
 
 import android.content.Context
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +22,33 @@ import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.reports.ReportStore
+import com.phoneproof.core.reports.SavedReport
+import java.io.File
+
+private const val TAG = "ScanRoute"
+
+/**
+ * Where saved reports live.
+ *
+ * Duplicated deliberately rather than depending on `feature:reports`: a feature module depending on
+ * another feature module is how a module graph turns into a knot. The directory name is asserted
+ * against the reports feature in a test so the two cannot drift apart silently.
+ */
+internal fun reportStore(context: Context): ReportStore =
+    ReportStore(File(context.filesDir, "reports"))
+
+/** "realme RMX5110", or just the model when the manufacturer is already in it. */
+internal fun deviceLabel(): String {
+    val manufacturer = Build.MANUFACTURER.orEmpty().trim()
+    val model = Build.MODEL.orEmpty().trim()
+    return when {
+        model.isEmpty() -> manufacturer.ifEmpty { "Unknown phone" }
+        manufacturer.isEmpty() -> model
+        model.startsWith(manufacturer, ignoreCase = true) -> model
+        else -> "$manufacturer $model"
+    }
+}
 
 @Composable
 fun ScanRoute(
@@ -42,6 +70,34 @@ fun ScanRoute(
     }
 
     LaunchedEffect(Unit) { startScan() }
+
+    // Saved without being asked. The moment a buyer wants a report is after they have handed the
+    // phone back, and a "save this?" prompt is answered wrongly under pressure in front of a seller.
+    //
+    // Keyed on scanId, so this runs once per scan: the id is minted when the scan starts, and saving
+    // the same id twice rewrites one file rather than duplicating the report.
+    val scanId = state.scanId
+    LaunchedEffect(scanId, state.finished) {
+        if (scanId == null || !state.finished) return@LaunchedEffect
+        val results = state.results
+        if (results.isEmpty()) return@LaunchedEffect
+
+        runCatching {
+            val pruned = reportStore(context).save(
+                SavedReport(
+                    id = scanId,
+                    createdAtEpochMs = System.currentTimeMillis(),
+                    deviceLabel = deviceLabel(),
+                    androidLabel = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+                    results = results,
+                ),
+            )
+            Diagnostics.info(TAG, "saved report $scanId (${results.size} results, $pruned pruned)")
+        }.onFailure {
+            // A failed save must never take down the screen showing results the buyer is reading.
+            Diagnostics.error(TAG, "could not save report $scanId", it)
+        }
+    }
 
     ScanScreen(
         state = state,

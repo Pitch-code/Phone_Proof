@@ -17,6 +17,14 @@ data class ScanStep(
 data class ScanUiState(
     val steps: List<ScanStep> = emptyList(),
     val finished: Boolean = false,
+    /**
+     * Identifies this scan attempt, and becomes the saved report's id.
+     *
+     * Generated once when the scan starts so that saving is idempotent: recomposition, or returning
+     * to this screen, rewrites the same file instead of filling the buyer's history with duplicates
+     * of one scan. A fresh scan gets a fresh id and is therefore a separate report.
+     */
+    val scanId: String? = null,
 ) {
     val results: List<CheckResult> get() = steps.mapNotNull { it.result }
     val doneCount: Int get() = steps.count { it.state == StepState.DONE }

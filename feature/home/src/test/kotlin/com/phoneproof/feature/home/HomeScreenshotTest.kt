@@ -44,6 +44,7 @@ class HomeScreenshotTest {
                     ),
                     onStartFullTest = {},
                     onOpenSettings = {},
+                    onOpenReports = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }

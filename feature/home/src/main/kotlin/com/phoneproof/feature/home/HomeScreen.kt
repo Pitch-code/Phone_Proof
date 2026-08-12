@@ -40,6 +40,7 @@ fun HomeScreen(
     checks: List<HomeCheck>,
     onStartFullTest: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenReports: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -133,6 +134,30 @@ fun HomeScreen(
         }
 
         Spacer(Modifier.weight(1f))
+
+        // Given its own row above Settings rather than buried inside it. A report the buyer cannot
+        // find again is the same as no report, and this is the screen they return to.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
+                .clickable(onClick = onOpenReports)
+                .padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Saved reports",
+                style = MaterialTheme.typography.titleMedium,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+            Text(
+                text = "›",
+                style = MaterialTheme.typography.titleLarge,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
+        }
 
         Text(
             text = "Settings",
