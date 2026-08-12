@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
+import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.reports.ReportDetailRoute
@@ -27,6 +28,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val REPORTS = "reports"
     const val SCREEN_PATTERNS = "screen-patterns"
+    const val GUIDE = "guide"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -69,6 +71,11 @@ fun PhoneProofNavHost(
                         subtitle = "Plain colours that make screen faults obvious",
                         onClick = { navController.navigate(Routes.SCREEN_PATTERNS) },
                     ),
+                    HomeCheck(
+                        title = "Check these by hand",
+                        subtitle = "The eight things no app can test for you",
+                        onClick = { navController.navigate(Routes.GUIDE) },
+                    ),
                 ),
                 // The instant scan is the closest thing to the full guided run that exists, and
                 // it already includes the remote-lock check, so the primary action opens it.
@@ -77,6 +84,10 @@ fun PhoneProofNavHost(
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        composable(Routes.GUIDE) {
+            GuideRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.SCREEN_PATTERNS) {
