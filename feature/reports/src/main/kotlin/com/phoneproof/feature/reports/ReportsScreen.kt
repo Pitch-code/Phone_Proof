@@ -57,12 +57,17 @@ fun ReportsScreen(
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textPrimary,
         )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = retentionLine(state),
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
-        )
+        // Suppressed while there is nothing to retain. Announcing "this version keeps your last 2"
+        // to someone with zero reports explains a limit they have not met and reads as an upsell on
+        // an empty screen.
+        if (state.reports.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = retentionLine(state),
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
         when {

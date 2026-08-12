@@ -21,7 +21,7 @@ import com.phoneproof.core.model.CheckResult
 data class TestPattern(
     val name: String,
     val colour: Color,
-    /** What to look for. Shown before the pattern, never on top of it. */
+    /** What to look for on this colour. Drawn in the corner hint, kept small so it hides no pixels. */
     val lookFor: String,
     /** True when the pattern is light, so hint text drawn over it must be dark. */
     val isLight: Boolean,

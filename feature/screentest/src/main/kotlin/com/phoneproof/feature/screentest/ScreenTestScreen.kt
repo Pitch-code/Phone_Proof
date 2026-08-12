@@ -165,6 +165,17 @@ private fun PatternLayout(
                 style = MaterialTheme.typography.labelSmall,
                 color = ink,
             )
+            // lookFor was written for all six patterns and then never rendered, while its own
+            // docstring claimed it was shown. So the pattern screen told the buyer nothing about
+            // what each colour reveals — that stuck pixels are invisible on white, that green is the
+            // subpixel the eye notices most. It is the most useful line on the screen.
+            Text(
+                text = pattern.lookFor,
+                style = MaterialTheme.typography.labelSmall,
+                color = ink,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 24.dp),
+            )
             Text(
                 text = "Tap for the next colour",
                 style = MaterialTheme.typography.labelSmall,

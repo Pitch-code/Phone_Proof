@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
+import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
@@ -31,6 +32,7 @@ private object Routes {
     const val SCREEN_PATTERNS = "screen-patterns"
     const val GUIDE = "guide"
     const val COMPARE = "compare"
+    const val CLAIMS = "claims"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -74,6 +76,11 @@ fun PhoneProofNavHost(
                         onClick = { navController.navigate(Routes.SCREEN_PATTERNS) },
                     ),
                     HomeCheck(
+                        title = "Claimed against measured",
+                        subtitle = "Is it the phone you were promised?",
+                        onClick = { navController.navigate(Routes.CLAIMS) },
+                    ),
+                    HomeCheck(
                         title = "Check these by hand",
                         subtitle = "The eight things no app can test for you",
                         onClick = { navController.navigate(Routes.GUIDE) },
@@ -86,6 +93,10 @@ fun PhoneProofNavHost(
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        composable(Routes.CLAIMS) {
+            ClaimsRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.GUIDE) {

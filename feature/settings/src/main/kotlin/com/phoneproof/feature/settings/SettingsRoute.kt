@@ -14,6 +14,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +49,15 @@ fun SettingsRoute(
                 // the UI says so instead of offering a button that cannot work.
                 billingAvailable = false,
                 entitlement = entitlement,
+                // Derived from the entitlement rather than left null, which is what it was since the
+                // Settings screen was written. The render of the Shop tier made the consequence
+                // obvious: entitlement was SHOP while the Shop card still read "Unavailable",
+                // telling a paying customer they had not bought the thing they were using.
+                ownedPlan = when (entitlement) {
+                    Entitlement.PREMIUM -> PremiumPlan.PREMIUM
+                    Entitlement.SHOP -> PremiumPlan.SHOP
+                    Entitlement.FREE -> null
+                },
                 shopName = branding.name,
                 shopContact = branding.contact,
                 shopLogoPath = branding.logoPath,

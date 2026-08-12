@@ -65,11 +65,10 @@ class ReportStore(
         readAll().firstOrNull { it.id == id }
     }
 
-    suspend fun delete(id: String): Boolean = withContext(io) { fileFor(id).delete() }
-
-    suspend fun clear(): Unit = withContext(io) {
-        jsonFiles().forEach { it.delete() }
-    }
+    // delete() and clear() lived here with no caller in the app, only in tests. Removed rather than
+    // kept "for later": an unused public API on a storage class is where someone eventually deletes
+    // the wrong thing. Pruning already handles the only removal the app actually performs, and a
+    // delete-this-report action can bring back a tested one when it has a screen behind it.
 
     /**
      * How many stored files could not be read.
