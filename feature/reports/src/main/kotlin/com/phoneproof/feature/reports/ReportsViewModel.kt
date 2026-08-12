@@ -30,7 +30,7 @@ class ReportsViewModel(
      * adds a report and can prune one. A stale list would offer the buyer a report that no longer
      * exists.
      */
-    fun refresh() {
+    private fun refresh() {
         viewModelScope.launch {
             val reports = store.list()
             val damaged = store.unreadableCount()

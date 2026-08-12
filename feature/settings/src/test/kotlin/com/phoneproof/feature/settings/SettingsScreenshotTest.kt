@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.ThemeMode
+import com.phoneproof.core.preferences.Entitlement
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,5 +70,44 @@ class SettingsScreenshotTest {
     @Config(qualifiers = "w411dp-h2400dp-xhdpi")
     fun settings_full_column() {
         render("settings-3-full", ThemeMode.DARK)
+    }
+
+    /**
+     * The Shop tier's branding fields and the debug tier switcher.
+     *
+     * These shipped with no render at all: every test above leaves `entitlement` at FREE and
+     * `showTestingControls` false, so two whole sections — five interactive controls between them —
+     * had never been drawn, let alone looked at.
+     */
+    @Test
+    @Config(qualifiers = "w411dp-h3000dp-xhdpi")
+    fun settings_with_shop_branding_and_testing_controls() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                SettingsScreen(
+                    state = SettingsUiState(
+                        themeMode = ThemeMode.DARK,
+                        versionName = "0.1.0",
+                        versionCode = 1,
+                        billingAvailable = false,
+                        entitlement = Entitlement.SHOP,
+                        // Set so the render shows what a Shop customer actually sees on their own
+                        // tier: "Active on this device", not "Unavailable".
+                        ownedPlan = PremiumPlan.SHOP,
+                        shopName = "Krishna Mobiles",
+                        shopContact = "98765 43210 · MG Road",
+                        shopLogoPath = "/files/branding/shop-logo.png",
+                        showTestingControls = true,
+                    ),
+                    onThemeSelected = {},
+                    onOpenPrivacyPolicy = {},
+                    onShareApp = {},
+                    onOpenDiagnostics = {},
+                    onChoosePlan = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/settings-4-shop.png")
     }
 }

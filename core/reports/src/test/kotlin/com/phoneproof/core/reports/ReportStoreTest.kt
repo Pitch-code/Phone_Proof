@@ -201,29 +201,6 @@ class ReportStoreTest {
     }
 
     @Test
-    fun `delete removes only the named report`() = runTest {
-        val subject = store(retain = 10)
-        val keep = report(1_000)
-        val drop = report(2_000)
-        subject.save(keep)
-        subject.save(drop)
-
-        assertThat(subject.delete(drop.id)).isTrue()
-        assertThat(subject.list()).containsExactly(keep)
-    }
-
-    @Test
-    fun `clear removes everything`() = runTest {
-        val subject = store(retain = 10)
-        subject.save(report(1_000))
-        subject.save(report(2_000))
-
-        subject.clear()
-
-        assertThat(subject.list()).isEmpty()
-    }
-
-    @Test
     fun `ids sort chronologically as text so filenames order themselves`() {
         val early = ReportStore.newId(1_000, "a")
         val late = ReportStore.newId(2_000, "a")

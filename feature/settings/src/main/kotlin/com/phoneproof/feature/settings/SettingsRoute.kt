@@ -10,24 +10,37 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
-import kotlinx.coroutines.flow.map
+import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun SettingsRoute(
     versionName: String,
     versionCode: Long,
     onOpenDiagnostics: () -> Unit,
+    /** True only for a debug build. See [SettingsUiState.showTestingControls]. */
+    showTestingControls: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember(context) { SettingsRepository(context) }
 
-    val state by remember(repository, versionName, versionCode) {
-        repository.themeMode.map { mode ->
+    val state by remember(repository, versionName, versionCode, showTestingControls) {
+        combine(
+            repository.themeMode,
+            repository.entitlement,
+            repository.shopBranding,
+        ) { mode, entitlement, branding ->
             SettingsUiState(
                 themeMode = mode,
                 versionName = versionName,
@@ -35,9 +48,39 @@ fun SettingsRoute(
                 // Flipped on when Play Billing is wired and the app ships through Play. Until then
                 // the UI says so instead of offering a button that cannot work.
                 billingAvailable = false,
+                entitlement = entitlement,
+                // Derived from the entitlement rather than left null, which is what it was since the
+                // Settings screen was written. The render of the Shop tier made the consequence
+                // obvious: entitlement was SHOP while the Shop card still read "Unavailable",
+                // telling a paying customer they had not bought the thing they were using.
+                ownedPlan = when (entitlement) {
+                    Entitlement.PREMIUM -> PremiumPlan.PREMIUM
+                    Entitlement.SHOP -> PremiumPlan.SHOP
+                    Entitlement.FREE -> null
+                },
+                shopName = branding.name,
+                shopContact = branding.contact,
+                shopLogoPath = branding.logoPath,
+                showTestingControls = showTestingControls,
             )
         }
     }.collectAsStateWithLifecycle(initialValue = SettingsUiState(versionName = versionName, versionCode = versionCode))
+
+    // PickVisualMedia rather than an open-document intent or a storage permission. It runs in the
+    // system photo picker, so the app never gains access to the gallery — only to the one image the
+    // shop chose. On a permission-free app this matters: asking for storage access to place a logo
+    // would be wildly disproportionate.
+    val logoPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri != null) {
+            scope.launch {
+                val path = copyLogoIntoAppStorage(context, uri)
+                repository.setShopLogoPath(path)
+                Diagnostics.info(TAG, "shop logo set: ${path != null}")
+            }
+        }
+    }
 
     SettingsScreen(
         state = state,
@@ -53,9 +96,54 @@ fun SettingsRoute(
             // this becomes the launch point, and the log already shows which plan people tap.
             Diagnostics.info(TAG, "plan tapped: ${plan.productId} (billing unavailable)")
         },
+        onShopNameChanged = { name ->
+            scope.launch { repository.setShopBranding(name, state.shopContact) }
+        },
+        onShopContactChanged = { contact ->
+            scope.launch { repository.setShopBranding(state.shopName, contact) }
+        },
+        onPickLogo = {
+            logoPicker.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+            )
+        },
+        onRemoveLogo = {
+            scope.launch {
+                // The stored copy is deleted, not just forgotten. Leaving an orphaned image in app
+                // storage after someone asked to remove their logo would be careless with a file
+                // they explicitly took back.
+                state.shopLogoPath?.let { runCatching { File(it).delete() } }
+                repository.setShopLogoPath(null)
+            }
+        },
+        onEntitlementSelected = { tier ->
+            scope.launch { repository.setEntitlement(tier) }
+            Diagnostics.info(TAG, "entitlement set to ${tier.name} (testing control)")
+        },
         modifier = modifier,
     )
 }
+
+/**
+ * Copies a picked image into app storage and returns its path.
+ *
+ * Copied rather than referenced by URI. A content URI from the photo picker is a temporary grant: it
+ * stops working after a restart, and the shop's logo would silently vanish from their reports days
+ * later with nothing to explain it.
+ *
+ * @return the new path, or null if the copy failed.
+ */
+private suspend fun copyLogoIntoAppStorage(context: Context, uri: Uri): String? =
+    withContext(Dispatchers.IO) {
+        runCatching {
+            val directory = File(context.filesDir, "branding").apply { mkdirs() }
+            val target = File(directory, "shop-logo.png")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                target.outputStream().use { output -> input.copyTo(output) }
+            } ?: return@runCatching null
+            target.absolutePath
+        }.onFailure { Diagnostics.error(TAG, "copying the logo failed", it) }.getOrNull()
+    }
 
 private fun openUrl(context: Context, url: String) {
     runCatching {

@@ -41,6 +41,7 @@ fun ReportsScreen(
     state: ReportsUiState,
     formatDate: (Long) -> String,
     onOpenReport: (String) -> Unit,
+    onCompare: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -56,12 +57,17 @@ fun ReportsScreen(
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textPrimary,
         )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = retentionLine(state),
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
-        )
+        // Suppressed while there is nothing to retain. Announcing "this version keeps your last 2"
+        // to someone with zero reports explains a limit they have not met and reads as an upsell on
+        // an empty screen.
+        if (state.reports.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = retentionLine(state),
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
+        }
         Spacer(Modifier.height(16.dp))
 
         when {
@@ -87,6 +93,41 @@ fun ReportsScreen(
             }
 
             else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Offered only once there are two things to compare. A button that explains it needs
+                // a second report is noise on a screen that already has one.
+                if (state.reports.size >= 2) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    PhoneProofTheme.colors.surfaceRaised,
+                                    RoundedCornerShape(12.dp),
+                                )
+                                .border(
+                                    1.dp,
+                                    PhoneProofTheme.colors.accent.copy(alpha = 0.4f),
+                                    RoundedCornerShape(12.dp),
+                                )
+                                .clickable(onClick = onCompare)
+                                .padding(14.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "Compare two phones",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = PhoneProofTheme.colors.accent,
+                            )
+                            Text(
+                                text = "›",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = PhoneProofTheme.colors.accent,
+                            )
+                        }
+                    }
+                }
+
                 items(state.reports, key = { it.id }) { report ->
                     ReportRow(
                         report = report,

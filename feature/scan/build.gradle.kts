@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":core:diagnostics"))
     implementation(project(":core:device"))
     implementation(project(":core:reports"))
+    implementation(project(":core:preferences"))
     implementation(project(":checks:device"))
 
     implementation(libs.androidx.core.ktx)

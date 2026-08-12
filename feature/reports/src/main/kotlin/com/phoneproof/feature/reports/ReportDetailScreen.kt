@@ -37,6 +37,15 @@ fun ReportDetailScreen(
     report: SavedReport?,
     dateLabel: String,
     onShare: () -> Unit,
+    onExportPdf: () -> Unit,
+    /**
+     * False on the free tier.
+     *
+     * The button stays visible and says why rather than disappearing. A feature that silently is not
+     * there cannot be discovered, and a paid tier nobody knows about sells nothing — but a disabled
+     * button that explains itself is also not a dark pattern, because it never pretends to work.
+     */
+    canExportPdf: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -88,14 +97,25 @@ fun ReportDetailScreen(
             }
         }
 
-        OutlinedButton(
-            onClick = onShare,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            shape = RoundedCornerShape(12.dp),
+        Column(
+            modifier = Modifier.padding(vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text("Share this report")
+            OutlinedButton(
+                onClick = onShare,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text("Share as text")
+            }
+            OutlinedButton(
+                onClick = onExportPdf,
+                enabled = canExportPdf,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+            ) {
+                Text(if (canExportPdf) "Save or print as PDF" else "PDF export is a Premium extra")
+            }
         }
     }
 }
