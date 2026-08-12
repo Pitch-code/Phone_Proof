@@ -14,6 +14,7 @@ import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.reports.ReportDetailRoute
 import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.scan.ScanRoute
+import com.phoneproof.feature.screentest.ScreenTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 
@@ -25,6 +26,7 @@ private object Routes {
     const val DIAGNOSTICS = "diagnostics"
     const val SETTINGS = "settings"
     const val REPORTS = "reports"
+    const val SCREEN_PATTERNS = "screen-patterns"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -62,6 +64,11 @@ fun PhoneProofNavHost(
                         subtitle = "Find dead patches on the screen",
                         onClick = { navController.navigate(Routes.TOUCH) },
                     ),
+                    HomeCheck(
+                        title = "Dead pixels and burn-in",
+                        subtitle = "Plain colours that make screen faults obvious",
+                        onClick = { navController.navigate(Routes.SCREEN_PATTERNS) },
+                    ),
                 ),
                 // The instant scan is the closest thing to the full guided run that exists, and
                 // it already includes the remote-lock check, so the primary action opens it.
@@ -70,6 +77,10 @@ fun PhoneProofNavHost(
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        composable(Routes.SCREEN_PATTERNS) {
+            ScreenTestRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.REPORTS) {
