@@ -50,8 +50,10 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:diagnostics"))
     implementation(project(":core:reports"))
+    implementation(project(":core:preferences"))
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.core)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 

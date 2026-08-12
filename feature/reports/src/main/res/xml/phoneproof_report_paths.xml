@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Only cacheDir/shared is exposed, and nothing else.
+
+    The saved reports themselves live in filesDir and are deliberately not shareable: exposing that
+    directory would let any app the user shares with reach every report they have ever taken, rather
+    than the one they chose to send. A PDF is written into this one folder for a single send.
+-->
+<paths>
+    <cache-path
+        name="shared-reports"
+        path="shared/" />
+</paths>

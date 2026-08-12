@@ -70,6 +70,7 @@ class ReportsScreenshotTest {
                     state = state,
                     formatDate = { dateLabel },
                     onOpenReport = {},
+                    onCompare = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -121,6 +122,9 @@ class ReportsScreenshotTest {
                     report = report("2-b", 2_000, listOf(pass(), caution())),
                     dateLabel = dateLabel,
                     onShare = {},
+                    onExportPdf = {},
+                    // Free tier, so the PDF button explains itself rather than disappearing.
+                    canExportPdf = false,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -138,6 +142,8 @@ class ReportsScreenshotTest {
                     report = null,
                     dateLabel = "",
                     onShare = {},
+                    onExportPdf = {},
+                    canExportPdf = true,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
