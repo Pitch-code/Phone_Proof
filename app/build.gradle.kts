@@ -59,6 +59,7 @@ dependencies {
     implementation(project(":feature:settings"))
     implementation(project(":feature:reports"))
     implementation(project(":feature:screentest"))
+    implementation(project(":feature:guide"))
     implementation(project(":core:preferences"))
     implementation(project(":feature:diagnostics"))
 
