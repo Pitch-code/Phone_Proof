@@ -80,17 +80,15 @@ fun PhoneProofNavHost(
                         subtitle = "Is it the phone you were promised?",
                         onClick = { navController.navigate(Routes.CLAIMS) },
                     ),
-                    HomeCheck(
-                        title = "Check these by hand",
-                        subtitle = "The eight things no app can test for you",
-                        onClick = { navController.navigate(Routes.GUIDE) },
-                    ),
                 ),
                 // The instant scan is the closest thing to the full guided run that exists, and
                 // it already includes the remote-lock check, so the primary action opens it.
                 onStartFullTest = { navController.navigate(Routes.SCAN) },
-                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // The guide is no longer one of the checks: it has its own heading on Home, because
+                // it is advice for the buyer's hands rather than something the phone measures.
+                onOpenGuide = { navController.navigate(Routes.GUIDE) },
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 modifier = Modifier.fillMaxSize(),
             )
         }

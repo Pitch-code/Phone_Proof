@@ -25,30 +25,48 @@ class HomeScreenshotTest {
     private val outputDir: String =
         System.getProperty("phoneproof.screenshotDir") ?: "build/screenshots"
 
-    @Test
-    fun home() {
+    /**
+     * Every check the app actually offers, not a token two.
+     *
+     * The old test passed two, which is why nobody noticed Home had outgrown its fixed layout: with
+     * two rows everything fitted, while the real app pushed Settings off the bottom of the screen.
+     * A screenshot test that renders less than the real screen cannot catch a screen that overflows.
+     */
+    private fun realChecks(): List<HomeCheck> = listOf(
+        HomeCheck("Instant scan", "Software, storage, sensors and screen — no waiting") {},
+        HomeCheck("Remote lock control", "Can a lender brick this phone after you pay?") {},
+        HomeCheck("Touch response", "Find dead patches on the screen") {},
+        HomeCheck("Dead pixels and burn-in", "Plain colours that make screen faults obvious") {},
+        HomeCheck("Claimed against measured", "Is it the phone you were promised?") {},
+    )
+
+    private fun render(name: String) {
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 HomeScreen(
-                    checks = listOf(
-                        HomeCheck(
-                            title = "Remote lock control",
-                            subtitle = "Can a lender brick this phone after you pay?",
-                            onClick = {},
-                        ),
-                        HomeCheck(
-                            title = "Touch response",
-                            subtitle = "Find dead patches on the screen",
-                            onClick = {},
-                        ),
-                    ),
+                    checks = realChecks(),
                     onStartFullTest = {},
-                    onOpenSettings = {},
+                    onOpenGuide = {},
                     onOpenReports = {},
+                    onOpenSettings = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
         }
-        composeRule.onRoot().captureRoboImage("$outputDir/home.png")
+        composeRule.onRoot().captureRoboImage("$outputDir/$name.png")
+    }
+
+    @Test
+    fun home() {
+        // A phone-sized viewport, so this shows what a buyer sees before scrolling.
+        render("home")
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h1800dp-xhdpi")
+    fun home_full_column() {
+        // The whole scrolling column in one image. This is the render that proves Settings and Saved
+        // reports exist at all, which the phone-sized shot cannot show now that Home scrolls.
+        render("home-2-full")
     }
 }

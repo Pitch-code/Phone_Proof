@@ -7,16 +7,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,18 +35,22 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 /**
  * Home.
  *
- * Not a dashboard. One dominant action, because the person holding this phone has about three
- * minutes and an audience — a grid of equally-weighted tiles would make them stop and read.
+ * One dominant action, because the person holding this phone has about three minutes and an audience.
  *
- * The individual checks are listed below the primary action only because the full guided run does
- * not exist yet. As checks land they fold into the single run and disappear from this list.
+ * **This screen scrolls, and it has to.** It was a fixed [Column] with a `Spacer(weight(1f))` pushing
+ * the last two rows to the bottom, which worked with three checks and broke silently at six: the
+ * spacer collapsed to nothing, "Saved reports" was clipped to a sliver with its label cut off, and
+ * Settings was pushed off the screen entirely. Nothing failed and no test noticed, because a fixed
+ * column simply draws what fits. Anything added below now extends the scroll instead of evicting
+ * whatever was last.
  */
 @Composable
 fun HomeScreen(
     checks: List<HomeCheck>,
     onStartFullTest: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onOpenGuide: () -> Unit,
     onOpenReports: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -48,13 +58,13 @@ fun HomeScreen(
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
             // safeDrawing, not statusBars: it also covers the navigation bar, gesture areas and
-            // display cutouts, so this holds on a notch phone and a 3-button phone alike rather
-            // than being tuned to one handset.
+            // display cutouts, so this holds on a notch phone and a 3-button phone alike.
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(24.dp))
 
         Text(
             text = "PhoneProof",
@@ -67,7 +77,7 @@ fun HomeScreen(
             color = PhoneProofTheme.colors.textSecondary,
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(6.dp))
 
         Button(
             onClick = onStartFullTest,
@@ -94,80 +104,101 @@ fun HomeScreen(
             textAlign = TextAlign.Center,
         )
 
-        Spacer(Modifier.height(8.dp))
+        SectionLabel("Test one thing at a time")
+        checks.forEach { check ->
+            NavigationRow(
+                title = check.title,
+                subtitle = check.subtitle,
+                onClick = check.onClick,
+            )
+        }
 
-        Text(
-            text = "Individual checks",
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
+        // Its own heading, because it is the opposite of everything above it: advice for the buyer's
+        // hands rather than a measurement the phone can make. Grouping it with the checks implied the
+        // app was testing something.
+        SectionLabel("What the app cannot test")
+        NavigationRow(
+            title = "Check these by hand",
+            subtitle = "Eight things to look at yourself, with pictures",
+            onClick = onOpenGuide,
         )
 
-        checks.forEach { check ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
-                    .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
-                    .clickable(onClick = check.onClick)
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = check.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = PhoneProofTheme.colors.textPrimary,
-                    )
-                    Text(
-                        text = check.subtitle,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PhoneProofTheme.colors.textTertiary,
-                    )
-                }
+        SectionLabel("Your reports")
+        NavigationRow(
+            title = "Saved reports",
+            subtitle = "Read a past test, or compare two phones",
+            onClick = onOpenReports,
+        )
+        NavigationRow(
+            title = "Settings",
+            subtitle = "Theme, premium, privacy and diagnostics",
+            onClick = onOpenSettings,
+            leading = {
+                // A real icon rather than the plain grey text this used to be. It sat at the very
+                // bottom looking like a footnote, and on a full screen it was not there at all.
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = null,
+                    tint = PhoneProofTheme.colors.textSecondary,
+                    modifier = Modifier.size(20.dp),
+                )
+            },
+        )
+
+        Spacer(Modifier.height(28.dp))
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelSmall,
+        color = PhoneProofTheme.colors.textTertiary,
+        modifier = Modifier.padding(top = 10.dp),
+    )
+}
+
+@Composable
+private fun NavigationRow(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    leading: (@Composable () -> Unit)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
+            .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier.padding(end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            leading?.invoke()
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "›",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = PhoneProofTheme.colors.textPrimary,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.textTertiary,
                 )
             }
         }
-
-        Spacer(Modifier.weight(1f))
-
-        // Given its own row above Settings rather than buried inside it. A report the buyer cannot
-        // find again is the same as no report, and this is the screen they return to.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
-                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(12.dp))
-                .clickable(onClick = onOpenReports)
-                .padding(14.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "Saved reports",
-                style = MaterialTheme.typography.titleMedium,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
-            Text(
-                text = "›",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textTertiary,
-            )
-        }
-
         Text(
-            text = "Settings",
-            style = MaterialTheme.typography.labelSmall,
+            text = "›",
+            style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textTertiary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpenSettings)
-                .padding(vertical = 8.dp),
-            textAlign = TextAlign.Center,
         )
     }
 }
