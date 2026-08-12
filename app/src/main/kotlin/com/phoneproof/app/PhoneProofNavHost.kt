@@ -12,6 +12,7 @@ import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
+import com.phoneproof.feature.reports.CompareRoute
 import com.phoneproof.feature.reports.ReportDetailRoute
 import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.scan.ScanRoute
@@ -29,6 +30,7 @@ private object Routes {
     const val REPORTS = "reports"
     const val SCREEN_PATTERNS = "screen-patterns"
     const val GUIDE = "guide"
+    const val COMPARE = "compare"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -97,8 +99,13 @@ fun PhoneProofNavHost(
         composable(Routes.REPORTS) {
             ReportsRoute(
                 onOpenReport = { id -> navController.navigate(Routes.reportDetail(id)) },
+                onCompare = { navController.navigate(Routes.COMPARE) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        composable(Routes.COMPARE) {
+            CompareRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.REPORT_DETAIL) { entry ->
@@ -125,6 +132,9 @@ fun PhoneProofNavHost(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE.toLong(),
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                // Only a debug build can switch tiers by hand. Read here rather than inside the
+                // feature module so a release build has no code path to the switcher at all.
+                showTestingControls = BuildConfig.DEBUG,
                 modifier = Modifier.fillMaxSize(),
             )
         }

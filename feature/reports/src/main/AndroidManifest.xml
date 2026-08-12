@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+        Sharing a PDF means handing another app a readable handle to a file. A file:// URI would
+        either be rejected outright on modern Android or, worse, require making the file world
+        readable. A FileProvider grants one temporary, revocable permission to the app the user
+        picked and nothing else.
+
+        The authority is derived from applicationId rather than hardcoded, so the debug build
+        (com.phoneproof.app.debug) and a release build can be installed side by side. Two APKs
+        declaring the same provider authority cannot coexist on one phone, which would make the
+        debug build refuse to install over a release one.
+        -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.reports"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/phoneproof_report_paths" />
+        </provider>
+    </application>
+
+</manifest>

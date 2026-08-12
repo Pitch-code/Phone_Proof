@@ -2,6 +2,7 @@ package com.phoneproof.feature.settings
 
 import androidx.compose.runtime.Immutable
 import com.phoneproof.core.designsystem.theme.ThemeMode
+import com.phoneproof.core.preferences.Entitlement
 
 /**
  * The paid tiers.
@@ -66,5 +67,19 @@ data class SettingsUiState(
      * the UI can say so rather than offering a button that quietly fails.
      */
     val billingAvailable: Boolean = false,
+    /** What this install currently has. Drives which paid features are reachable. */
+    val entitlement: Entitlement = Entitlement.FREE,
+    val shopName: String? = null,
+    val shopContact: String? = null,
+    val shopLogoPath: String? = null,
+    /**
+     * Whether to offer the tier switcher.
+     *
+     * True only in a debug build. Play Billing cannot complete a purchase in a sideloaded APK, so
+     * without this the paid features could not be exercised at all before release — they would ship
+     * having never been run. It is passed in from the app module rather than read here, so a release
+     * build physically cannot show it.
+     */
+    val showTestingControls: Boolean = false,
     val ownedPlan: PremiumPlan? = null,
 )

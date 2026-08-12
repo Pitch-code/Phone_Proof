@@ -24,6 +24,8 @@ import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.reports.ReportStore
 import com.phoneproof.core.reports.SavedReport
 import java.io.File
@@ -37,8 +39,8 @@ private const val TAG = "ScanRoute"
  * another feature module is how a module graph turns into a knot. The directory name is asserted
  * against the reports feature in a test so the two cannot drift apart silently.
  */
-internal fun reportStore(context: Context): ReportStore =
-    ReportStore(File(context.filesDir, "reports"))
+internal fun reportStore(context: Context, retain: Int): ReportStore =
+    ReportStore(File(context.filesDir, "reports"), retain = retain)
 
 /** "realme RMX5110", or just the model when the manufacturer is already in it. */
 internal fun deviceLabel(): String {
@@ -78,14 +80,26 @@ fun ScanRoute(
     //
     // Keyed on scanId, so this runs once per scan: the id is minted when the scan starts, and saving
     // the same id twice rewrites one file rather than duplicating the report.
+    val entitlement by remember(context) { SettingsRepository(context).entitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+    val retain = if (entitlement.hasPremiumExtras) {
+        ReportStore.PREMIUM_RETAIN
+    } else {
+        ReportStore.FREE_TIER_RETAIN
+    }
+
     val scanId = state.scanId
-    LaunchedEffect(scanId, state.finished) {
+    LaunchedEffect(scanId, state.finished, retain) {
         if (scanId == null || !state.finished) return@LaunchedEffect
         val results = state.results
         if (results.isEmpty()) return@LaunchedEffect
 
         runCatching {
-            val pruned = reportStore(context).save(
+            // Retention follows what the buyer has paid for. Without this the Premium promise to
+            // "keep every report instead of only the last two" would be false: the save path is
+            // where pruning happens, so a hardcoded free limit here silently deletes a paying
+            // customer's history no matter what the Settings screen says they bought.
+            val pruned = reportStore(context, retain).save(
                 SavedReport(
                     id = scanId,
                     createdAtEpochMs = System.currentTimeMillis(),

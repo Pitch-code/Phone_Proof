@@ -21,8 +21,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.reports.ShopBranding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +49,11 @@ fun SettingsScreen(
     onShareApp: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onChoosePlan: (PremiumPlan) -> Unit,
+    onShopNameChanged: (String) -> Unit = {},
+    onShopContactChanged: (String) -> Unit = {},
+    onPickLogo: () -> Unit = {},
+    onRemoveLogo: () -> Unit = {},
+    onEntitlementSelected: (Entitlement) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -92,6 +100,63 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.labelSmall,
                     color = PhoneProofTheme.colors.textTertiary,
                 )
+            }
+        }
+
+        if (state.entitlement.hasShopBranding) {
+            Section("Your shop") {
+                Text(
+                    text = "Printed at the top of every PDF report you hand a customer.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PhoneProofTheme.colors.textTertiary,
+                )
+                OutlinedTextField(
+                    value = state.shopName.orEmpty(),
+                    onValueChange = { onShopNameChanged(it.take(ShopBranding.MAX_NAME_LENGTH)) },
+                    label = { Text("Shop name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = state.shopContact.orEmpty(),
+                    onValueChange = { onShopContactChanged(it.take(ShopBranding.MAX_CONTACT_LENGTH)) },
+                    label = { Text("Phone or address") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                ActionRow(
+                    label = if (state.shopLogoPath == null) "Choose a logo" else "Change the logo",
+                    onClick = onPickLogo,
+                )
+                if (state.shopLogoPath != null) {
+                    ActionRow(label = "Remove the logo", onClick = onRemoveLogo)
+                }
+                // Stated plainly. A shop that expected to hand over a document with only its own
+                // name on it should know before it prints a hundred of them.
+                Text(
+                    text = "Every report still says the measurements came from PhoneProof. That " +
+                        "line cannot be removed — it is what makes the report worth showing.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = PhoneProofTheme.colors.textTertiary,
+                )
+            }
+        }
+
+        if (state.showTestingControls) {
+            Section("Testing only") {
+                Text(
+                    text = "This build cannot take payments, so the paid tiers are unlocked here " +
+                        "to be tested. Debug builds only.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PhoneProofTheme.colors.caution,
+                )
+                Entitlement.entries.forEach { tier ->
+                    ThemeLikeRow(
+                        title = tier.label,
+                        selected = state.entitlement == tier,
+                        onClick = { onEntitlementSelected(tier) },
+                    )
+                }
             }
         }
 
@@ -301,6 +366,46 @@ private fun ActionRow(label: String, onClick: () -> Unit) {
             text = "›",
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textTertiary,
+        )
+    }
+}
+
+/** The theme row's selectable look, reused so the tier switcher does not invent a second one. */
+@Composable
+private fun ThemeLikeRow(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val accent = PhoneProofTheme.colors.accent
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PhoneProofTheme.colors.surface, RoundedCornerShape(12.dp))
+            .border(
+                1.dp,
+                if (selected) accent.copy(alpha = 0.55f) else PhoneProofTheme.colors.border,
+                RoundedCornerShape(12.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(18.dp)
+                .border(2.dp, if (selected) accent else PhoneProofTheme.colors.borderStrong, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) {
+                Box(Modifier.size(9.dp).background(accent, CircleShape))
+            }
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = PhoneProofTheme.colors.textPrimary,
         )
     }
 }
