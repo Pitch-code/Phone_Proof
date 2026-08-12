@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // Pure Kotlin. No Android dependency of any kind — that is enforced by using the JVM
@@ -10,6 +11,10 @@ kotlin {
 }
 
 dependencies {
+    // api, not implementation: a saved report is this model written to disk, so anything that
+    // persists one needs the serializers on its own compile classpath.
+    api(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
     testImplementation(libs.truth)
 }

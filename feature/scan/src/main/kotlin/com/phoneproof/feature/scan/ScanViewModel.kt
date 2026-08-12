@@ -3,6 +3,8 @@ package com.phoneproof.feature.scan
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.reports.ReportStore
+import kotlin.random.Random
 import com.phoneproof.core.model.CheckResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -43,6 +45,12 @@ class ScanViewModel : ViewModel() {
         _uiState.value = ScanUiState(
             steps = tasks.map { ScanStep(id = it.id, label = it.label) },
             finished = false,
+            // The suffix keeps two scans started in the same millisecond apart. The ViewModel mints
+            // it rather than the screen, so it survives recomposition and cannot change mid-scan.
+            scanId = ReportStore.newId(
+                System.currentTimeMillis(),
+                Random.nextInt(0x1000, 0xFFFF).toString(16),
+            ),
         )
 
         job = viewModelScope.launch {

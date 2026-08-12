@@ -57,6 +57,7 @@ dependencies {
     implementation(project(":feature:emilock"))
     implementation(project(":feature:scan"))
     implementation(project(":feature:settings"))
+    implementation(project(":feature:reports"))
     implementation(project(":core:preferences"))
     implementation(project(":feature:diagnostics"))
 

@@ -11,6 +11,8 @@ import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
+import com.phoneproof.feature.reports.ReportDetailRoute
+import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.scan.ScanRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
@@ -22,6 +24,10 @@ private object Routes {
     const val SCAN = "scan"
     const val DIAGNOSTICS = "diagnostics"
     const val SETTINGS = "settings"
+    const val REPORTS = "reports"
+    const val REPORT_DETAIL = "reports/{reportId}"
+
+    fun reportDetail(id: String): String = "reports/$id"
 }
 
 /**
@@ -61,6 +67,21 @@ fun PhoneProofNavHost(
                 // it already includes the remote-lock check, so the primary action opens it.
                 onStartFullTest = { navController.navigate(Routes.SCAN) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                onOpenReports = { navController.navigate(Routes.REPORTS) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.REPORTS) {
+            ReportsRoute(
+                onOpenReport = { id -> navController.navigate(Routes.reportDetail(id)) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.REPORT_DETAIL) { entry ->
+            ReportDetailRoute(
+                reportId = entry.arguments?.getString("reportId").orEmpty(),
                 modifier = Modifier.fillMaxSize(),
             )
         }
