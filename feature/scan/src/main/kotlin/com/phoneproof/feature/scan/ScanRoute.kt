@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.phoneproof.checks.device.BatteryCheck
 import com.phoneproof.checks.device.BuildIntegrityCheck
 import com.phoneproof.checks.device.DeviceFacts
 import com.phoneproof.checks.device.DisplayCheck
@@ -18,6 +19,7 @@ import com.phoneproof.checks.device.SecurityPatchCheck
 import com.phoneproof.checks.device.SensorInventoryCheck
 import com.phoneproof.checks.device.StorageCheck
 import com.phoneproof.checks.emilock.EmiLockEvaluator
+import com.phoneproof.core.device.BatteryFactsReader
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
@@ -144,6 +146,14 @@ private fun tasks(context: Context, facts: DeviceFacts?): List<ScanTask> {
         tasks += ScanTask(DisplayCheck.CHECK_ID, "Testing the display") {
             DisplayCheck.evaluate(facts)
         }
+    }
+
+    // Read per scan rather than with the other facts, because charge, temperature and the charge
+    // counter all move: a stale reading would make a rescan look like it re-measured when it had
+    // not. Outside the facts != null block, since the battery has its own source and does not
+    // depend on DeviceFactsReader having succeeded.
+    tasks += ScanTask(BatteryCheck.CHECK_ID, "Measuring the battery") {
+        BatteryCheck.evaluate(BatteryFactsReader(context, diagnostics).read())
     }
 
     return tasks
