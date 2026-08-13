@@ -108,23 +108,50 @@ class BatteryCheckTest {
     // --------------------------------------------------------------- unknown
 
     @Test
-    fun `a phone that will not report cycles says so instead of guessing`() {
+    fun `a phone that will not report cycles passes on what could be read`() {
+        // Changed from UNKNOWN at the product owner's direction. PASS here means "no fault found in
+        // what could be read", not "the battery is healthy".
         val result = BatteryCheck.evaluate(facts(cycleCount = null))
 
-        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
-        assertThat(result.headline).contains("does not report")
+        assertThat(result.outcome).isEqualTo(CheckOutcome.PASS)
     }
 
     @Test
-    fun `a good health reading alone is not treated as a pass`() {
-        // Android reports GOOD on badly worn cells, so GOOD without a cycle count is not evidence
-        // that a battery has life left. This is the trap that would let the app flatter every phone.
+    fun `passing without a cycle count never claims full confidence`() {
+        // The guard that keeps the change above honest. Android reports GOOD on badly worn cells, so
+        // a pass with no wear data is a weak pass; HIGH confidence here would let the app flatter
+        // every phone it ever saw, which is the thing the Confidence type exists to prevent.
         val result = BatteryCheck.evaluate(
             facts(cycleCount = null, health = BatteryHealth.GOOD),
         )
 
-        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
-        assertThat(result.outcome).isNotEqualTo(CheckOutcome.PASS)
+        assertThat(result.confidence).isEqualTo(Confidence.LOW)
+        assertThat(result.confidence).isNotEqualTo(Confidence.HIGH)
+    }
+
+    @Test
+    fun `a pass without a cycle count says so on the card`() {
+        // The buyer must be able to see that wear was not measured, or a green badge is the app
+        // taking credit for a reading it never took.
+        val result = BatteryCheck.evaluate(facts(cycleCount = null))
+
+        assertThat(result.headline).contains("will not report battery wear")
+        assertThat(result.consequence).contains("cannot be measured")
+        assertThat(result.action).isNotEmpty()
+        assertThat(result.measurements.first { it.label == "Charge cycles" }.display)
+            .isEqualTo("not reported")
+    }
+
+    @Test
+    fun `a measured cycle count still outranks the no-data pass`() {
+        // Regression guard: the new PASS branch must not shadow real wear data. A phone that does
+        // report cycles must still be judged on them.
+        val worn = BatteryCheck.evaluate(facts(cycleCount = 950))
+        val unknownWear = BatteryCheck.evaluate(facts(cycleCount = null))
+
+        assertThat(worn.outcome).isEqualTo(CheckOutcome.CAUTION)
+        assertThat(unknownWear.outcome).isEqualTo(CheckOutcome.PASS)
+        assertThat(worn.confidence).isEqualTo(Confidence.HIGH)
     }
 
     @Test
