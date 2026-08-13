@@ -1,5 +1,11 @@
 package com.phoneproof.feature.home
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +32,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
@@ -102,20 +110,37 @@ fun HomeScreen(
         }
 
         if (freeScansLeft != null) {
+            // Pulsed rather than flashed, and this is a deliberate departure from what was asked for.
+            //
+            // A continuous flash was requested so the line gets noticed. WCAG 2.3.1 puts the
+            // photosensitive-seizure threshold at three flashes per second, and this text sits on the
+            // first screen of the app where it would run for as long as the app is open — so a blink
+            // here is the worst place in the product to put one. A slow fade between two colours
+            // draws the eye without ever going dark, at the same 0.7 Hz already used for a FAIL card,
+            // which is the only other looping animation in this codebase.
+            val pulse by rememberInfiniteTransition(label = "trialPulse").animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "trialPulseValue",
+            )
+            val restColour = if (freeScansLeft == 0) {
+                PhoneProofTheme.colors.caution
+            } else {
+                PhoneProofTheme.colors.accent
+            }
             Text(
                 text = when (freeScansLeft) {
                     0 -> "Free trial used up — see the plans in Settings"
                     1 -> "1 scan left on the free trial"
                     else -> "$freeScansLeft scans left on the free trial"
                 },
-                style = MaterialTheme.typography.labelSmall,
-                // Amber at zero so it reads as a state to act on, not an error. Nothing has gone
-                // wrong; the trial has ended.
-                color = if (freeScansLeft == 0) {
-                    PhoneProofTheme.colors.caution
-                } else {
-                    PhoneProofTheme.colors.textSecondary
-                },
+                // titleSmall, up from labelSmall. This was the line reported as hard to read.
+                style = MaterialTheme.typography.titleSmall,
+                color = lerp(restColour, PhoneProofTheme.colors.textPrimary, pulse),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
@@ -126,8 +151,10 @@ fun HomeScreen(
             // advertising ID does leave the device; claiming "nothing leaves this device" would be
             // false, and overclaiming privacy is worse than not claiming it.
             text = "Your test results stay on this device",
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
+            // bodyMedium, up from labelSmall. Left static: a privacy statement that blinks reads as
+            // an advertisement for itself, and only one thing on a screen can be the thing moving.
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )

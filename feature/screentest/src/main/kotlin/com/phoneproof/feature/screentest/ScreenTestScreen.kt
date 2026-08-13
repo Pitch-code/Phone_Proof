@@ -152,6 +152,15 @@ private fun PatternLayout(
         // The only thing drawn over the pattern, kept small and pushed into a corner. Anything
         // larger would hide the very pixels the buyer is inspecting.
         val ink = if (pattern.isLight) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.5f)
+
+        // A second, stronger ink for the two lines that actually have to be read. The faint wash is
+        // right for "tap for the next colour", which the buyer only needs once, and wrong for the
+        // instruction telling them what a fault looks like on this particular colour.
+        val strongInk = if (pattern.isLight) {
+            Color.Black.copy(alpha = 0.82f)
+        } else {
+            Color.White.copy(alpha = 0.88f)
+        }
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -160,10 +169,13 @@ private fun PatternLayout(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
+            // titleMedium, up from labelSmall, and in full-strength ink rather than the 45% wash the
+            // rest of the hint uses. This is read at arm's length while the phone is tilted to catch
+            // the light, which is the worst possible reading condition in the app.
             Text(
                 text = "${pattern.name} · ${state.position} of ${state.total}",
-                style = MaterialTheme.typography.labelSmall,
-                color = ink,
+                style = MaterialTheme.typography.titleMedium,
+                color = strongInk,
             )
             // lookFor was written for all six patterns and then never rendered, while its own
             // docstring claimed it was shown. So the pattern screen told the buyer nothing about
@@ -171,8 +183,10 @@ private fun PatternLayout(
             // subpixel the eye notices most. It is the most useful line on the screen.
             Text(
                 text = pattern.lookFor,
-                style = MaterialTheme.typography.labelSmall,
-                color = ink,
+                // bodyMedium, up from labelSmall. This is the most useful sentence on the screen —
+                // it is what tells the buyer that stuck pixels are invisible on white.
+                style = MaterialTheme.typography.bodyMedium,
+                color = strongInk,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
