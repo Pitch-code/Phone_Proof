@@ -25,12 +25,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val repository = remember { SettingsRepository(applicationContext) }
-            // SYSTEM for the first frame, because the stored value is read asynchronously. Someone
-            // who picked Light on a dark-mode phone therefore gets one dark frame at cold start.
-            // Accepted rather than blocking the first frame on a disk read: a brief flash is a
-            // smaller cost than a slower launch on a cheap phone, which is the hardware this app
-            // is most often used on.
-            val themeMode by repository.themeMode.collectAsState(initial = ThemeMode.SYSTEM)
+            // LIGHT for the first frame, matching the stored default, because the stored value is
+            // read asynchronously. Whoever has not changed the theme therefore sees no flash at all,
+            // which is most people; someone who chose Dark gets one light frame at cold start.
+            //
+            // That trade is deliberately the way round it is. Blocking the first frame on a disk read
+            // would slow every launch on the cheap hardware this app is most used on, and a flash for
+            // the minority who changed the setting is the cheaper cost.
+            val themeMode by repository.themeMode.collectAsState(initial = ThemeMode.LIGHT)
 
             PhoneProofTheme(themeMode = themeMode) {
                 Surface(

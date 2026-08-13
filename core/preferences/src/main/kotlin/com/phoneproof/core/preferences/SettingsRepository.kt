@@ -31,7 +31,9 @@ class SettingsRepository(private val context: Context) {
         }
         .map { preferences ->
             val stored = preferences[THEME_KEY]
-            ThemeMode.entries.firstOrNull { it.name == stored } ?: ThemeMode.SYSTEM
+            // Light when nothing has been chosen. This is the one place that decides it for a fresh
+            // install, so the app-wide default lives here rather than being repeated per screen.
+            ThemeMode.entries.firstOrNull { it.name == stored } ?: ThemeMode.LIGHT
         }
 
     suspend fun setThemeMode(mode: ThemeMode) {

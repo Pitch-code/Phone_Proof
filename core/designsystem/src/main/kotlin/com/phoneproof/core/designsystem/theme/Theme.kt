@@ -9,7 +9,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
-/** Which theme the user has chosen. Persisted; [SYSTEM] is the default. */
+/** Which theme the user has chosen. Persisted; [LIGHT] is the default. */
 enum class ThemeMode {
     SYSTEM,
     LIGHT,
@@ -23,7 +23,7 @@ enum class ThemeMode {
  */
 @Composable
 fun PhoneProofTheme(
-    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    themeMode: ThemeMode = ThemeMode.LIGHT,
     content: @Composable () -> Unit,
 ) {
     val dark = when (themeMode) {

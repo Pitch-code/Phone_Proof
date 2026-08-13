@@ -59,7 +59,7 @@ enum class PremiumPlan(
 
 @Immutable
 data class SettingsUiState(
-    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val themeMode: ThemeMode = ThemeMode.LIGHT,
     val versionName: String = "",
     val versionCode: Long = 0L,
     /**
