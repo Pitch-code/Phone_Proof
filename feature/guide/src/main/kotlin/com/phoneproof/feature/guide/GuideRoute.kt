@@ -10,10 +10,34 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.phoneproof.core.designsystem.component.LockedFeature
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.SettingsRepository
 
 @Composable
-fun GuideRoute(modifier: Modifier = Modifier) {
+fun GuideRoute(
+    onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
+    val entitlement by remember(context) { SettingsRepository(context).entitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+
+    if (!entitlement.hasAdvisoryTools) {
+        LockedFeature(
+            title = "Check these by hand",
+            explanation = "Eight things no app can test for you — a twisted frame, a re-glued " +
+                "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
+                "how to check it. It is part of a paid plan.",
+            whatUnlockingGives = "The full walkthrough, including the account check that stops a " +
+                "phone being locked remotely after you have paid. Also unlocks claimed against " +
+                "measured, PDF reports and side-by-side comparison.",
+            onOpenSettings = onOpenSettings,
+            modifier = modifier,
+        )
+        return
+    }
 
     // rememberSaveable, so rotating the phone mid-step does not collapse the card being read. Easy
     // to get wrong and irritating in exactly the situation this screen is used in: one hand on the

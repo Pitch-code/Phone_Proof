@@ -12,9 +12,13 @@ import com.phoneproof.core.preferences.Entitlement
  * disagrees with the checkout sheet is both a support burden and a Play policy problem. These exist
  * so the wording and structure can be reviewed before any of that is set up.
  *
- * Note what no tier removes: every check stays unlimited and free. Revenue comes from keeping and
- * sharing results, never from rationing the measurement — rationing the core function of a
- * trust-focused app teaches people to distrust it.
+ * The model changed here, and the old comment claiming "every check stays unlimited and free" had to
+ * go with it: the free trial now gets [Entitlement.FREE_SCAN_LIMIT] scans and then stops, and the two
+ * advisory screens are paid. Leaving that sentence in place would have been a false promise printed
+ * on the screen where the app asks for money.
+ *
+ * What the trial still does *not* do is weaken a measurement. Every check that runs, runs in full
+ * and reports the same verdict at every tier — the limit is how many times, never how honestly.
  */
 enum class PremiumPlan(
     val productId: String,
@@ -81,5 +85,7 @@ data class SettingsUiState(
      * build physically cannot show it.
      */
     val showTestingControls: Boolean = false,
+    /** Scans left on the free trial, or null when unlimited. Shown on the free-trial card. */
+    val freeScansLeft: Int? = null,
     val ownedPlan: PremiumPlan? = null,
 )

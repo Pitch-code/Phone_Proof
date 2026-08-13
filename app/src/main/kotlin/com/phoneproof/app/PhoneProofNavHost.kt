@@ -6,7 +6,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.claims.ClaimsRoute
@@ -47,6 +53,11 @@ fun PhoneProofNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    val context = LocalContext.current
+    val settings = remember(context) { SettingsRepository(context) }
+    val entitlement by settings.entitlement.collectAsStateWithLifecycle(Entitlement.FREE)
+    val scansUsed by settings.scansUsed.collectAsStateWithLifecycle(0)
+
     NavHost(
         navController = navController,
         startDestination = Routes.HOME,
@@ -89,16 +100,30 @@ fun PhoneProofNavHost(
                 onOpenGuide = { navController.navigate(Routes.GUIDE) },
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // null for a paid tier, so no counter is shown at all rather than a limit that does
+                // not apply. coerceAtLeast guards a stored count above the limit, which would
+                // otherwise render as a negative number of scans left.
+                freeScansLeft = if (entitlement.hasUnlimitedScans) {
+                    null
+                } else {
+                    (Entitlement.FREE_SCAN_LIMIT - scansUsed).coerceAtLeast(0)
+                },
                 modifier = Modifier.fillMaxSize(),
             )
         }
 
         composable(Routes.CLAIMS) {
-            ClaimsRoute(modifier = Modifier.fillMaxSize())
+            ClaimsRoute(
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         composable(Routes.GUIDE) {
-            GuideRoute(modifier = Modifier.fillMaxSize())
+            GuideRoute(
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         composable(Routes.SCREEN_PATTERNS) {
@@ -129,7 +154,10 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.SCAN) {
-            ScanRoute(modifier = Modifier.fillMaxSize())
+            ScanRoute(
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         composable(Routes.LOCK) {

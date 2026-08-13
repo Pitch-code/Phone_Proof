@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.phoneproof.core.designsystem.theme.ThemeMode
@@ -63,6 +64,31 @@ class SettingsRepository(private val context: Context) {
         runCatching {
             context.dataStore.edit { it[ENTITLEMENT_KEY] = entitlement.name }
         }.onFailure { Diagnostics.error(TAG, "saving entitlement failed", it) }
+    }
+
+    /**
+     * How many scans this install has used.
+     *
+     * Counts completed scans, not attempts, so a scan that failed to read anything does not consume
+     * the allowance — a buyer must never lose one of two chances to a bug in this app.
+     *
+     * Stored locally, which is what it is: a counter someone with a rooted phone can reset. Fine for
+     * a free allowance, and it has to move behind a verified Play purchase before it guards anything
+     * that costs money.
+     */
+    val scansUsed: Flow<Int> = context.dataStore.data
+        .catch { error ->
+            Diagnostics.error(TAG, "reading scan count failed, treating as none used", error)
+            emit(androidx.datastore.preferences.core.emptyPreferences())
+        }
+        .map { preferences -> preferences[SCANS_USED_KEY] ?: 0 }
+
+    suspend fun recordScanUsed() {
+        runCatching {
+            context.dataStore.edit { preferences ->
+                preferences[SCANS_USED_KEY] = (preferences[SCANS_USED_KEY] ?: 0) + 1
+            }
+        }.onFailure { Diagnostics.error(TAG, "saving scan count failed", it) }
     }
 
     /** A shop's own details for the header of a printed report. */
@@ -125,6 +151,7 @@ class SettingsRepository(private val context: Context) {
         val SHOP_NAME_KEY = stringPreferencesKey("shop_name")
         val SHOP_CONTACT_KEY = stringPreferencesKey("shop_contact")
         val SHOP_LOGO_KEY = stringPreferencesKey("shop_logo_path")
+        val SCANS_USED_KEY = intPreferencesKey("scans_used")
     }
 }
 

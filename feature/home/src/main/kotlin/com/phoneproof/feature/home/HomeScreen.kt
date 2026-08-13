@@ -51,6 +51,14 @@ fun HomeScreen(
     onOpenGuide: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenSettings: () -> Unit,
+    /**
+     * Scans left on the free trial, or null when they are unlimited.
+     *
+     * Shown under the button rather than inside it: the label stays "Test this phone" so the primary
+     * action never turns into a counter, and a paid user sees no counter at all rather than a
+     * reminder of a limit that does not apply to them.
+     */
+    freeScansLeft: Int? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -91,6 +99,26 @@ fun HomeScreen(
             ),
         ) {
             Text(text = "Test this phone", style = MaterialTheme.typography.titleLarge)
+        }
+
+        if (freeScansLeft != null) {
+            Text(
+                text = when (freeScansLeft) {
+                    0 -> "Free trial used up — see the plans in Settings"
+                    1 -> "1 scan left on the free trial"
+                    else -> "$freeScansLeft scans left on the free trial"
+                },
+                style = MaterialTheme.typography.labelSmall,
+                // Amber at zero so it reads as a state to act on, not an error. Nothing has gone
+                // wrong; the trial has ended.
+                color = if (freeScansLeft == 0) {
+                    PhoneProofTheme.colors.caution
+                } else {
+                    PhoneProofTheme.colors.textSecondary
+                },
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
         }
 
         Text(
