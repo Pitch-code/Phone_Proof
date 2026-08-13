@@ -11,9 +11,14 @@ needs to be recorded rather than rediscovered as a surprise.
 | Premium | ₹99 one-time | unlimited | unlocked | all kept, PDF, compare |
 | Shop | ₹999/year | unlimited | unlocked | everything, plus shop branding on reports |
 
-"Advisory screens" means **Claimed against measured** and **Check these by hand**. They are advice
-and comparison rather than measurements of the phone, which is why they sit behind the paywall while
-the measurements do not.
+"Advisory screens" means **Claimed against measured** and **Eight things only you can check** (named
+once, in `MANUAL_CHECKS_TITLE`). They are advice and comparison rather than measurements of the
+phone, which is why they sit behind the paywall while the measurements do not.
+
+Both are gated on the **tier alone** (`Entitlement.hasAdvisoryTools`), never on the scan count. A
+free-trial install with both scans unused still finds them locked, so lock copy must say the trial
+does not include them — never that the scans have run out. That sentence is written once, in
+`ADVISORY_TRIAL_EXCLUSION`.
 
 The scan limit lives in exactly one place, `Entitlement.FREE_SCAN_LIMIT`. Do not add a second copy:
 the number shown on the button, the number in the block message and the number enforced must be the

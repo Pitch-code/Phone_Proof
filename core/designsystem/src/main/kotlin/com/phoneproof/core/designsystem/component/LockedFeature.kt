@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -28,10 +30,13 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 /**
  * Shown where the free trial stops.
  *
- * One component for every locked case — the scan allowance, claimed-against-measured, and the
- * by-hand guide — so the wording, the tone and the route out are identical wherever a buyer meets a
- * limit. Three separately written lock screens would drift, and the one that drifts is always the
- * one that reads as a shakedown.
+ * One component for every locked case — the scan allowance, claimed-against-measured, and the manual
+ * checks ([MANUAL_CHECKS_TITLE]) — so the wording, the tone and the route out are identical wherever
+ * a buyer meets a limit. Three separately written lock screens would drift, and the one that drifts
+ * is always the one that reads as a shakedown.
+ *
+ * The two advisory locks share [ADVISORY_TRIAL_EXCLUSION] for the reason they are locked, because
+ * this component only keeps the tone identical if the explanation is not retyped per screen.
  *
  * Three rules this screen follows, because a paywall is where an app is most easily resented:
  *
@@ -55,6 +60,11 @@ fun LockedFeature(
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
+            // Scrolls, because this screen is a fixed column of text whose length is decided by
+            // whichever caller wrote the longest explanation. On a short phone the button was the
+            // thing that fell off the bottom — a paywall with no way out. Home had the same bug.
+            // Costs nothing when the content already fits: the layout is identical.
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

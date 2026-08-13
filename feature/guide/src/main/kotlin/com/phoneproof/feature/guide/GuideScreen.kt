@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -67,7 +68,7 @@ fun GuideScreen(
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Spacer(Modifier.height(14.dp))
             Text(
-                text = "Check these by hand",
+                text = MANUAL_CHECKS_TITLE,
                 style = MaterialTheme.typography.titleLarge,
                 color = PhoneProofTheme.colors.textPrimary,
             )

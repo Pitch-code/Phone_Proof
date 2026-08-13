@@ -32,7 +32,14 @@ enum class Entitlement {
      */
     val hasUnlimitedScans: Boolean get() = this != FREE
 
-    /** Claimed against measured, and the by-hand guide. Extras rather than measurements. */
+    /**
+     * Claimed against measured, and "Eight things only you can check". Advice rather than
+     * measurements, which is why these two sit behind the trial while no measurement does.
+     *
+     * Purely the tier. This is deliberately **not** affected by how many scans have been used: a
+     * fresh install with both scans intact still has these locked, so any copy explaining the lock
+     * must not claim the scans have run out. See `ADVISORY_TRIAL_EXCLUSION` in core:designsystem.
+     */
     val hasAdvisoryTools: Boolean get() = this != FREE
 
     /** Branding a report with a shop's own name and logo. */

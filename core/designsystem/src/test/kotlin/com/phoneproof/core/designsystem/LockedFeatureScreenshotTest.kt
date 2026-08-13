@@ -75,10 +75,37 @@ class LockedFeatureScreenshotTest {
             name = "locked-2-advisory-light",
             title = "Claimed against measured",
             explanation = "This compares what the seller told you against what the phone actually " +
-                "reports — storage, memory and model. It is part of a paid plan.",
+                "reports — storage, memory and model.\n\n" + ADVISORY_TRIAL_EXCLUSION,
             whatUnlockingGives = "Catch a phone sold as 128 GB that holds 32, or as 8 GB of memory " +
-                "when it has 4. Also unlocks the by-hand guide, PDF reports and side-by-side " +
+                "when it has 4. Also unlocks “$MANUAL_CHECKS_TITLE”, PDF reports and side-by-side " +
                 "comparison.",
+            themeMode = ThemeMode.LIGHT,
+        )
+    }
+
+    /**
+     * The manual-checks lock, which had no render at all.
+     *
+     * Two advisory screens are gated by the same tier check, and only one of them was ever
+     * photographed — `locked-2` draws the claimed-against-measured wording. So the longest and most
+     * easily resented lock copy in the app could be rewritten with CI staying green and no PNG
+     * changing, which is the exact hole the screenshot gate exists to close.
+     *
+     * Rendered in light, the app's default, and with the real shared sentence rather than a retyped
+     * copy of it — the first paragraph is still typed out here, so it can drift from GuideRoute; a
+     * designsystem test cannot import a feature module to read the real thing.
+     */
+    @Test
+    fun the_manual_checks_lock() {
+        render(
+            name = "locked-3-manual-checks",
+            title = MANUAL_CHECKS_TITLE,
+            explanation = "Eight things no app can test for you — a twisted frame, a re-glued " +
+                "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
+                "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
+            whatUnlockingGives = "The full walkthrough, including the account check that stops a " +
+                "phone being locked remotely after you have paid. Also unlocks claimed against " +
+                "measured, PDF reports and side-by-side comparison.",
             themeMode = ThemeMode.LIGHT,
         )
     }

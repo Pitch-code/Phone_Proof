@@ -11,6 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.phoneproof.core.designsystem.ADVISORY_TRIAL_EXCLUSION
+import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
@@ -26,10 +28,12 @@ fun GuideRoute(
 
     if (!entitlement.hasAdvisoryTools) {
         LockedFeature(
-            title = "Check these by hand",
+            title = MANUAL_CHECKS_TITLE,
+            // "It is part of a paid plan" was the whole explanation before, which read as though the
+            // screen were a Premium extra and said nothing about the trial the reader is actually on.
             explanation = "Eight things no app can test for you — a twisted frame, a re-glued " +
                 "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
-                "how to check it. It is part of a paid plan.",
+                "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
             whatUnlockingGives = "The full walkthrough, including the account check that stops a " +
                 "phone being locked remotely after you have paid. Also unlocks claimed against " +
                 "measured, PDF reports and side-by-side comparison.",
