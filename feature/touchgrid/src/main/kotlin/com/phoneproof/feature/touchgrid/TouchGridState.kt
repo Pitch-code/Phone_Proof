@@ -44,8 +44,9 @@ data class TouchGridUiState(
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
-    /** Over every cell, reachable or not. Kept for anything that wants the raw figure. */
-    val coverageRatio: Float get() = touchedCount.toFloat() / cellCount.toFloat()
+    // coverageRatio lived here with a comment saying it was "kept for anything that wants the raw
+    // figure". Nothing wanted it, in production or in a test. Removed rather than left as a second,
+    // subtly wrong way to measure coverage sitting next to the right one.
 
     /** Covered cells among those that can actually be reached. */
     val testableTouchedCount: Int get() = (touchedCells - reservedCells).size

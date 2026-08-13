@@ -64,8 +64,10 @@ fun ReportsScreen(
             Spacer(Modifier.height(4.dp))
             Text(
                 text = retentionLine(state),
-                style = MaterialTheme.typography.labelSmall,
-                color = PhoneProofTheme.colors.textTertiary,
+                // bodyMedium, up from labelSmall. This line explains why an old report disappeared,
+                // which is the one thing on this screen someone comes back confused about.
+                style = MaterialTheme.typography.bodyMedium,
+                color = PhoneProofTheme.colors.textSecondary,
             )
         }
         Spacer(Modifier.height(16.dp))
@@ -197,7 +199,9 @@ private fun ReportRow(
             )
             Text(
                 text = dateLabel,
-                style = MaterialTheme.typography.labelSmall,
+                // The date separates two reports of the same phone, so it has to be readable rather
+                // than decorative.
+                style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textTertiary,
             )
         }
