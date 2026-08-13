@@ -123,14 +123,30 @@ object BatteryCheck {
         val cycles = facts.cycleCount
 
         if (cycles == null) {
-            // The common case on older or tighter-lipped phones. Saying so and handing over a
-            // manual method is worth more than a fabricated percentage.
+            // No cycle count, which is the common case: it depends on the OEM's fuel gauge, and
+            // neither of the realme handsets this was tested on reports it.
+            //
+            // This used to be UNKNOWN, on the grounds that wear had not been measured. Changed to
+            // PASS at the product owner's direction, because "can't tell" on the part buyers care
+            // most about read as the app being useless rather than careful.
+            //
+            // What keeps it defensible: PASS here means "no fault was found in what could be read",
+            // which is true — the platform's own health verdict, temperature, voltage and presence
+            // were all checked and none is alarming. It does not mean the battery is healthy, so the
+            // confidence is LOW, the headline says wear could not be measured, and the card tells
+            // the buyer how to judge wear themselves. A silent green badge with no caveat would be
+            // the app claiming a measurement it never took.
             return CheckResult(
                 id = CHECK_ID,
                 title = TITLE,
-                outcome = CheckOutcome.UNKNOWN,
-                confidence = Confidence.HIGH,
-                headline = "This phone does not report how many charge cycles it has been through.",
+                outcome = CheckOutcome.PASS,
+                confidence = Confidence.LOW,
+                headline = "Nothing wrong found, but this phone will not report battery wear.",
+                consequence = "It does not publish a charge-cycle count, so how much life the " +
+                    "battery has lost cannot be measured here. Everything that could be read — " +
+                    "Android's own health verdict, temperature and voltage — looks normal.",
+                action = "Judge the battery yourself: note the percentage now, use the phone hard " +
+                    "for ten minutes, and check how far it has dropped.",
                 measurements = measurements,
             )
         }
