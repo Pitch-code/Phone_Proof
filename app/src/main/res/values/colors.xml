@@ -2,6 +2,13 @@
 <resources>
     <!-- Mirrors PhoneProofColors.Background in the design system. Used only for the
          pre-Compose window background so there is no white flash on cold start. -->
-    <color name="window_background">#FF0A0A0B</color>
+    <!--
+    Matches LightPalette.background, because light is the app's default theme. This is the colour
+    Android paints before the first Compose frame exists, so a dark value here flashed dark on every
+    launch for the majority of users. Someone who chose dark now gets a light flash instead, which is
+    the same trade already accepted for the first frame in MainActivity: the default should be the
+    one that launches cleanly.
+    -->
+    <color name="window_background">#FFFAFAFA</color>
     <color name="ic_launcher_background">#FF0A0A0B</color>
 </resources>

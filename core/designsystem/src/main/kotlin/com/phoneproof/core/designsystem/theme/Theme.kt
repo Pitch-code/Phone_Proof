@@ -26,11 +26,7 @@ fun PhoneProofTheme(
     themeMode: ThemeMode = ThemeMode.LIGHT,
     content: @Composable () -> Unit,
 ) {
-    val dark = when (themeMode) {
-        ThemeMode.SYSTEM -> isSystemInDarkTheme()
-        ThemeMode.LIGHT -> false
-        ThemeMode.DARK -> true
-    }
+    val dark = themeMode.resolvesToDark()
     val palette = if (dark) DarkPalette else LightPalette
 
     CompositionLocalProvider(LocalPhoneProofPalette provides palette) {
@@ -47,6 +43,20 @@ fun PhoneProofTheme(
  * object and a function to share a name, which is what lets `PhoneProofTheme { }` and
  * `PhoneProofTheme.colors` coexist.
  */
+/**
+ * Whether this choice ends up dark, resolving [ThemeMode.SYSTEM] against the phone's own setting.
+ *
+ * Public because the activity needs the same answer to tell Android which colour to draw the status
+ * bar icons in. Working it out twice is how those two drift apart, and the symptom is exactly the bug
+ * this exists to fix: white icons on a white status bar.
+ */
+@Composable
+fun ThemeMode.resolvesToDark(): Boolean = when (this) {
+    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
 object PhoneProofTheme {
     val colors: PhoneProofPalette
         @Composable
