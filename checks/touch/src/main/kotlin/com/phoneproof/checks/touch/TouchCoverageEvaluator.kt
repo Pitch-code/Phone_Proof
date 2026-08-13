@@ -36,10 +36,19 @@ object TouchCoverageEvaluator {
     )
 
     fun evaluate(coverage: TouchCoverage): CheckResult {
-        val percent = (coverage.coverageRatio * 100f)
+        // Counted over reachable cells, matching the live readout. Reporting 509 / 512 and 99.4%
+        // when 509 was every cell anyone could reach told the buyer they had missed three tiles and
+        // made a flawless screen look imperfect — the exact impression the "Not testable" row below
+        // exists to prevent. The reserved cells are disclosed on their own line instead.
+        val percent = (coverage.testableCoverageRatio * 100f)
         val untestable = coverage.untestedReservedCells.size
         val measurements = buildList {
-            add(Measurement("Cells covered", "${coverage.touchedCount} / ${coverage.cellCount}"))
+            add(
+                Measurement(
+                    "Cells covered",
+                    "${coverage.testableTouchedCount} / ${coverage.testableCellCount}",
+                ),
+            )
             add(Measurement("Coverage", String.format("%.1f", percent), "%"))
             // Disclosed on every outcome, including FAIL and PASS, so the report always states the
             // limits of what was actually measured rather than only when it flatters the phone.

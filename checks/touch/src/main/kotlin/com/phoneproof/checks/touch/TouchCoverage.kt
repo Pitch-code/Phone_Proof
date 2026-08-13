@@ -119,6 +119,9 @@ data class TouchCoverage(
     /** Cells the tester can fairly be expected to reach. */
     val testableCellCount: Int get() = cellCount - reservedCells.size
 
+    /** Covered cells among the reachable ones. What the report counts. */
+    val testableTouchedCount: Int get() = (touchedCells - reservedCells).size
+
     /**
      * Coverage over the cells that can actually be reached, which is what the judging threshold
      * has to be measured against. Using the raw ratio would make a 100% target unreachable on a
