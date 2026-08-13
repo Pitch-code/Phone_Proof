@@ -44,7 +44,11 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.touch.Cell
@@ -336,10 +340,18 @@ private fun CoverageCanvas(
     // Hoisted out of the Canvas: the draw lambda is not a composable scope, so it cannot read the
     // palette. Reading them once per composition is also cheaper than once per cell — this loop
     // runs 512 times.
-    val coveredColour = PhoneProofTheme.colors.accent.copy(alpha = 0.34f)
+    // Opaque, not a 34% wash. On the light theme the old value produced the pale blue you could
+    // barely see against a white background — and this fill is the entire feedback the test gives,
+    // so it has to be unmistakable in a shop under bright light rather than merely present.
+    val coveredColour = PhoneProofTheme.colors.accent
     val emptyColour = PhoneProofTheme.colors.gridEmpty
 
     val reservedColour = PhoneProofTheme.colors.gridReserved
+
+    // Deliberately faint — the label explains a band the tester should ignore, so it must not
+    // compete with the grid it sits in.
+    val reservedInk = PhoneProofTheme.colors.textTertiary.copy(alpha = 0.75f)
+    val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = modifier.then(gestureModifier)) {
         val cellWidth = size.width / state.spec.columns
@@ -382,6 +394,53 @@ private fun CoverageCanvas(
                 )
             }
         }
+
+        // Labels written into the reserved bands themselves.
+        //
+        // The dimmed edges were being read as dead parts of the screen — the readout explained them
+        // in a sentence at the top, which is not where someone is looking while they sweep the
+        // bottom. Saying it in the band removes the question at the place it gets asked.
+        if (state.reservedCells.isNotEmpty()) {
+            val topRows = (0 until state.spec.rows)
+                .takeWhile { row -> (0 until state.spec.columns).all { Cell(it, row) in state.reservedCells } }
+                .count()
+            val bottomRows = (state.spec.rows - 1 downTo 0)
+                .takeWhile { row -> (0 until state.spec.columns).all { Cell(it, row) in state.reservedCells } }
+                .count()
+
+            val label = textMeasurer.measure(
+                text = "no need to touch here",
+                style = TextStyle(fontSize = 11.sp, color = reservedInk),
+            )
+
+            // The top band is skipped while the test is running, because the readout card sits over
+            // it — the render showed this label drawn underneath the panel, invisible. During the
+            // test the card's own caption explains the dimmed edges; once the test is finished the
+            // card is gone and the label is worth drawing.
+            //
+            // Only drawn where the band is genuinely taller than the text, too. A label crammed into
+            // a one-row strip would overlap the cells it is describing.
+            val topIsVisible = state.phase == TouchTestPhase.FINISHED
+            if (topIsVisible && topRows > 0 && topRows * cellHeight > label.size.height * 1.4f) {
+                drawText(
+                    textLayoutResult = label,
+                    topLeft = Offset(
+                        x = (size.width - label.size.width) / 2f,
+                        y = (topRows * cellHeight - label.size.height) / 2f,
+                    ),
+                )
+            }
+            if (bottomRows > 0 && bottomRows * cellHeight > label.size.height * 1.4f) {
+                val bandTop = size.height - bottomRows * cellHeight
+                drawText(
+                    textLayoutResult = label,
+                    topLeft = Offset(
+                        x = (size.width - label.size.width) / 2f,
+                        y = bandTop + (bottomRows * cellHeight - label.size.height) / 2f,
+                    ),
+                )
+            }
+        }
     }
 }
 
@@ -407,7 +466,7 @@ private fun Readout(state: TouchGridUiState) {
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "${state.touchedCount} / ${state.cellCount}",
+                text = "${state.testableTouchedCount} / ${state.testableCellCount}",
                 style = PhoneProofType.NumericLarge,
                 color = PhoneProofTheme.colors.textPrimary,
             )

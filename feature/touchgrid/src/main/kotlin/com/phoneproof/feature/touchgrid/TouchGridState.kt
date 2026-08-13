@@ -44,8 +44,21 @@ data class TouchGridUiState(
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
+    /** Over every cell, reachable or not. Kept for anything that wants the raw figure. */
     val coverageRatio: Float get() = touchedCount.toFloat() / cellCount.toFloat()
-    val coveragePercent: Int get() = (coverageRatio * 100f).toInt()
+
+    /** Covered cells among those that can actually be reached. */
+    val testableTouchedCount: Int get() = (touchedCells - reservedCells).size
+
+    /**
+     * The percentage the readout shows, over reachable cells only.
+     *
+     * It used to divide by every cell, so a finished test read "466 / 512, 91%" when 457 was the most
+     * anyone could ever reach. That told the tester they had missed 46 tiles no app can touch, and
+     * made the top and bottom of a perfectly good screen look broken. It reaches 100 when the job is
+     * actually done.
+     */
+    val coveragePercent: Int get() = (testableCoverageRatio * 100f).toInt()
 
     /** Cells the tester can fairly be asked to reach. Mirrors `TouchCoverage.testableCellCount`. */
     val testableCellCount: Int get() = cellCount - reservedCells.size

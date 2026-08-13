@@ -209,6 +209,33 @@ class TouchCoverageEvaluatorTest {
     }
 
     @Test
+    fun `the report counts coverage over reachable cells, not every cell`() {
+        // The realme reading that prompted this: 3 cells under the gesture strip, 509 covered out of
+        // 512. Reporting "509 / 512, 99.4%" told the buyer they had missed three tiles and made a
+        // flawless screen look imperfect, which is what the "Not testable" row exists to prevent.
+        val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
+        val result = TouchCoverageEvaluator.evaluate(coverage(untouched, topStrip))
+
+        assertThat(result.measurements.first { it.label == "Cells covered" }.display)
+            .isEqualTo("${spec.cellCount - topStrip.size} / ${spec.cellCount - topStrip.size}")
+        assertThat(result.measurements.first { it.label == "Coverage" }.display)
+            .isEqualTo("100.0 %")
+        // The forgiven cells are still disclosed rather than vanishing into a rounder number.
+        assertThat(result.measurements.first { it.label == "Not testable" }.display)
+            .isEqualTo("3 cells")
+    }
+
+    @Test
+    fun `with nothing reserved the count is unchanged`() {
+        // Guards the common case: a phone that reserves nothing must still report every cell.
+        val result = TouchCoverageEvaluator.evaluate(coverage(emptySet(), emptySet()))
+
+        assertThat(result.measurements.first { it.label == "Cells covered" }.display)
+            .isEqualTo("${spec.cellCount} / ${spec.cellCount}")
+        assertThat(result.measurements.map { it.label }).doesNotContain("Not testable")
+    }
+
+    @Test
     fun `check id is stable so saved reports keep comparing correctly`() {
         val result = TouchCoverageEvaluator.evaluate(coverage(emptySet()))
         assertThat(result.id).isEqualTo("screen.touch_coverage")
