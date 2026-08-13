@@ -1,6 +1,7 @@
 package com.phoneproof.feature.touchgrid
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -31,11 +32,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -96,6 +101,32 @@ private fun TestingLayout(
     modifier: Modifier = Modifier,
 ) {
     var pointerDown by remember { mutableStateOf(false) }
+
+    // Where the finger is, and where the readout sits, so the readout can get out of its own way.
+    //
+    // The readout is drawn on a scrim over the grid, which made the cells beneath it unreadable —
+    // exactly the cells a tester sweeping the top of the screen is trying to check. Dropping the
+    // scrim would make the text unreadable over covered cells instead, so neither one can simply
+    // win: it fades out while the finger is over it and comes back when the finger leaves.
+    var fingerAt by remember { mutableStateOf<Offset?>(null) }
+    var readoutBounds by remember { mutableStateOf<Rect?>(null) }
+
+    val fingerOverReadout = run {
+        val finger = fingerAt
+        val bounds = readoutBounds
+        // Inflated, so the readout is already out of the way by the time the finger arrives rather
+        // than fading as it crosses the edge.
+        finger != null && bounds != null && pointerDown &&
+            bounds.inflate(FADE_MARGIN_PX).contains(finger)
+    }
+
+    // Faded, not hidden. Going fully transparent would leave a tester mid-sweep with no idea how far
+    // they had got, and removing it from layout would make the grid jump.
+    val readoutAlpha by animateFloatAsState(
+        targetValue = if (fingerOverReadout) 0.12f else 1f,
+        animationSpec = tween(durationMillis = 180),
+        label = "readoutAlpha",
+    )
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
 
     // Measured, not assumed. These insets differ between a gesture-navigation phone and a
@@ -129,13 +160,20 @@ private fun TestingLayout(
         CoverageCanvas(
             state = state,
             onTouch = onTouch,
-            onPointerDownChange = { pointerDown = it },
+            onPointerDownChange = { down ->
+                pointerDown = down
+                // Cleared on lift so the readout returns even if the finger left over it.
+                if (!down) fingerAt = null
+            },
+            onPointerAt = { fingerAt = it },
             modifier = Modifier.fillMaxSize(),
         )
 
         Column(
             modifier = Modifier
                 .align(Alignment.TopCenter)
+                .onGloballyPositioned { readoutBounds = it.boundsInParent() }
+                .alpha(readoutAlpha)
                 // Only the overlay is inset. The canvas above deliberately keeps no inset at all,
                 // because the test has to reach the true physical edges of the screen — insetting
                 // it would leave the strips under the status and navigation bars untestable, and
@@ -231,6 +269,8 @@ private fun CoverageCanvas(
     state: TouchGridUiState,
     onTouch: (Float, Float) -> Unit,
     onPointerDownChange: (Boolean) -> Unit,
+    /** Where the finger is, in canvas pixels. Used to move the readout out of the way. */
+    onPointerAt: (Offset) -> Unit = {},
     modifier: Modifier = Modifier,
     interactive: Boolean = true,
 ) {
@@ -253,6 +293,9 @@ private fun CoverageCanvas(
 
                 fun report(position: Offset) {
                     onTouch(position.x / width, position.y / height)
+                    // Raw pixels, not the normalised pair above: the caller compares this against
+                    // the readout's own bounds, which are in the same pixel space.
+                    onPointerAt(position)
                 }
 
                 fun report(change: PointerInputChange) {
@@ -393,3 +436,12 @@ private fun Readout(state: TouchGridUiState) {
         }
     }
 }
+
+
+/**
+ * How far outside the readout a finger counts as being over it.
+ *
+ * Generous on purpose. The readout should already be faded by the time the fingertip reaches it, and
+ * a fingertip covers far more of the screen than the single point the touch system reports.
+ */
+private const val FADE_MARGIN_PX = 90f
