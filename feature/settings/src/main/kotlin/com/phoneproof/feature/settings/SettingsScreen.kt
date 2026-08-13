@@ -82,6 +82,16 @@ fun SettingsScreen(
             }
         }
 
+        Section("Your plan") {
+            // The free trial gets a card of its own, listed like the paid ones. Someone deciding
+            // whether to pay needs to see what they already have beside what they would gain; a bare
+            // "2 scans left" tells them the cost of not paying without telling them the benefit.
+            FreeTrialCard(
+                active = state.entitlement == Entitlement.FREE,
+                scansLeft = state.freeScansLeft,
+            )
+        }
+
         Section("Premium") {
             PremiumPlan.entries.forEach { plan ->
                 PlanCard(
@@ -367,6 +377,98 @@ private fun ActionRow(label: String, onClick: () -> Unit) {
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textTertiary,
         )
+    }
+}
+
+@Composable
+private fun FreeTrialCard(active: Boolean, scansLeft: Int?) {
+    val accent = PhoneProofTheme.colors.accent
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(PhoneProofTheme.colors.surface, RoundedCornerShape(14.dp))
+            .border(
+                1.dp,
+                if (active) accent.copy(alpha = 0.5f) else PhoneProofTheme.colors.border,
+                RoundedCornerShape(14.dp),
+            )
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "Free trial",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = PhoneProofTheme.colors.textPrimary,
+                )
+                Text(
+                    text = "To try the app before paying",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PhoneProofTheme.colors.textTertiary,
+                )
+            }
+            Text(
+                text = "Free",
+                style = PhoneProofType.NumericLarge,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+        }
+
+        // Included and not included, in one list. Splitting them into two sections lets a reader
+        // skim only the good half, and the limit is the whole point of this card.
+        listOf(
+            true to "${Entitlement.FREE_SCAN_LIMIT} full scans of a phone",
+            true to "Every check runs in full — nothing is watered down",
+            true to "Touch grid, dead pixels and burn-in, remote lock, battery",
+            true to "Your last 2 reports, kept on the phone",
+            false to "Claimed against measured",
+            false to "Check these by hand",
+            false to "PDF reports, comparing two phones, unlimited history",
+        ).forEach { (included, text) ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = if (included) "✓" else "✕",
+                    color = if (included) {
+                        PhoneProofTheme.colors.pass
+                    } else {
+                        PhoneProofTheme.colors.textTertiary
+                    },
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (included) {
+                        PhoneProofTheme.colors.textSecondary
+                    } else {
+                        PhoneProofTheme.colors.textTertiary
+                    },
+                )
+            }
+        }
+
+        if (active) {
+            Text(
+                text = when (scansLeft) {
+                    null -> "Active on this device"
+                    0 -> "Active — both scans used"
+                    1 -> "Active — 1 scan left"
+                    else -> "Active — $scansLeft scans left"
+                },
+                style = MaterialTheme.typography.labelLarge,
+                color = if (scansLeft == 0) {
+                    PhoneProofTheme.colors.caution
+                } else {
+                    PhoneProofTheme.colors.pass
+                },
+            )
+        }
     }
 }
 

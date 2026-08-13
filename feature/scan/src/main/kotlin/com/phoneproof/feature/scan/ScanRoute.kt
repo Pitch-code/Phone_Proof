@@ -23,6 +23,7 @@ import com.phoneproof.core.device.BatteryFactsReader
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
+import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
@@ -56,11 +57,28 @@ internal fun deviceLabel(): String {
 
 @Composable
 fun ScanRoute(
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ScanViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val settings = remember(context) { SettingsRepository(context) }
+    val entitlement by remember(settings) { settings.entitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+    val scansUsed by remember(settings) { settings.scansUsed }
+        .collectAsStateWithLifecycle(initialValue = 0)
+
+    val retain = if (entitlement.hasPremiumExtras) {
+        ReportStore.PREMIUM_RETAIN
+    } else {
+        ReportStore.FREE_TIER_RETAIN
+    }
+
+    // Declared before it is read, which the first attempt at this got wrong: the block below runs
+    // before the scan is started, so the allowance has to be known by then.
+    val outOfScans = !entitlement.hasUnlimitedScans && scansUsed >= Entitlement.FREE_SCAN_LIMIT
 
     // The facts are read once per scan attempt and shared by the checks that need them, so six
     // checks do not each re-read the same platform values.
@@ -73,21 +91,29 @@ fun ScanRoute(
         }
     }
 
-    LaunchedEffect(Unit) { startScan() }
+    if (outOfScans) {
+        LockedFeature(
+            title = "You have used both free scans",
+            explanation = "The free trial covers ${Entitlement.FREE_SCAN_LIMIT} full scans of a " +
+                "phone, and both are done. Nothing is wrong with this phone or with the app — the " +
+                "trial has simply ended.",
+            whatUnlockingGives = "Scan as many phones as you like, keep every report instead of " +
+                "the last two, save a report as a PDF, and compare two phones side by side.",
+            onOpenSettings = onOpenSettings,
+            modifier = modifier,
+        )
+        return
+    }
+
+    // Keyed so the scan starts once, and only while there is an allowance left. Without outOfScans in
+    // the key, a buyer arriving with no scans left would still burn one before the block appeared.
+    LaunchedEffect(outOfScans) { if (!outOfScans) startScan() }
 
     // Saved without being asked. The moment a buyer wants a report is after they have handed the
     // phone back, and a "save this?" prompt is answered wrongly under pressure in front of a seller.
     //
     // Keyed on scanId, so this runs once per scan: the id is minted when the scan starts, and saving
     // the same id twice rewrites one file rather than duplicating the report.
-    val entitlement by remember(context) { SettingsRepository(context).entitlement }
-        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
-    val retain = if (entitlement.hasPremiumExtras) {
-        ReportStore.PREMIUM_RETAIN
-    } else {
-        ReportStore.FREE_TIER_RETAIN
-    }
-
     val scanId = state.scanId
     LaunchedEffect(scanId, state.finished, retain) {
         if (scanId == null || !state.finished) return@LaunchedEffect
@@ -109,6 +135,13 @@ fun ScanRoute(
                 ),
             )
             Diagnostics.info(TAG, "saved report $scanId (${results.size} results, $pruned pruned)")
+
+            // Counted here, at the point a scan actually produced results, rather than when one
+            // starts. A scan that read nothing must not cost a buyer one of two chances.
+            if (!entitlement.hasUnlimitedScans) {
+                settings.recordScanUsed()
+                Diagnostics.info(TAG, "free scan recorded (${scansUsed + 1}/${Entitlement.FREE_SCAN_LIMIT})")
+            }
         }.onFailure {
             // A failed save must never take down the screen showing results the buyer is reading.
             Diagnostics.error(TAG, "could not save report $scanId", it)

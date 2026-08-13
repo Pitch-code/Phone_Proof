@@ -46,8 +46,10 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:preferences"))
 
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.foundation)

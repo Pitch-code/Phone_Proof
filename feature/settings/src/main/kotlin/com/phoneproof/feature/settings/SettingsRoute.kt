@@ -40,7 +40,8 @@ fun SettingsRoute(
             repository.themeMode,
             repository.entitlement,
             repository.shopBranding,
-        ) { mode, entitlement, branding ->
+            repository.scansUsed,
+        ) { mode, entitlement, branding, scansUsed ->
             SettingsUiState(
                 themeMode = mode,
                 versionName = versionName,
@@ -62,6 +63,11 @@ fun SettingsRoute(
                 shopContact = branding.contact,
                 shopLogoPath = branding.logoPath,
                 showTestingControls = showTestingControls,
+                freeScansLeft = if (entitlement.hasUnlimitedScans) {
+                    null
+                } else {
+                    (Entitlement.FREE_SCAN_LIMIT - scansUsed).coerceAtLeast(0)
+                },
             )
         }
     }.collectAsStateWithLifecycle(initialValue = SettingsUiState(versionName = versionName, versionCode = versionCode))

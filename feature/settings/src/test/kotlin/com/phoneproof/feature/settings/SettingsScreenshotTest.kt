@@ -35,6 +35,10 @@ class SettingsScreenshotTest {
                         versionName = "0.1.0",
                         versionCode = 1L,
                         billingAvailable = false,
+                        // Set, because a free-trial user always has a count — the route computes it
+                        // for every FREE entitlement. Leaving it null rendered "Active on this
+                        // device", which is the paid-tier wording and a state nobody will ever see.
+                        freeScansLeft = Entitlement.FREE_SCAN_LIMIT,
                     ),
                     onThemeSelected = {},
                     onOpenPrivacyPolicy = {},

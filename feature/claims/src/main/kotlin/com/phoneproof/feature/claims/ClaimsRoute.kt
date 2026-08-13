@@ -8,15 +8,38 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.phoneproof.checks.device.ClaimedSpecs
 import com.phoneproof.checks.device.ClaimedSpecsCheck
+import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.device.DeviceFactsReader
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.model.CheckResult
 
 @Composable
-fun ClaimsRoute(modifier: Modifier = Modifier) {
+fun ClaimsRoute(
+    onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val context = LocalContext.current
+    val entitlement by remember(context) { SettingsRepository(context).entitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+
+    if (!entitlement.hasAdvisoryTools) {
+        LockedFeature(
+            title = "Claimed against measured",
+            explanation = "This compares what the seller told you against what the phone actually " +
+                "reports — storage, memory and model. It is part of a paid plan.",
+            whatUnlockingGives = "Catch a phone sold as 128 GB that holds 32, or as 8 GB of memory " +
+                "when it has 4. Also unlocks the by-hand guide, PDF reports and side-by-side " +
+                "comparison.",
+            onOpenSettings = onOpenSettings,
+            modifier = modifier,
+        )
+        return
+    }
 
     // rememberSaveable throughout: a buyer typing three fields must not lose them to a rotation, or
     // to the keyboard resizing the window.
