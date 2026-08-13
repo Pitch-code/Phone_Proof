@@ -63,6 +63,36 @@ class HomeScreenshotTest {
     }
 
     @Test
+    fun home_on_the_free_trial_with_scans_left() {
+        // The counter had no render at all: every existing shot leaves freeScansLeft null, which is
+        // the paid case, so the line a free user actually sees was never drawn.
+        renderWithScans("home-3-scans-left", scansLeft = 2)
+    }
+
+    @Test
+    fun home_with_the_trial_used_up() {
+        // Amber, and worded as a state to act on rather than an error.
+        renderWithScans("home-4-trial-used-up", scansLeft = 0)
+    }
+
+    private fun renderWithScans(name: String, scansLeft: Int) {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                HomeScreen(
+                    checks = realChecks(),
+                    onStartFullTest = {},
+                    onOpenGuide = {},
+                    onOpenReports = {},
+                    onOpenSettings = {},
+                    freeScansLeft = scansLeft,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/$name.png")
+    }
+
+    @Test
     @Config(qualifiers = "w411dp-h1800dp-xhdpi")
     fun home_full_column() {
         // The whole scrolling column in one image. This is the render that proves Settings and Saved
