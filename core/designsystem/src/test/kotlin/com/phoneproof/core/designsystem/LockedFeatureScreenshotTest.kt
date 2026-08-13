@@ -100,7 +100,7 @@ class LockedFeatureScreenshotTest {
         render(
             name = "locked-3-manual-checks",
             title = MANUAL_CHECKS_TITLE,
-            explanation = "Eight things no app can test for you — a twisted frame, a re-glued " +
+            explanation = "No app can test any of these for you — a twisted frame, a re-glued " +
                 "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
                 "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
             whatUnlockingGives = "The full walkthrough, including the account check that stops a " +

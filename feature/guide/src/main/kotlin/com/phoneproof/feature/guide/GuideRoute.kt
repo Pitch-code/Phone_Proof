@@ -31,7 +31,10 @@ fun GuideRoute(
             title = MANUAL_CHECKS_TITLE,
             // "It is part of a paid plan" was the whole explanation before, which read as though the
             // screen were a Premium extra and said nothing about the trial the reader is actually on.
-            explanation = "Eight things no app can test for you — a twisted frame, a re-glued " +
+            //
+            // Opens "No app can test" rather than "Eight things no app can test": the render showed
+            // the old opening repeating the first two words of the title directly beneath it.
+            explanation = "No app can test any of these for you — a twisted frame, a re-glued " +
                 "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
                 "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
             whatUnlockingGives = "The full walkthrough, including the account check that stops a " +
