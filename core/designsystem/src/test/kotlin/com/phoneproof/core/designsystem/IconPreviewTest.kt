@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.ThemeMode
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import org.junit.Rule
 import org.junit.Test
@@ -87,6 +88,12 @@ class IconPreviewTest {
     @Test
     fun launcher_icon_at_every_size_it_will_be_seen_at() {
         composeRule.setContent {
+            // Pinned to dark, like every other render in this project. This preview previously read
+            // the palette with no theme around it, so it silently used the CompositionLocal fallback
+            // — and the moment that fallback changed with the app's default, the icon tiles turned
+            // white while the shipped icon stayed near-black. A render that depends on a fallback is
+            // a render that moves for reasons unrelated to what it is testing.
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
             Column(
                 modifier = Modifier
                     .background(Color(0xFF1C1C20))
@@ -101,7 +108,11 @@ class IconPreviewTest {
                         AdaptiveIconPreview(
                             size = it,
                             drawableRes = R.drawable.ic_launcher_foreground,
-                            background = PhoneProofTheme.colors.background,
+                            // The launcher's real background from res/values/colors.xml, not the
+                            // theme's. The icon on a phone's home screen does not follow the app's
+                            // light or dark setting, so a preview that did would be showing
+                            // something the user never sees.
+                            background = LAUNCHER_BACKGROUND,
                         )
                     }
                 }
@@ -132,7 +143,13 @@ class IconPreviewTest {
                     color = PhoneProofTheme.colors.textSecondary,
                 )
             }
+            }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/icon-sizes.png")
+    }
+
+    private companion object {
+        /** Mirrors `R.color.ic_launcher_background` (#FF0A0A0B). */
+        val LAUNCHER_BACKGROUND = Color(0xFF0A0A0B)
     }
 }

@@ -50,7 +50,8 @@ data class PhoneProofPalette(
 }
 
 /**
- * Dark is the app's native form. The background is not pure black on purpose: #000 smears visibly
+ * Dark, which is now a choice rather than the default. The background is not pure black on purpose:
+ * #000 smears visibly
  * on OLED panels, which would be a poor look in an app whose job is to inspect OLED panels.
  */
 val DarkPalette = PhoneProofPalette(
@@ -102,4 +103,10 @@ val LightPalette = PhoneProofPalette(
  * Static rather than dynamic: the palette changes only when the user picks a different theme, so
  * there is no reason to make every reader recompose on a value that is effectively constant.
  */
-val LocalPhoneProofPalette = staticCompositionLocalOf { DarkPalette }
+// Falls back to light, matching the app's default, so a palette read without a theme around it
+// cannot disagree with what the rest of the app is doing.
+//
+// This is a fallback and not a default anyone should rely on: changing it moved the launcher-icon
+// preview, which turned out to be reading the palette with no theme wrapper at all. That render now
+// pins its own theme. If another one moves when this line changes, that render is the bug.
+val LocalPhoneProofPalette = staticCompositionLocalOf { LightPalette }

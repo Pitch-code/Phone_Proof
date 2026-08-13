@@ -420,6 +420,8 @@ private val ThemeMode.label: String
 private val ThemeMode.description: String
     get() = when (this) {
         ThemeMode.SYSTEM -> "Follows your phone's own light or dark setting"
-        ThemeMode.LIGHT -> "Easier to read in bright sunlight"
-        ThemeMode.DARK -> "The default. Kinder to the eyes indoors"
+        // "The default" moves with the default. Leaving it on Dark would have made the settings
+        // screen quietly lie to every new user about what they were looking at.
+        ThemeMode.LIGHT -> "The default. Easier to read in bright sunlight"
+        ThemeMode.DARK -> "Kinder to the eyes indoors"
     }
