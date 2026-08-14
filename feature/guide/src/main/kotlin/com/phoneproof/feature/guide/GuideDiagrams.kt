@@ -107,10 +107,12 @@ internal fun DrawScope.drawHand(
         path.close()
 
         drawPath(path, ink.copy(alpha = 0.20f * alpha))
+        // Thin, because the scallops between the fingers are only about a thirtieth of the hand
+        // apart: a heavier stroke closes the gaps and hands the shape back to being an oval.
         drawPath(
             path,
             ink.copy(alpha = 0.85f * alpha),
-            style = Stroke(width = length * 0.042f),
+            style = Stroke(width = length * 0.030f),
         )
 
         // The folded fingers. Without them the fist is a bean, and the bean is what the old two-bar
@@ -120,7 +122,7 @@ internal fun DrawScope.drawHand(
                 color = ink.copy(alpha = 0.45f * alpha),
                 start = Offset(tip.x + from.x * length, tip.y + from.y * length),
                 end = Offset(tip.x + to.x * length, tip.y + to.y * length),
-                strokeWidth = length * 0.026f,
+                strokeWidth = length * 0.020f,
             )
         }
     }
@@ -129,57 +131,98 @@ internal fun DrawScope.drawHand(
 /**
  * The pointing hand, as fractions of its own length, fingertip at the origin and pointing up.
  *
- * Walked clockwise from the left edge of the index finger. The thumb is the bulge at 0.72 down the
- * left side: it is what stops the shape reading as a mitten.
+ * Two things carry the reading, and both are in the **silhouette**:
+ *
+ *  - The folded fingers are **scallops down the right edge**, not lines drawn inside the shape. The
+ *    first attempt used three parallel interior stripes; rendered, they read as grill marks and the
+ *    whole hand as a leaf. At thirty pixels an interior line is texture, and texture is noise.
+ *  - The thumb **leaves the outline** on the left, with a notch behind it. A thumb absorbed into a
+ *    smooth curve is not a thumb, and without one the shape was a potato.
+ *
+ * Walked clockwise from the left edge of the index finger.
  */
 private val PointingHand = listOf(
-    Offset(-0.075f, 0.045f),
-    Offset(-0.045f, 0.005f),
-    Offset(0.045f, 0.005f),
-    Offset(0.075f, 0.045f),
-    Offset(0.075f, 0.320f),
-    Offset(0.190f, 0.370f),
-    Offset(0.260f, 0.460f),
-    Offset(0.280f, 0.600f),
-    Offset(0.260f, 0.740f),
-    Offset(0.210f, 0.850f),
-    Offset(0.150f, 0.950f),
+    // The index finger: long and narrow, because it is the part that has to look deliberate.
+    Offset(-0.055f, 0.050f),
+    Offset(-0.032f, 0.006f),
+    Offset(0.032f, 0.006f),
+    Offset(0.055f, 0.050f),
+    Offset(0.055f, 0.330f),
+    // Knuckles, then three folded fingers as bumps down the right edge.
+    Offset(0.150f, 0.370f),
+    Offset(0.205f, 0.445f),
+    Offset(0.160f, 0.520f),
+    Offset(0.235f, 0.585f),
+    Offset(0.180f, 0.665f),
+    Offset(0.240f, 0.725f),
+    Offset(0.185f, 0.805f),
+    Offset(0.215f, 0.865f),
+    Offset(0.140f, 0.945f),
+    // Wrist.
     Offset(0.020f, 1.000f),
-    Offset(-0.130f, 0.970f),
-    Offset(-0.230f, 0.870f),
-    Offset(-0.290f, 0.720f),
-    Offset(-0.280f, 0.570f),
-    Offset(-0.200f, 0.440f),
-    Offset(-0.110f, 0.370f),
+    Offset(-0.140f, 0.970f),
+    // The thumb, out to the left with a notch behind it.
+    Offset(-0.225f, 0.885f),
+    Offset(-0.345f, 0.780f),
+    Offset(-0.375f, 0.680f),
+    Offset(-0.300f, 0.605f),
+    Offset(-0.205f, 0.585f),
+    // Back up the palm to the base of the index finger.
+    Offset(-0.160f, 0.460f),
+    Offset(-0.100f, 0.380f),
 )
 
-/** The same hand closed, for the steps where something is held rather than touched. */
+/**
+ * The same hand closed, for the steps where something is held rather than touched.
+ *
+ * The knuckles are scalloped along the **leading** edge — the end nearest the fingertip anchor — so
+ * that the four folded fingers are what meets whatever is being gripped. Rebuilt for the same reason
+ * as the pointing hand: as a smooth oval with stripes across it, this was a potato.
+ */
 private val Fist = listOf(
-    Offset(-0.140f, 0.100f),
-    Offset(0.100f, 0.060f),
-    Offset(0.220f, 0.140f),
-    Offset(0.280f, 0.300f),
-    Offset(0.300f, 0.500f),
-    Offset(0.280f, 0.720f),
-    Offset(0.220f, 0.880f),
-    Offset(0.060f, 1.000f),
-    Offset(-0.120f, 0.980f),
-    Offset(-0.240f, 0.860f),
-    Offset(-0.310f, 0.660f),
-    Offset(-0.300f, 0.420f),
-    Offset(-0.240f, 0.220f),
+    // Four knuckles across the gripping edge.
+    Offset(-0.170f, 0.175f),
+    Offset(-0.105f, 0.060f),
+    Offset(-0.020f, 0.120f),
+    Offset(0.050f, 0.030f),
+    Offset(0.130f, 0.100f),
+    Offset(0.200f, 0.045f),
+    Offset(0.265f, 0.140f),
+    Offset(0.310f, 0.105f),
+    Offset(0.340f, 0.225f),
+    // Down the far side and round the wrist.
+    Offset(0.350f, 0.440f),
+    Offset(0.315f, 0.680f),
+    Offset(0.255f, 0.860f),
+    Offset(0.120f, 0.990f),
+    Offset(-0.060f, 1.000f),
+    Offset(-0.200f, 0.920f),
+    // The thumb, crossing the front of the fist.
+    Offset(-0.300f, 0.800f),
+    Offset(-0.400f, 0.660f),
+    Offset(-0.380f, 0.540f),
+    Offset(-0.285f, 0.500f),
+    Offset(-0.240f, 0.345f),
 )
 
+/**
+ * Where one finger ends and the next begins.
+ *
+ * Drawn from the valley between two scallops **into** the hand, across the direction of the fingers
+ * rather than along it. The stripes this replaced ran the other way, which is why they read as a
+ * grille: a line parallel to the knuckle edge describes a surface, a line perpendicular to it
+ * describes a gap.
+ */
 private val PointingHandCreases = listOf(
-    Offset(-0.020f, 0.500f) to Offset(0.200f, 0.530f),
-    Offset(-0.040f, 0.640f) to Offset(0.190f, 0.660f),
-    Offset(-0.030f, 0.780f) to Offset(0.170f, 0.790f),
+    Offset(0.160f, 0.520f) to Offset(0.055f, 0.505f),
+    Offset(0.180f, 0.665f) to Offset(0.070f, 0.650f),
+    Offset(0.185f, 0.805f) to Offset(0.085f, 0.790f),
 )
 
 private val FistCreases = listOf(
-    Offset(-0.150f, 0.330f) to Offset(0.220f, 0.330f),
-    Offset(-0.170f, 0.530f) to Offset(0.240f, 0.530f),
-    Offset(-0.160f, 0.730f) to Offset(0.220f, 0.730f),
+    Offset(-0.020f, 0.120f) to Offset(-0.030f, 0.330f),
+    Offset(0.130f, 0.100f) to Offset(0.120f, 0.320f),
+    Offset(0.265f, 0.140f) to Offset(0.250f, 0.330f),
 )
 
 // ---------------------------------------------------------------------------------------------
