@@ -236,6 +236,9 @@ private fun Diagram(diagram: GuideDiagram, animate: Boolean) {
             ink = PhoneProofTheme.colors.textSecondary,
             accent = PhoneProofTheme.colors.accent,
             warn = PhoneProofTheme.colors.caution,
+            // The same token as the Box behind this canvas, so an occluding tray matches what it is
+            // covering. If these two ever disagree the SIM tray becomes a visible block.
+            surface = PhoneProofTheme.colors.surfaceRaised,
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1.6f),
