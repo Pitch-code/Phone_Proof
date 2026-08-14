@@ -61,6 +61,127 @@ private fun wave(progress: Float): Float = sin(progress * 2f * Math.PI.toFloat()
  */
 private val PhoneProofSurface = Color(0xFF18181B)
 
+// --- The hand ---------------------------------------------------------------------------------
+
+/**
+ * A hand, because every step on this screen is something a person does with one.
+ *
+ * These diagrams previously drew the actor as whatever primitive was nearest to hand: the frame
+ * twist used two grey bars, the screen seam a triangle, the fingerprint a single arc, and the other
+ * five showed no person at all. On a real phone the bars read as pencils. A screen whose entire
+ * subject is "what to do with your hands" was illustrating everything except the hands.
+ *
+ * One outline, two variants, eight callers. Drawn as a polygon rather than with curves: at the size
+ * these appear in the frame grid a hand is barely thirty pixels tall, where a bezier buys nothing
+ * that can be seen, and `lineTo` cannot behave differently between Compose versions.
+ *
+ * Positioned by **fingertip** rather than by centre, and rotated about it, because in every one of
+ * these diagrams it is the fingertip that has to land on something exact — the seam, the sensor, the
+ * row in a list. Anchoring at the centre would mean recomputing an offset at all eight call sites.
+ *
+ * Filled with translucent ink and stroked with opaque ink, so the hand never hides the fault it is
+ * pointing at, and so it works in both themes without naming a colour of its own.
+ *
+ * `internal` rather than private for the same reason [GuideDiagramCanvas] is: eight diagrams share
+ * this shape, the frame grid renders it barely thirty pixels tall, and a primitive that cannot be
+ * looked at on its own is one nobody has reviewed. `GuideScreenshotTest` draws it large.
+ */
+internal fun DrawScope.drawHand(
+    tip: Offset,
+    length: Float,
+    angleDegrees: Float,
+    ink: Color,
+    pointing: Boolean = true,
+    alpha: Float = 1f,
+) {
+    val outline = if (pointing) PointingHand else Fist
+    val creases = if (pointing) PointingHandCreases else FistCreases
+
+    rotate(degrees = angleDegrees, pivot = tip) {
+        val path = Path()
+        outline.forEachIndexed { index, point ->
+            val x = tip.x + point.x * length
+            val y = tip.y + point.y * length
+            if (index == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        path.close()
+
+        drawPath(path, ink.copy(alpha = 0.20f * alpha))
+        drawPath(
+            path,
+            ink.copy(alpha = 0.85f * alpha),
+            style = Stroke(width = length * 0.042f),
+        )
+
+        // The folded fingers. Without them the fist is a bean, and the bean is what the old two-bar
+        // version already looked like.
+        creases.forEach { (from, to) ->
+            drawLine(
+                color = ink.copy(alpha = 0.45f * alpha),
+                start = Offset(tip.x + from.x * length, tip.y + from.y * length),
+                end = Offset(tip.x + to.x * length, tip.y + to.y * length),
+                strokeWidth = length * 0.026f,
+            )
+        }
+    }
+}
+
+/**
+ * The pointing hand, as fractions of its own length, fingertip at the origin and pointing up.
+ *
+ * Walked clockwise from the left edge of the index finger. The thumb is the bulge at 0.72 down the
+ * left side: it is what stops the shape reading as a mitten.
+ */
+private val PointingHand = listOf(
+    Offset(-0.075f, 0.045f),
+    Offset(-0.045f, 0.005f),
+    Offset(0.045f, 0.005f),
+    Offset(0.075f, 0.045f),
+    Offset(0.075f, 0.320f),
+    Offset(0.190f, 0.370f),
+    Offset(0.260f, 0.460f),
+    Offset(0.280f, 0.600f),
+    Offset(0.260f, 0.740f),
+    Offset(0.210f, 0.850f),
+    Offset(0.150f, 0.950f),
+    Offset(0.020f, 1.000f),
+    Offset(-0.130f, 0.970f),
+    Offset(-0.230f, 0.870f),
+    Offset(-0.290f, 0.720f),
+    Offset(-0.280f, 0.570f),
+    Offset(-0.200f, 0.440f),
+    Offset(-0.110f, 0.370f),
+)
+
+/** The same hand closed, for the steps where something is held rather than touched. */
+private val Fist = listOf(
+    Offset(-0.140f, 0.100f),
+    Offset(0.100f, 0.060f),
+    Offset(0.220f, 0.140f),
+    Offset(0.280f, 0.300f),
+    Offset(0.300f, 0.500f),
+    Offset(0.280f, 0.720f),
+    Offset(0.220f, 0.880f),
+    Offset(0.060f, 1.000f),
+    Offset(-0.120f, 0.980f),
+    Offset(-0.240f, 0.860f),
+    Offset(-0.310f, 0.660f),
+    Offset(-0.300f, 0.420f),
+    Offset(-0.240f, 0.220f),
+)
+
+private val PointingHandCreases = listOf(
+    Offset(-0.020f, 0.500f) to Offset(0.200f, 0.530f),
+    Offset(-0.040f, 0.640f) to Offset(0.190f, 0.660f),
+    Offset(-0.030f, 0.780f) to Offset(0.170f, 0.790f),
+)
+
+private val FistCreases = listOf(
+    Offset(-0.150f, 0.330f) to Offset(0.220f, 0.330f),
+    Offset(-0.170f, 0.530f) to Offset(0.240f, 0.530f),
+    Offset(-0.160f, 0.730f) to Offset(0.220f, 0.730f),
+)
+
 // ---------------------------------------------------------------------------------------------
 
 /** A phone outline twisting, with the flex exaggerated so the motion reads at thumbnail size. */
@@ -85,19 +206,24 @@ private fun DrawScope.drawFrameTwist(progress: Float, ink: Color, warn: Color) {
     }
     drawPath(path, ink, style = Stroke(width = h * 0.018f))
 
-    // Hands, as two short bars at the ends.
-    val handW = bodyW * 1.5f
-    drawLine(
-        color = ink.copy(alpha = 0.5f),
-        start = Offset(cx - handW / 2f, cy - bodyH / 2f - h * 0.06f + lean),
-        end = Offset(cx + handW / 2f, cy - bodyH / 2f - h * 0.06f - lean),
-        strokeWidth = h * 0.03f,
+    // A hand at each end, as the step says: "one hand at each end", wringing in opposite directions.
+    //
+    // Each fist is tilted with the end it is holding, so the two hands counter-rotate. That is the
+    // whole gesture, and it is what two straight bars could never show: bars leaning in opposite
+    // directions read as a diagram of parallax, not as a pair of wrists.
+    drawHand(
+        tip = Offset(cx, cy - bodyH / 2f + h * 0.03f + lean),
+        length = h * 0.26f,
+        angleDegrees = 180f + twist * 12f,
+        ink = ink,
+        pointing = false,
     )
-    drawLine(
-        color = ink.copy(alpha = 0.5f),
-        start = Offset(cx - handW / 2f, cy + bodyH / 2f + h * 0.06f - lean),
-        end = Offset(cx + handW / 2f, cy + bodyH / 2f + h * 0.06f + lean),
-        strokeWidth = h * 0.03f,
+    drawHand(
+        tip = Offset(cx, cy + bodyH / 2f - h * 0.03f - lean),
+        length = h * 0.26f,
+        angleDegrees = -twist * 12f,
+        ink = ink,
+        pointing = false,
     )
 
     // A creak mark appears at the extremes of the twist, where a bent frame would complain.
@@ -149,15 +275,18 @@ private fun DrawScope.drawScreenSeam(progress: Float, ink: Color, warn: Color) {
         )
     }
 
-    // A fingernail travelling along the seam, which is the action being described.
+    // A fingertip travelling along the seam, which is the action being described. Was a triangle,
+    // which said "nail" to whoever wrote it and "grey wedge" to everyone else.
+    //
+    // Tilted left so the hand sits back over the flat part of the glass rather than over the lifting
+    // end: the gap on the right is the fault, and the actor must not stand in front of it.
     val nailX = w * 0.18f + ((wave(progress) + 1f) / 2f) * w * 0.62f
-    val nail = Path().apply {
-        moveTo(nailX, h * 0.30f)
-        lineTo(nailX + w * 0.05f, h * 0.30f)
-        lineTo(nailX + w * 0.025f, h * 0.41f)
-        close()
-    }
-    drawPath(nail, ink.copy(alpha = 0.75f))
+    drawHand(
+        tip = Offset(nailX, h * 0.42f),
+        length = h * 0.40f,
+        angleDegrees = 152f,
+        ink = ink,
+    )
 }
 
 /** A SIM tray sliding out, revealing a sticker that turns from white to red. */
@@ -218,6 +347,15 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
         center = Offset(trayX + w * 0.03f, slotTop + slotHeight / 2f),
         style = Stroke(width = h * 0.008f),
     )
+
+    // The hand that pulled it, reaching in from the right and travelling with the tray. Without it
+    // the tray moves by itself, which is the one thing a SIM tray never does.
+    drawHand(
+        tip = Offset(trayX + w * 0.22f, slotTop + slotHeight / 2f),
+        length = h * 0.34f,
+        angleDegrees = 270f,
+        ink = ink,
+    )
 }
 
 /** A grille with air being drawn through it, which is what a broken seal allows. */
@@ -273,6 +411,20 @@ private fun DrawScope.drawSpeakerSeal(progress: Float, ink: Color, accent: Color
         size = Size(w * 0.32f, h * 0.22f),
         style = Stroke(width = h * 0.018f),
     )
+
+    // The hand holding the phone up to the mouth.
+    //
+    // The one diagram where the hand is not the actor — the mouth is — so it holds rather than does,
+    // and it is placed out at the left edge. A grille and a pair of lips floating unsupported was
+    // the least physical drawing of the eight; something has to be bringing them together.
+    drawHand(
+        tip = Offset(w * 0.20f, h * 0.50f),
+        length = h * 0.30f,
+        angleDegrees = 24f,
+        ink = ink,
+        pointing = false,
+        alpha = 0.75f,
+    )
 }
 
 /** A lens with a light sweeping across it, picking specks out of the glass. */
@@ -319,6 +471,19 @@ private fun DrawScope.drawLensDust(progress: Float, ink: Color, warn: Color) {
             center = speck,
         )
     }
+
+    // The hand holding the torch, moving with the beam so the sweep has a cause.
+    //
+    // It enters from the top edge and is deliberately allowed to run off it. A hand cropped by the
+    // frame reads as a hand coming into shot; a whole hand shrunk to fit would be a mitten floating
+    // above a lens, and the beam is what matters here.
+    drawHand(
+        tip = Offset(beamX + w * 0.05f, h * 0.13f),
+        length = h * 0.30f,
+        angleDegrees = 168f,
+        ink = ink,
+        pointing = false,
+    )
 }
 
 /** A fingertip on a sensor, with a ripple confirming a read. */
@@ -351,16 +516,16 @@ private fun DrawScope.drawFingerprint(progress: Float, ink: Color, accent: Color
         style = Stroke(width = h * 0.012f),
     )
 
-    // A fingertip descending onto the sensor.
+    // A finger descending onto the sensor. Was a lone arc, which at this size was a croissant.
+    //
+    // `press` moves the whole hand rather than only the tip, so the finger arrives at the sensor
+    // instead of stretching towards it.
     val press = (1f - kotlin.math.abs(wave(progress))) * h * 0.05f
-    drawArc(
-        color = ink,
-        startAngle = 0f,
-        sweepAngle = -180f,
-        useCenter = false,
-        topLeft = Offset(cx - w * 0.10f, cy - h * 0.20f - press),
-        size = Size(w * 0.20f, h * 0.20f),
-        style = Stroke(width = h * 0.018f),
+    drawHand(
+        tip = Offset(cx, cy - h * 0.075f - press),
+        length = h * 0.42f,
+        angleDegrees = 187f,
+        ink = ink,
     )
 }
 
@@ -426,6 +591,18 @@ private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Colo
         end = Offset(cx - arm, cy + arm),
         strokeWidth = h * 0.014f,
     )
+
+    // The finger doing the removing, tapping the row that is going.
+    //
+    // Placed to the right of the crossed-out avatar rather than on it: the cross is the outcome and
+    // must stay visible. It descends as the strike completes, so the tap and the result are one
+    // motion rather than two things that happen to be on screen together.
+    drawHand(
+        tip = Offset(w * 0.66f, y + h * 0.055f - (1f - strike) * h * 0.10f),
+        length = h * 0.34f,
+        angleDegrees = 196f,
+        ink = ink,
+    )
 }
 
 /** A cable in a port, wiggling, with the charge indicator dropping out when it moves too far. */
@@ -461,6 +638,16 @@ private fun DrawScope.drawChargingPort(progress: Float, ink: Color, accent: Colo
             start = Offset(cx, h * 0.60f),
             end = Offset(cx, h * 0.86f),
             strokeWidth = h * 0.022f,
+        )
+
+        // The hand doing the wiggling, inside the rotate so it travels with the lead it is holding.
+        // Outside it, the cable would swing while the hand stayed still.
+        drawHand(
+            tip = Offset(cx, h * 0.64f),
+            length = h * 0.30f,
+            angleDegrees = 0f,
+            ink = ink,
+            pointing = false,
         )
     }
 

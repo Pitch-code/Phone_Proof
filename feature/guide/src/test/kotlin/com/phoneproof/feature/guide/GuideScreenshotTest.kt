@@ -1,8 +1,10 @@
 package com.phoneproof.feature.guide
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
@@ -116,5 +119,72 @@ class GuideScreenshotTest {
             }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/guide-3-diagram-frames.png")
+    }
+
+    /**
+     * The hand on its own, large, at the angles the eight diagrams actually ask for.
+     *
+     * Eight diagrams share one shape, and in the frame grid above it is barely thirty pixels tall —
+     * so a hand that has become a blob would look much the same as a hand that has not, and the grid
+     * would show eight problems where there is really one. This renders the primitive by itself,
+     * big enough to see whether it is a hand at all, and rotated to each orientation in use.
+     *
+     * Angles here are the ones passed at the call sites: 0 grips the charging lead, 24 holds the
+     * phone to the mouth, 152 runs the seam, 187 presses the sensor, 196 taps the account row, 270
+     * pulls the SIM tray.
+     */
+    @Test
+    fun the_hand_by_itself() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                val ink = PhoneProofTheme.colors.textSecondary
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(PhoneProofTheme.colors.background)
+                        .padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    listOf(true, false).forEach { pointing ->
+                        Text(
+                            text = if (pointing) "POINTING" else "FIST",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PhoneProofTheme.colors.textTertiary,
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            listOf(0f, 24f, 152f, 187f, 270f).forEach { angle ->
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Canvas(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(0.85f)
+                                            .background(PhoneProofTheme.colors.surfaceRaised),
+                                    ) {
+                                        drawHand(
+                                            // Centred, so a hand pointing in any direction stays in
+                                            // its cell rather than leaving the frame at one angle.
+                                            tip = Offset(size.width / 2f, size.height / 2f),
+                                            length = size.height * 0.44f,
+                                            angleDegrees = angle,
+                                            ink = ink,
+                                            pointing = pointing,
+                                        )
+                                    }
+                                    Text(
+                                        text = "${angle.toInt()}°",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = PhoneProofTheme.colors.textTertiary,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/guide-4-hand.png")
     }
 }
