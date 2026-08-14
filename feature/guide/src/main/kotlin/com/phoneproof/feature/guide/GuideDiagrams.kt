@@ -371,7 +371,11 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
     // The tray, sliding out of the opening and staying attached to it.
     // Short travel on purpose. A longer slide left the tray floating in space with a gap between it
     // and the phone, which read as two unrelated objects rather than one being pulled from the other.
-    val trayX = bodyRight - w * 0.10f + out * w * 0.20f
+    // Travel halved again. At the old distance the tray's near edge cleared the phone entirely and
+    // left a visible gap, so the drawing became a box, a dot and an unrelated rectangle — the exact
+    // fault the rebuild above was meant to have fixed. Adding a hand pulling from the right made it
+    // worse, because the eye now had somewhere else to go. It now stops flush with the body.
+    val trayX = bodyRight - w * 0.10f + out * w * 0.10f
     drawRect(
         color = PhoneProofSurface,
         topLeft = Offset(trayX, slotTop),
@@ -394,8 +398,8 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
     // The hand that pulled it, reaching in from the right and travelling with the tray. Without it
     // the tray moves by itself, which is the one thing a SIM tray never does.
     drawHand(
-        tip = Offset(trayX + w * 0.22f, slotTop + slotHeight / 2f),
-        length = h * 0.34f,
+        tip = Offset(trayX + w * 0.21f, slotTop + slotHeight / 2f),
+        length = h * 0.27f,
         angleDegrees = 270f,
         ink = ink,
     )
@@ -405,6 +409,14 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
 private fun DrawScope.drawSpeakerSeal(progress: Float, ink: Color, accent: Color) {
     val w = size.width
     val h = size.height
+
+    // The bottom edge of the phone, so the grille sits on something and the hand has something to
+    // hold. Without it this was the least physical of the eight: a row of bars, an arc, and no object.
+    drawRect(
+        color = ink.copy(alpha = 0.14f),
+        topLeft = Offset(w * 0.24f, h * 0.46f),
+        size = Size(w * 0.54f, h * 0.21f),
+    )
 
     // The grille: a row of slots.
     val slots = 7
@@ -457,16 +469,16 @@ private fun DrawScope.drawSpeakerSeal(progress: Float, ink: Color, accent: Color
 
     // The hand holding the phone up to the mouth.
     //
-    // The one diagram where the hand is not the actor — the mouth is — so it holds rather than does,
-    // and it is placed out at the left edge. A grille and a pair of lips floating unsupported was
-    // the least physical drawing of the eight; something has to be bringing them together.
+    // The one diagram where the hand is not the actor — the mouth is — so it holds rather than does.
+    // It needs something to hold, though: on its own at the edge of the frame it was a hand floating
+    // beside a row of bars. The phone edge below carries the grille and gives the grip a subject.
     drawHand(
-        tip = Offset(w * 0.20f, h * 0.50f),
+        tip = Offset(w * 0.255f, h * 0.565f),
         length = h * 0.30f,
-        angleDegrees = 24f,
+        angleDegrees = 90f,
         ink = ink,
         pointing = false,
-        alpha = 0.75f,
+        alpha = 0.8f,
     )
 }
 
@@ -520,10 +532,25 @@ private fun DrawScope.drawLensDust(progress: Float, ink: Color, warn: Color) {
     // It enters from the top edge and is deliberately allowed to run off it. A hand cropped by the
     // frame reads as a hand coming into shot; a whole hand shrunk to fit would be a mitten floating
     // above a lens, and the beam is what matters here.
+    // The torch itself. Without it the hand held nothing and the beam had no source, so the drawing
+    // was a hand, a circle and a grey wedge between them.
+    drawRect(
+        color = ink.copy(alpha = 0.30f),
+        topLeft = Offset(beamX + w * 0.005f, h * 0.055f),
+        size = Size(w * 0.075f, h * 0.155f),
+    )
+    drawRect(
+        color = ink,
+        topLeft = Offset(beamX + w * 0.005f, h * 0.055f),
+        size = Size(w * 0.075f, h * 0.155f),
+        style = Stroke(width = h * 0.012f),
+    )
+
+    // The hand wrapped round it, low enough that the barrel shows above the knuckles.
     drawHand(
-        tip = Offset(beamX + w * 0.05f, h * 0.13f),
-        length = h * 0.30f,
-        angleDegrees = 168f,
+        tip = Offset(beamX + w * 0.042f, h * 0.20f),
+        length = h * 0.26f,
+        angleDegrees = 174f,
         ink = ink,
         pointing = false,
     )
@@ -564,10 +591,15 @@ private fun DrawScope.drawFingerprint(progress: Float, ink: Color, accent: Color
     // `press` moves the whole hand rather than only the tip, so the finger arrives at the sensor
     // instead of stretching towards it.
     val press = (1f - kotlin.math.abs(wave(progress))) * h * 0.05f
+    // Comes in steeply from the upper right rather than straight down.
+    //
+    // Straight down put the whole hand on top of the print, and the print is the subject: the render
+    // showed a hand and a ripple with the arches hidden behind them. Approaching at an angle lands
+    // the fingertip on the sensor while leaving the arches to the left of it visible.
     drawHand(
-        tip = Offset(cx, cy - h * 0.075f - press),
-        length = h * 0.42f,
-        angleDegrees = 187f,
+        tip = Offset(cx, cy - h * 0.05f - press),
+        length = h * 0.36f,
+        angleDegrees = 132f,
         ink = ink,
     )
 }
@@ -640,10 +672,15 @@ private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Colo
     // Placed to the right of the crossed-out avatar rather than on it: the cross is the outcome and
     // must stay visible. It descends as the strike completes, so the tap and the result are one
     // motion rather than two things that happen to be on screen together.
+    // Shorter and further right than first drawn, and allowed to run off the frame.
+    //
+    // At full length the hand reached back across the row above and looked as though it were tapping
+    // that one instead. Three rows twenty percent of the height apart leave no room for a whole hand
+    // between them, so it leaves by the edge rather than shrinking to fit.
     drawHand(
-        tip = Offset(w * 0.66f, y + h * 0.055f - (1f - strike) * h * 0.10f),
-        length = h * 0.34f,
-        angleDegrees = 196f,
+        tip = Offset(w * 0.72f, y + h * 0.055f - (1f - strike) * h * 0.09f),
+        length = h * 0.25f,
+        angleDegrees = 208f,
         ink = ink,
     )
 }
