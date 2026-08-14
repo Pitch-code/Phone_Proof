@@ -25,25 +25,35 @@ That is the gap this fills.
 
 ## Status
 
-Six checks run as one **instant scan** — no permission prompt, nothing for the buyer to do, done in
+Eight checks run as one **instant scan** — no permission prompt, nothing for the buyer to do, done in
 under a second:
 
 | Check | What it catches |
 |---|---|
 | **Remote lock control** | Device-owner or device-admin control: how a phone bought on instalments gets bricked weeks after you pay |
+| **Root and bootloader** | An `su` binary, a root manager, or a Verified Boot state that is not `green` — a phone whose own measurements cannot be trusted, and which banking apps will eventually refuse |
 | **Genuine software** | `test-keys` builds, and a `Build.FINGERPRINT` that disagrees with the model name — what a cloned handset looks like |
 | **Security updates** | Months since the last patch, from `Build.VERSION.SECURITY_PATCH` |
 | **Storage** | Usable capacity against the tier it is sold as, catching downgraded chips |
 | **Sensors** | A missing gyroscope or proximity sensor: invisible in a spec argument, checkable in a second |
 | **Display** | Real resolution and the highest refresh rate the panel supports, versus the rate it is running at |
+| **Battery** | Charge cycles from the fuel gauge, which survive a factory reset, plus charge, temperature and voltage. Wear is never a `FAIL`, and no health percentage is ever invented |
 
-Plus **touch coverage**, which maps the screen into a grid and finds contiguous unresponsive
-patches, and an in-app **diagnostics log** that captures errors and uncaught exceptions and copies
-in one tap — so a bug report is an exact log rather than a remembered symptom.
+Then, one thing at a time:
 
-Still to build: measured battery discharge with cycle count, dead-pixel and burn-in patterns,
-camera/mic/speaker with waveform analysis, IMEI capture with checksum and CEIR deep link, and the
-coached physical walkthrough with photo capture.
+- **Touch coverage** maps the screen into a grid and finds contiguous unresponsive patches, counting
+  only the cells Android does not reserve for its own edge gestures.
+- **Dead pixels and burn-in** drives the panel through plain colours at forced maximum brightness.
+- **Claimed against measured** puts what the seller said beside what the phone reports.
+- **Eight things only you can check** covers the faults no app can reach — a twisted frame, a
+  re-glued screen, the water sticker in the SIM slot — each with a moving diagram of the action.
+- **Saved reports** keep past scans and compare two phones side by side.
+
+Plus an in-app **diagnostics log** that captures errors and uncaught exceptions and copies in one
+tap — so a bug report is an exact log rather than a remembered symptom.
+
+Still to build: camera, microphone and speaker with waveform analysis, IMEI capture with checksum
+and a CEIR deep link, and photo capture during the manual walkthrough.
 
 ## Screens
 
@@ -97,13 +107,24 @@ feature set.
 
 ## Monetisation
 
-The core is never rationed. Every check, unlimited, free, forever.
+No check is ever watered down to sell an upgrade: every measurement runs in full on the free trial,
+at full accuracy. What the trial limits is **how many phones** you can scan — two, and then it stops.
 
-| Tier | |
-|---|---|
-| Free | all checks, 2 saved reports, minimal ads, PDF export via opt-in rewarded ad |
-| Premium | ₹99 one-time — no ads, unlimited history, PDF export, comparison |
-| Shop | ₹999/year — shop branding on the report card, bulk export |
+That is a reversal of this project's original position, which was that scanning would be unlimited
+and free forever. It was changed deliberately, on the reasoning that a trial which measures
+everything forever gives nobody a reason to pay, and it is recorded in
+[`.kiro/steering/monetisation.md`](.kiro/steering/monetisation.md) so that it cannot be quietly
+reverted by someone reading only this file.
+
+| Tier | Scans | Advice screens | Reports |
+|---|---|---|---|
+| Free trial | **2, then blocked** | locked | last 2 kept, PDF via opt-in rewarded ad |
+| Premium — ₹99 one-time | unlimited | unlocked | all kept, PDF, comparison, no ads |
+| Shop — ₹999/year | unlimited | unlocked | everything, plus shop branding on the report card and bulk export |
+
+"Advice screens" means *Claimed against measured* and *Eight things only you can check*. They are
+advice and comparison rather than measurements of the phone, which is why they sit behind the trial
+while no measurement does.
 
 Ads are forbidden on the battery test, the touch grid, the screen patterns and the report card.
 For the first three that is a correctness constraint rather than taste: an ad is uncontrolled CPU,
