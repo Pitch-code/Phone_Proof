@@ -11,6 +11,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.phoneproof.checks.device.ClaimedSpecs
 import com.phoneproof.checks.device.ClaimedSpecsCheck
+import com.phoneproof.core.designsystem.ADVISORY_TRIAL_EXCLUSION
+import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.preferences.Entitlement
@@ -30,10 +32,15 @@ fun ClaimsRoute(
     if (!entitlement.hasAdvisoryTools) {
         LockedFeature(
             title = "Claimed against measured",
+            // Same fix as the guide's lock, and deliberately the same sentence: LockedFeature exists
+            // so that every limit sounds alike, and one of the two advisory locks explaining itself
+            // better than the other is the drift that component was built to prevent.
             explanation = "This compares what the seller told you against what the phone actually " +
-                "reports — storage, memory and model. It is part of a paid plan.",
+                "reports — storage, memory and model.\n\n" + ADVISORY_TRIAL_EXCLUSION,
+            // Was "the by-hand guide" — a name this feature has never carried on screen. Quoted,
+            // because the title is a phrase and runs into the sentence around it otherwise.
             whatUnlockingGives = "Catch a phone sold as 128 GB that holds 32, or as 8 GB of memory " +
-                "when it has 4. Also unlocks the by-hand guide, PDF reports and side-by-side " +
+                "when it has 4. Also unlocks “$MANUAL_CHECKS_TITLE”, PDF reports and side-by-side " +
                 "comparison.",
             onOpenSettings = onOpenSettings,
             modifier = modifier,

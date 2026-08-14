@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.designsystem.theme.ThemeMode
@@ -427,7 +428,7 @@ private fun FreeTrialCard(active: Boolean, scansLeft: Int?) {
             true to "Touch grid, dead pixels and burn-in, remote lock, battery",
             true to "Your last 2 reports, kept on the phone",
             false to "Claimed against measured",
-            false to "Check these by hand",
+            false to MANUAL_CHECKS_TITLE,
             false to "PDF reports, comparing two phones, unlimited history",
         ).forEach { (included, text) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

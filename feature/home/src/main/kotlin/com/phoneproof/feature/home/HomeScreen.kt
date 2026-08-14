@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -173,8 +174,11 @@ fun HomeScreen(
         // app was testing something.
         SectionLabel("What the app cannot test")
         NavigationRow(
-            title = "Check these by hand",
-            subtitle = "Eight things to look at yourself, with pictures",
+            title = MANUAL_CHECKS_TITLE,
+            // The old subtitle opened "Eight things to look at yourself", which repeated both the
+            // count in the title and the point already made by the heading above. It names the
+            // faults instead: three concrete things beats a restatement.
+            subtitle = "A twisted frame, a re-glued screen, the water sticker — with diagrams",
             onClick = onOpenGuide,
         )
 
