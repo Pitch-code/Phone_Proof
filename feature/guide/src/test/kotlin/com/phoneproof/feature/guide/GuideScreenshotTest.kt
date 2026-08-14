@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -80,45 +81,29 @@ class GuideScreenshotTest {
     @Test
     fun every_diagram_at_three_points_of_its_cycle() {
         composeRule.setContent {
-            PhoneProofTheme(themeMode = ThemeMode.DARK) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(PhoneProofTheme.colors.background)
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                ) {
-                    GuideDiagram.entries.forEach { diagram ->
-                        Text(
-                            text = diagram.name,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = PhoneProofTheme.colors.textTertiary,
-                        )
-                        androidx.compose.foundation.layout.Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            listOf(0.15f, 0.4f, 0.75f).forEach { progress ->
-                                Column(modifier = Modifier.weight(1f)) {
-                                    GuideDiagramCanvas(
-                                        diagram = diagram,
-                                        progress = progress,
-                                        ink = PhoneProofTheme.colors.textSecondary,
-                                        accent = PhoneProofTheme.colors.accent,
-                                        warn = PhoneProofTheme.colors.caution,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .aspectRatio(1.5f)
-                                            .background(PhoneProofTheme.colors.surfaceRaised),
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            PhoneProofTheme(themeMode = ThemeMode.DARK) { DiagramFrames() }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/guide-3-diagram-frames.png")
+    }
+
+    /**
+     * The same grid in light, which is the theme most people will actually see.
+     *
+     * This exists because its absence hid a real bug. Every render in this file asked for `DARK`,
+     * while light has been the default since #12 — so two diagrams drew an occluder from a hardcoded
+     * `Color(0xFF18181B)`, which is `DarkPalette.surfaceRaised` exactly, and on a light card the SIM
+     * tray and the account row were near-black blocks. The torch beam had the opposite fault: white
+     * at ten percent alpha, invisible on a light surface, in the one diagram about shining a torch.
+     *
+     * Neither was a subtle rendering flaw. Both were plainly wrong and both survived, because a
+     * diagram is only reviewed in the theme somebody photographed it in.
+     */
+    @Test
+    fun every_diagram_in_light_mode() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.LIGHT) { DiagramFrames() }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/guide-5-diagram-frames-light.png")
     }
 
     /**
@@ -186,5 +171,53 @@ class GuideScreenshotTest {
             }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/guide-4-hand.png")
+    }
+}
+
+
+/**
+ * Every diagram, three frames each, in whichever theme wraps it.
+ *
+ * Shared by the dark and light renders rather than written twice: the point of the light grid is that
+ * it differs from the dark one *only* by the theme, so any difference between the two images is the
+ * palette and nothing else. Two hand-built copies of this layout could drift and quietly weaken that.
+ */
+@Composable
+private fun DiagramFrames() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(PhoneProofTheme.colors.background)
+            .padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        GuideDiagram.entries.forEach { diagram ->
+            Text(
+                text = diagram.name,
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                listOf(0.15f, 0.4f, 0.75f).forEach { progress ->
+                    Column(modifier = Modifier.weight(1f)) {
+                        GuideDiagramCanvas(
+                            diagram = diagram,
+                            progress = progress,
+                            ink = PhoneProofTheme.colors.textSecondary,
+                            accent = PhoneProofTheme.colors.accent,
+                            warn = PhoneProofTheme.colors.caution,
+                            surface = PhoneProofTheme.colors.surfaceRaised,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(1.5f)
+                                .background(PhoneProofTheme.colors.surfaceRaised),
+                        )
+                    }
+                }
+            }
+        }
     }
 }

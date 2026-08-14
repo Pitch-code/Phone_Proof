@@ -34,17 +34,25 @@ internal fun GuideDiagramCanvas(
     ink: Color,
     accent: Color,
     warn: Color,
+    /**
+     * The colour of the surface these are drawn on.
+     *
+     * Passed in rather than assumed, because two diagrams have to **hide** something: the SIM tray
+     * covers the water sticker while it is closed, and the account row is wiped as it is removed. An
+     * occluder has to match the background exactly, and the background is a theme value.
+     */
+    surface: Color,
     modifier: Modifier = Modifier,
 ) {
     Canvas(modifier = modifier) {
         when (diagram) {
             GuideDiagram.FRAME_TWIST -> drawFrameTwist(progress, ink, warn)
             GuideDiagram.SCREEN_SEAM -> drawScreenSeam(progress, ink, warn)
-            GuideDiagram.WATER_STICKER -> drawWaterSticker(progress, ink, warn)
+            GuideDiagram.WATER_STICKER -> drawWaterSticker(progress, ink, warn, surface)
             GuideDiagram.SPEAKER_SEAL -> drawSpeakerSeal(progress, ink, accent)
-            GuideDiagram.LENS_DUST -> drawLensDust(progress, ink, warn)
+            GuideDiagram.LENS_DUST -> drawLensDust(progress, ink, accent, warn)
             GuideDiagram.FINGERPRINT -> drawFingerprint(progress, ink, accent)
-            GuideDiagram.ACCOUNT_REMOVED -> drawAccountRemoved(progress, ink, warn)
+            GuideDiagram.ACCOUNT_REMOVED -> drawAccountRemoved(progress, ink, warn, surface)
             GuideDiagram.CHARGING_PORT -> drawChargingPort(progress, ink, accent)
         }
     }
@@ -53,13 +61,14 @@ internal fun GuideDiagramCanvas(
 /** A sine wave over the full cycle, so every diagram returns to where it started. */
 private fun wave(progress: Float): Float = sin(progress * 2f * Math.PI.toFloat())
 
-/**
- * An opaque fill for parts that must hide what is behind them.
- *
- * A translucent ink would let the sticker show through the closed SIM tray, which would destroy the
- * one thing that diagram is trying to say. Matched to the raised surface the diagram sits on.
- */
-private val PhoneProofSurface = Color(0xFF18181B)
+// The opaque fill that hides what is behind it — the closed SIM tray, the row being wiped — used to
+// be a hardcoded `Color(0xFF18181B)` here, with a comment saying it was "matched to the raised
+// surface the diagram sits on". It was: to the *dark* one. It is `DarkPalette.surfaceRaised` exactly,
+// while the light surface is `0xFFF4F4F5`, and light has been the default theme since #12.
+//
+// Nobody saw it because all four renders in GuideScreenshotTest asked for DARK, so a near-black block
+// on a near-white card was drawn on the default theme and never once photographed. It is now the
+// `surface` parameter of GuideDiagramCanvas, and the frame grid renders in both themes.
 
 // --- The hand ---------------------------------------------------------------------------------
 
@@ -333,7 +342,7 @@ private fun DrawScope.drawScreenSeam(progress: Float, ink: Color, warn: Color) {
 }
 
 /** A SIM tray sliding out, revealing a sticker that turns from white to red. */
-private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color) {
+private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color, surface: Color) {
     val w = size.width
     val h = size.height
     val out = ((wave(progress) + 1f) / 2f)
@@ -354,6 +363,10 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
     )
 
     // The opening, cut into the right edge of the body.
+    //
+    // Left as black in both themes on purpose, unlike the tray above it. This is a hole, and a hole
+    // is dark whatever colour the phone or the page is; inverting it in light mode would draw a white
+    // gap in a white body and lose the slot entirely.
     drawRect(
         color = Color.Black.copy(alpha = 0.55f),
         topLeft = Offset(bodyRight - w * 0.10f, slotTop),
@@ -377,7 +390,7 @@ private fun DrawScope.drawWaterSticker(progress: Float, ink: Color, warn: Color)
     // worse, because the eye now had somewhere else to go. It now stops flush with the body.
     val trayX = bodyRight - w * 0.10f + out * w * 0.10f
     drawRect(
-        color = PhoneProofSurface,
+        color = surface,
         topLeft = Offset(trayX, slotTop),
         size = Size(w * 0.24f, slotHeight),
     )
@@ -483,7 +496,7 @@ private fun DrawScope.drawSpeakerSeal(progress: Float, ink: Color, accent: Color
 }
 
 /** A lens with a light sweeping across it, picking specks out of the glass. */
-private fun DrawScope.drawLensDust(progress: Float, ink: Color, warn: Color) {
+private fun DrawScope.drawLensDust(progress: Float, ink: Color, accent: Color, warn: Color) {
     val w = size.width
     val h = size.height
     val cx = w / 2f
@@ -508,7 +521,12 @@ private fun DrawScope.drawLensDust(progress: Float, ink: Color, warn: Color) {
         lineTo(cx - w * 0.05f, cy)
         close()
     }
-    drawPath(beam, Color.White.copy(alpha = 0.10f))
+    // The accent rather than white.
+    //
+    // White at ten percent is a beam of light on a dark card and *nothing at all* on a light one, and
+    // light is the default theme — so the one diagram whose whole subject is shining a torch was
+    // shipping without a visible torch beam for most users. The accent reads on both.
+    drawPath(beam, accent.copy(alpha = 0.16f))
 
     // Specks, lit only while the beam is near them, which is exactly why the step says to use a
     // light from an angle: the dust is invisible face-on.
@@ -605,7 +623,7 @@ private fun DrawScope.drawFingerprint(progress: Float, ink: Color, accent: Color
 }
 
 /** An account row being struck through and removed from a list. */
-private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Color) {
+private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Color, surface: Color) {
     val w = size.width
     val h = size.height
 
@@ -641,7 +659,7 @@ private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Colo
     val fade = 1f - strike
 
     drawRect(
-        color = PhoneProofSurface.copy(alpha = strike * 0.9f),
+        color = surface.copy(alpha = strike * 0.9f),
         topLeft = Offset(w * 0.16f, y),
         size = Size(w * 0.68f, h * 0.13f),
     )
