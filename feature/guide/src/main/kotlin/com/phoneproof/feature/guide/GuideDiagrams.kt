@@ -678,9 +678,9 @@ private fun DrawScope.drawAccountRemoved(progress: Float, ink: Color, warn: Colo
     // that one instead. Three rows twenty percent of the height apart leave no room for a whole hand
     // between them, so it leaves by the edge rather than shrinking to fit.
     drawHand(
-        tip = Offset(w * 0.72f, y + h * 0.055f - (1f - strike) * h * 0.09f),
+        tip = Offset(w * 0.70f, y + h * 0.060f - (1f - strike) * h * 0.09f),
         length = h * 0.25f,
-        angleDegrees = 208f,
+        angleDegrees = 238f,
         ink = ink,
     )
 }
