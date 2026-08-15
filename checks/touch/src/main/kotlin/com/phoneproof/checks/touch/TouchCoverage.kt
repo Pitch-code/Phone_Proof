@@ -122,29 +122,31 @@ data class TouchCoverage(
     val coverageRatio: Float
         get() = touchedCount.toFloat() / cellCount.toFloat()
 
+    /** Uncovered cells inside a gesture strip: real gaps, but not evidence about the digitiser. */
+    val uncoveredSystemGestureCells: Set<Cell>
+        get() = untouchedCells intersect systemGestureCells
+
     /**
      * Untouched cells grouped into connected components using 4-way adjacency.
      *
      * Diagonal adjacency is deliberately excluded: two cells touching only at a corner are
      * far more likely to be two separate finger skips than one physical defect.
      *
-     * Every gap is here, including ones the platform may have caused. There used to be a second
-     * grouping that removed the gesture strips first, and the verdict used that one; now the verdict
-     * uses this, and [isEntirelySystemGesture] decides how a zone is *described* rather than whether
-     * it is counted.
-     */
-    fun deadZones(): List<DeadZone> = connectedZones(untouchedCells)
-
-    /**
-     * Whether a gap lies wholly inside the strips Android may have intercepted.
+     * **Gesture-strip cells are removed before grouping, and that is a separate decision from
+     * counting them.** They are counted — they are part of [coverageRatio], and the test cannot be
+     * finished without sweeping them. What they are not is *evidence*: the app cannot distinguish a
+     * dead strip from a swipe the system swallowed, so a cell in a strip can never contribute to the
+     * size of a reported defect.
      *
-     * The test is "wholly", not "overlaps", and the difference is the safety of the check. A patch
-     * straddling the bottom edge has cells the system could not have taken, and those cells are real
-     * evidence about the digitiser — so it is reported as a fault. Only a gap with no evidence
-     * outside the strips is unattributable.
+     * Removing them before grouping rather than after is what makes that safe. A four-cell patch
+     * straddling the top edge with two cells inside the strip is two cells of evidence, not four —
+     * and four would clear [TouchCoverageEvaluator.DEAD_ZONE_MIN_CELLS] and report a fault on the
+     * strength of cells the app may never have been given. Removing them first also lets a patch
+     * bridged only by a strip cell split into the two unrelated skips it probably is.
+     *
+     * With no strips known this is simply every gap, which is the three-button and Robolectric case.
      */
-    fun isEntirelySystemGesture(zone: DeadZone): Boolean =
-        systemGestureCells.isNotEmpty() && zone.cells.all { it in systemGestureCells }
+    fun deadZones(): List<DeadZone> = connectedZones(untouchedCells - systemGestureCells)
 
     private fun connectedZones(cells: Set<Cell>): List<DeadZone> {
         val remaining = cells.toHashSet()

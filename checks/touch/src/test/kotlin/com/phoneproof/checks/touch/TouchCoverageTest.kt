@@ -216,50 +216,58 @@ class TouchCoverageSystemGestureCellsTest {
     }
 
     @Test
-    fun `a gap wholly inside a strip is unattributable`() {
+    fun `a gap wholly inside a strip is no evidence at all`() {
         val subject = coverage(setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0)), topRow)
 
+        // Counted as uncovered...
+        assertThat(subject.uncoveredSystemGestureCells).hasSize(3)
+        // ...but contributing nothing to any reported defect.
+        assertThat(subject.deadZones()).isEmpty()
+    }
+
+    @Test
+    fun `a patch straddling a strip is sized on the part outside it`() {
+        // The load-bearing case. Four contiguous uncovered cells, two of them in the strip. The honest
+        // size is two — the other two may have been swipes the system took — and two is under the
+        // defect threshold, so this reports as a scattered miss rather than a dead patch.
+        //
+        // This is also why the strip cells are removed *before* grouping. Removed afterwards, the zone
+        // would already have been measured at four and promoted to a fault.
+        val subject = coverage(setOf(Cell(0, 0), Cell(1, 0), Cell(0, 1), Cell(1, 1)), topRow)
+
         val zones = subject.deadZones()
         assertThat(zones).hasSize(1)
-        assertThat(subject.isEntirelySystemGesture(zones.first())).isTrue()
+        assertThat(zones.first().size).isEqualTo(2)
     }
 
     @Test
-    fun `a gap straddling a strip is attributable, because part of it is real evidence`() {
-        // The load-bearing case, and the reason the test is "wholly" rather than "overlaps". Cell(0,1)
-        // is outside the strip: the system could not have taken that swipe, so something is there to
-        // report and the patch must not be waved through.
-        val subject = coverage(setOf(Cell(0, 0), Cell(0, 1)), topRow)
+    fun `a strip cell bridging two skips does not join them into one patch`() {
+        // Three in a row with only the middle one in a strip. Grouped without removing it first this
+        // is one three-cell patch; the honest reading is two unrelated single-cell skips, because the
+        // only thing joining them is a cell that proves nothing.
+        val subject = coverage(setOf(Cell(0, 1), Cell(1, 1), Cell(2, 1)), setOf(Cell(1, 1)))
 
         val zones = subject.deadZones()
-        assertThat(zones).hasSize(1)
-        assertThat(subject.isEntirelySystemGesture(zones.first())).isFalse()
+        assertThat(zones).hasSize(2)
+        assertThat(zones.map { it.size }).containsExactly(1, 1)
     }
 
     @Test
-    fun `a gap outside every strip is attributable`() {
-        val subject = coverage(setOf(Cell(2, 2)), topRow)
-
-        assertThat(subject.isEntirelySystemGesture(subject.deadZones().first())).isFalse()
-    }
-
-    @Test
-    fun `with no strips known nothing is unattributable`() {
-        // Guards the isNotEmpty() check. Without it, `all { }` on an empty set is vacuously true and
-        // every gap on a phone reporting no gesture insets — the Robolectric case, and a three-button
-        // phone — would be excused as the platform's fault. That would be the original bug inverted:
-        // instead of blaming the phone for the system, it would blame the system for the phone.
+    fun `with no strips known every gap is evidence`() {
+        // The three-button phone and the Robolectric case. Nothing is excused, so a gap is the phone's
+        // to answer for — the original bug inverted would be blaming the system for the phone.
         val subject = coverage(setOf(Cell(2, 2)), emptySet())
 
-        assertThat(subject.systemGestureCells).isEmpty()
-        assertThat(subject.isEntirelySystemGesture(subject.deadZones().first())).isFalse()
+        assertThat(subject.uncoveredSystemGestureCells).isEmpty()
+        assertThat(subject.deadZones()).hasSize(1)
     }
 
     @Test
-    fun `a fully swept grid has no gaps to attribute either way`() {
+    fun `a fully swept grid leaves nothing on either side of the line`() {
         val subject = TouchCoverage(spec, all, topRow)
 
         assertThat(subject.coverageRatio).isEqualTo(1f)
         assertThat(subject.deadZones()).isEmpty()
+        assertThat(subject.uncoveredSystemGestureCells).isEmpty()
     }
 }

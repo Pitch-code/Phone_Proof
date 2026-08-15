@@ -60,19 +60,13 @@ object TouchCoverageEvaluator {
             )
         }
 
-        // Every gap, then split by whether it can be attributed to the phone at all.
+        // Gaps outside the gesture strips: the only cells that are evidence about the digitiser.
         //
-        // A gap lying wholly inside the strips Android may have intercepted is not evidence about the
-        // digitiser and never becomes a FAIL or a CAUTION, however large it is. That is not leniency:
-        // the app genuinely cannot distinguish a dead strip from a swipe the system swallowed, and
-        // guessing in either direction would be a fabrication. It is reported as unattributable, with
-        // an instruction to sweep again.
-        //
-        // "Wholly" is the load-bearing word. A patch straddling an edge has cells the system could not
-        // have taken, so it is judged on those and can still fail.
+        // Counting a strip cell toward a defect would mean reporting a fault on the strength of a
+        // swipe the system may have taken. Counting them toward *coverage* is different and is exactly
+        // what changed here — they are in the ratio above, and the test cannot finish without them.
         val zones = coverage.deadZones()
-        val (unattributable, attributable) = zones.partition { coverage.isEntirelySystemGesture(it) }
-        val realDefects = attributable.filter { it.size >= DEAD_ZONE_MIN_CELLS }
+        val realDefects = zones.filter { it.size >= DEAD_ZONE_MIN_CELLS }
 
         if (realDefects.isNotEmpty()) {
             val worst = realDefects.first()
@@ -98,8 +92,8 @@ object TouchCoverageEvaluator {
             )
         }
 
-        if (attributable.isNotEmpty()) {
-            val skipped = attributable.sumOf { it.size }
+        if (zones.isNotEmpty()) {
+            val skipped = zones.sumOf { it.size }
             return CheckResult(
                 id = CHECK_ID,
                 title = "Touch response",
@@ -122,8 +116,9 @@ object TouchCoverageEvaluator {
         // Deliberately not a PASS with a disclaimer, which is what this used to be. A buyer reads the
         // badge and not the small print, and a green PASS covering cells nobody managed to touch is the
         // overstatement the whole check exists to avoid.
-        if (unattributable.isNotEmpty()) {
-            val missed = unattributable.sumOf { it.size }
+        val insideStrips = coverage.uncoveredSystemGestureCells
+        if (insideStrips.isNotEmpty()) {
+            val missed = insideStrips.size
             return CheckResult(
                 id = CHECK_ID,
                 title = "Touch response",
