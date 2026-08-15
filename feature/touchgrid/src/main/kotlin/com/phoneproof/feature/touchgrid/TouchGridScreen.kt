@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -44,9 +45,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.IntSize
@@ -80,7 +78,7 @@ fun TouchGridScreen(
     onTouch: (Float, Float) -> Unit,
     onFinish: () -> Unit,
     onRetest: () -> Unit,
-    onReservedCellsChanged: (Set<Cell>) -> Unit,
+    onLayoutMeasured: (width: Int, height: Int, left: Int, top: Int, right: Int, bottom: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.phase == TouchTestPhase.FINISHED) {
@@ -90,7 +88,7 @@ fun TouchGridScreen(
             state = state,
             onTouch = onTouch,
             onFinish = onFinish,
-            onReservedCellsChanged = onReservedCellsChanged,
+            onLayoutMeasured = onLayoutMeasured,
             modifier = modifier,
         )
     }
@@ -101,7 +99,7 @@ private fun TestingLayout(
     state: TouchGridUiState,
     onTouch: (Float, Float) -> Unit,
     onFinish: () -> Unit,
-    onReservedCellsChanged: (Set<Cell>) -> Unit,
+    onLayoutMeasured: (width: Int, height: Int, left: Int, top: Int, right: Int, bottom: Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var pointerDown by remember { mutableStateOf(false) }
@@ -139,21 +137,24 @@ private fun TestingLayout(
     val density = LocalDensity.current
     val layoutDirection = LocalLayoutDirection.current
 
-    val reserved = remember(state.spec, canvasSize, gestureInsets, density, layoutDirection) {
-        reservedCells(
-            spec = state.spec,
-            width = canvasSize.width,
-            height = canvasSize.height,
-            left = gestureInsets.getLeft(density, layoutDirection),
-            top = gestureInsets.getTop(density),
-            right = gestureInsets.getRight(density, layoutDirection),
-            bottom = gestureInsets.getBottom(density),
+    // Raw insets and the canvas size are reported upward; the cells are worked out by the ViewModel.
+    //
+    // It used to compute the cell set here and hand that over. The ViewModel needs the raw edge
+    // thicknesses instead, because it keeps the *widest* it has seen: this screen hides the system
+    // bars while the test runs, and doing so can take these insets to zero, which would otherwise
+    // erase the app's knowledge of where the risky strips are at the exact moment it stopped being
+    // able to re-measure them.
+    LaunchedEffect(canvasSize, gestureInsets, density, layoutDirection) {
+        if (canvasSize.width <= 0 || canvasSize.height <= 0) return@LaunchedEffect
+        onLayoutMeasured(
+            canvasSize.width,
+            canvasSize.height,
+            gestureInsets.getLeft(density, layoutDirection),
+            gestureInsets.getTop(density),
+            gestureInsets.getRight(density, layoutDirection),
+            gestureInsets.getBottom(density),
         )
     }
-
-    // Reported rather than used locally, because the verdict is produced by the ViewModel and has
-    // to be built from the same set that is drawn.
-    LaunchedEffect(reserved) { onReservedCellsChanged(reserved) }
 
     Box(
         modifier = modifier
@@ -170,7 +171,17 @@ private fun TestingLayout(
                 if (!down) fingerAt = null
             },
             onPointerAt = { fingerAt = it },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Asks Android not to take the back swipe over this surface, which is half of what
+                // makes the edges testable at all. Until now the app measured the strips the system
+                // was stealing and then forgave them, without ever asking it to stop.
+                //
+                // Only half, and the limits are worth knowing: this affects the back gesture on the
+                // left and right edges, Android caps the exclusion at 200dp per edge, and it does
+                // nothing for the shade at the top or the home swipe at the bottom. Those are what
+                // hiding the system bars is for, in TouchGridRoute.
+                .systemGestureExclusion(),
         )
 
         Column(
@@ -202,10 +213,12 @@ private fun TestingLayout(
 
             // Appears only once there is enough coverage to reach a verdict, and only while the
             // finger is lifted. Until then the whole screen stays sweepable.
-            // Measured against reachable cells, matching the evaluator. Gating on raw coverage would
-            // hide this button on exactly the phones whose gesture strips make 90% unreachable.
+            //
+            // Over every cell, matching the evaluator. It used to gate on a smaller denominator that
+            // excluded the gesture strips, which let the test finish without them ever being swept —
+            // the opposite of what is wanted now that the edges are the valuable part.
             val enoughToJudge =
-                state.testableCoverageRatio >= TouchCoverageEvaluator.MIN_COVERAGE_TO_JUDGE
+                state.coverageRatio >= TouchCoverageEvaluator.MIN_COVERAGE_TO_JUDGE
             if (enoughToJudge && !pointerDown) {
                 Button(
                     onClick = onFinish,
@@ -346,13 +359,10 @@ private fun CoverageCanvas(
     val coveredColour = PhoneProofTheme.colors.accent
     val emptyColour = PhoneProofTheme.colors.gridEmpty
 
-    val reservedColour = PhoneProofTheme.colors.gridReserved
-
-    // Deliberately faint — the label explains a band the tester should ignore, so it must not
-    // compete with the grid it sits in.
-    val reservedInk = PhoneProofTheme.colors.textTertiary.copy(alpha = 0.75f)
-    val textMeasurer = rememberTextMeasurer()
-
+    // No third colour any more. The gesture strips used to be drawn in gridReserved with "no need to
+    // touch here" written into them, which is the opposite of the instruction now: they do need
+    // touching, and a dimmed band saying otherwise was the single clearest way to stop someone
+    // sweeping the exact edges that matter most.
     Canvas(modifier = modifier.then(gestureModifier)) {
         val cellWidth = size.width / state.spec.columns
         val cellHeight = size.height / state.spec.rows
@@ -368,13 +378,7 @@ private fun CoverageCanvas(
                 val covered = cell in state.touchedCells
                 val flagged = highlight > 0f && cell in state.highlightedCells
 
-                val reserved = cell in state.reservedCells
-
                 val colour: Color = when {
-                    // Before covered, so a reserved cell the finger did reach still reads as
-                    // untestable. Its coverage was luck — the system could have taken that swipe —
-                    // and showing it as confirmed would overstate what was measured.
-                    reserved && !flagged -> reservedColour
                     // Flagged first: an uncovered cell that the verdict cares about must read as
                     // the loudest thing on screen. The colour comes from the verdict itself so
                     // the map cannot contradict the badge — marking scattered finger-skips in
@@ -395,52 +399,10 @@ private fun CoverageCanvas(
             }
         }
 
-        // Labels written into the reserved bands themselves.
-        //
-        // The dimmed edges were being read as dead parts of the screen — the readout explained them
-        // in a sentence at the top, which is not where someone is looking while they sweep the
-        // bottom. Saying it in the band removes the question at the place it gets asked.
-        if (state.reservedCells.isNotEmpty()) {
-            val topRows = (0 until state.spec.rows)
-                .takeWhile { row -> (0 until state.spec.columns).all { Cell(it, row) in state.reservedCells } }
-                .count()
-            val bottomRows = (state.spec.rows - 1 downTo 0)
-                .takeWhile { row -> (0 until state.spec.columns).all { Cell(it, row) in state.reservedCells } }
-                .count()
-
-            val label = textMeasurer.measure(
-                text = "no need to touch here",
-                style = TextStyle(fontSize = 11.sp, color = reservedInk),
-            )
-
-            // The top band is skipped while the test is running, because the readout card sits over
-            // it — the render showed this label drawn underneath the panel, invisible. During the
-            // test the card's own caption explains the dimmed edges; once the test is finished the
-            // card is gone and the label is worth drawing.
-            //
-            // Only drawn where the band is genuinely taller than the text, too. A label crammed into
-            // a one-row strip would overlap the cells it is describing.
-            val topIsVisible = state.phase == TouchTestPhase.FINISHED
-            if (topIsVisible && topRows > 0 && topRows * cellHeight > label.size.height * 1.4f) {
-                drawText(
-                    textLayoutResult = label,
-                    topLeft = Offset(
-                        x = (size.width - label.size.width) / 2f,
-                        y = (topRows * cellHeight - label.size.height) / 2f,
-                    ),
-                )
-            }
-            if (bottomRows > 0 && bottomRows * cellHeight > label.size.height * 1.4f) {
-                val bandTop = size.height - bottomRows * cellHeight
-                drawText(
-                    textLayoutResult = label,
-                    topLeft = Offset(
-                        x = (size.width - label.size.width) / 2f,
-                        y = bandTop + (bottomRows * cellHeight - label.size.height) / 2f,
-                    ),
-                )
-            }
-        }
+        // The "no need to touch here" labels that used to be drawn into the top and bottom bands are
+        // gone with the bands. They were solving a problem that no longer exists — explaining why a
+        // dimmed strip should be skipped — and if they stayed they would now be instructing the
+        // tester to skip the part of the screen the test most wants covered.
     }
 }
 
@@ -451,14 +413,12 @@ private fun Readout(state: TouchGridUiState) {
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
-            text = when {
-                state.phase == TouchTestPhase.READY ->
-                    "Drag your finger over every part of the screen"
-                // Telling someone to cover the edges while the app is also telling them the edges
-                // cannot be tested is a straight contradiction, and it was on screen together.
-                state.reservedCells.isNotEmpty() ->
-                    "Keep going — cover everything inside the dimmed border"
-                else -> "Keep going — cover the edges and corners"
+            // One instruction now. The variant that said "cover everything inside the dimmed border"
+            // existed because there *was* a border to stay inside; there is not, and the edges are
+            // the part worth insisting on, so the wording says so plainly.
+            text = when (state.phase) {
+                TouchTestPhase.READY -> "Drag your finger over every part of the screen"
+                else -> "Keep going — right into the edges and corners"
             },
             style = MaterialTheme.typography.titleMedium,
             color = PhoneProofTheme.colors.textPrimary,
@@ -466,7 +426,7 @@ private fun Readout(state: TouchGridUiState) {
         )
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(
-                text = "${state.testableTouchedCount} / ${state.testableCellCount}",
+                text = "${state.touchedCount} / ${state.cellCount}",
                 style = PhoneProofType.NumericLarge,
                 color = PhoneProofTheme.colors.textPrimary,
             )
@@ -481,14 +441,17 @@ private fun Readout(state: TouchGridUiState) {
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofTheme.colors.textTertiary,
         )
-        // Shown only when the phone actually reserves something, and said before the verdict rather
-        // than after it. A tester who cannot cover the top edge needs to know why at the moment
-        // they are struggling with it, not in a footnote once the result is already on screen.
-        if (state.reservedCells.isNotEmpty()) {
+        // The caption that said "the dimmed edges belong to Android's own swipes ... left out of the
+        // result" is gone. Nothing is left out of the result, so it would have been false — and it
+        // told the tester not to bother with the edges, which is now the one thing worth insisting on.
+        //
+        // Replaced with the practical hint, because the edges are genuinely harder to sweep than the
+        // middle and a tester who does not know the trick will conclude the screen is dead.
+        if (state.phase != TouchTestPhase.READY && state.systemGestureCells.isNotEmpty()) {
             Text(
-                text = "The dimmed edges belong to Android's own swipes. No app can test them, " +
-                    "and they are left out of the result.",
-                style = MaterialTheme.typography.labelSmall,
+                text = "For the very top and bottom, start just inside the screen and drag " +
+                    "outwards rather than swiping in from the edge.",
+                style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textSecondary,
                 textAlign = TextAlign.Center,
             )

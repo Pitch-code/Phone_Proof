@@ -121,59 +121,67 @@ class TouchCoverageEvaluatorTest {
     }
 
     // ---------------------------------------------------------------------------------------
-    // Cells Android reserves for its own edge gestures.
+    // The strips Android uses for its own edge gestures, which are now swept rather than excused.
     //
-    // Reproduces a false alarm from a realme RMX5110: a flawless screen reported CAUTION over
-    // three cells along the top edge, because the system took those swipes to open the
-    // notification shade and the app never received them.
+    // The original false alarm still governs these tests: a flawless realme RMX5110 reported CAUTION
+    // over three cells along the top edge, because the system took those swipes to open the shade and
+    // the app never received them. What changed is the remedy. The strips used to be removed from the
+    // verdict, which meant a PASS; now they are part of the test, and a gap left inside one is
+    // reported as UNKNOWN — unattributable — with an instruction to sweep again.
+    //
+    // The thing that must not regress in either design: a working screen is never accused.
     // ---------------------------------------------------------------------------------------
 
     /** The top row, standing in for the strip the shade gesture occupies. */
     private val topStrip: Set<Cell> = (0 until spec.columns).map { Cell(it, 0) }.toSet()
 
-    private fun coverage(untouched: Set<Cell>, reserved: Set<Cell>): TouchCoverage {
+    private fun coverage(untouched: Set<Cell>, gestures: Set<Cell>): TouchCoverage {
         val all = buildSet {
             for (row in 0 until spec.rows) {
                 for (column in 0 until spec.columns) add(Cell(column, row))
             }
         }
-        return TouchCoverage(spec, all - untouched, reserved)
+        return TouchCoverage(spec, all - untouched, gestures)
     }
 
     @Test
-    fun `uncovered cells inside a reserved strip pass instead of accusing the screen`() {
+    fun `uncovered cells inside a gesture strip are unattributable, never an accusation`() {
         val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
         val result = TouchCoverageEvaluator.evaluate(coverage(untouched, topStrip))
 
-        // The whole point of the fix. This was CAUTION on real hardware.
-        assertThat(result.outcome).isEqualTo(CheckOutcome.PASS)
+        // The line that must never move. This was CAUTION on real hardware, and a CAUTION about a
+        // working screen teaches the buyer to discount every later result.
+        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
         assertThat(result.outcome).isNotEqualTo(CheckOutcome.CAUTION)
+        assertThat(result.outcome).isNotEqualTo(CheckOutcome.FAIL)
     }
 
     @Test
-    fun `a pass with untestable cells is honest about it rather than claiming certainty`() {
+    fun `an unattributable gap says so, and says what to do about it`() {
         val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
         val result = TouchCoverageEvaluator.evaluate(coverage(untouched, topStrip))
 
         assertThat(result.confidence).isEqualTo(Confidence.MEDIUM)
-        val notTestable = result.measurements.first { it.label == "Not testable" }
-        assertThat(notTestable.display).isEqualTo("3 cells")
-        assertThat(result.headline).contains("the app can read")
+        assertThat(result.measurements.first { it.label == "Unattributed" }.display)
+            .isEqualTo("3 cells")
+        assertThat(result.action).isNotNull()
+        // Not a PASS with small print. A buyer reads the badge, not the footnote.
+        assertThat(result.outcome).isNotEqualTo(CheckOutcome.PASS)
     }
 
     @Test
-    fun `covering the reserved strip earns full confidence and no disclaimer`() {
+    fun `sweeping the strip successfully earns a plain full-confidence pass`() {
         val result = TouchCoverageEvaluator.evaluate(coverage(emptySet(), topStrip))
 
         assertThat(result.outcome).isEqualTo(CheckOutcome.PASS)
         assertThat(result.confidence).isEqualTo(Confidence.HIGH)
-        assertThat(result.measurements.map { it.label }).doesNotContain("Not testable")
+        assertThat(result.measurements.map { it.label }).doesNotContain("Unattributed")
     }
 
     @Test
-    fun `a real dead zone outside the reserved strip still fails`() {
-        // The fix must not become a blanket amnesty: forgiving the strip cannot cost the app its
-        // ability to catch an actual dead patch.
+    fun `a real dead zone outside the strips still fails`() {
+        // Not a blanket amnesty: treating the strips gently cannot cost the app its ability to catch
+        // an actual dead patch.
         val result = TouchCoverageEvaluator.evaluate(coverage(block(5, 5, 2, 2), topStrip))
 
         assertThat(result.outcome).isEqualTo(CheckOutcome.FAIL)
@@ -181,10 +189,10 @@ class TouchCoverageEvaluatorTest {
     }
 
     @Test
-    fun `a patch straddling the strip is judged only on the part that could be read`() {
-        // Four contiguous uncovered cells, two of them unreachable. Counting all four would clear
-        // DEAD_ZONE_MIN_CELLS and report a fault the app cannot actually evidence; only the two
-        // readable cells count, which is a scattered-miss CAUTION.
+    fun `a patch straddling a strip is judged on the part the system could not have taken`() {
+        // Four contiguous uncovered cells, two of them inside the strip. The two outside it are real
+        // evidence, and two cells is under DEAD_ZONE_MIN_CELLS, so this is a scattered-miss CAUTION
+        // rather than either a FAIL or a shrug.
         val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(0, 1), Cell(1, 1))
         val result = TouchCoverageEvaluator.evaluate(coverage(untouched, topStrip))
 
@@ -193,46 +201,41 @@ class TouchCoverageEvaluatorTest {
     }
 
     @Test
-    fun `the judging threshold is measured against reachable cells only`() {
-        // Two reserved rows left uncovered, every reachable cell covered. Raw coverage is 80%,
-        // under the 90% threshold, so judging on the raw ratio would strand the tester on
-        // "keep going" forever on a phone with wide gesture strips.
-        val reserved = topStrip + (0 until spec.columns).map { Cell(it, 1) }
-        val subject = coverage(reserved, reserved)
+    fun `a strip left entirely unswept is not enough coverage to judge`() {
+        // Two whole rows of a five-row grid missed, so raw coverage is 80% and under the threshold.
+        //
+        // The old design deliberately passed this, by measuring against a denominator that excluded
+        // the strips: the tester was told the job was done without ever having swept the edges. That
+        // is precisely what the product owner reversed, so the assertion is now the opposite one.
+        val strips = topStrip + (0 until spec.columns).map { Cell(it, 1) }
+        val subject = coverage(strips, strips)
 
         assertThat(subject.coverageRatio).isEqualTo(0.80f)
-        assertThat(subject.testableCoverageRatio).isEqualTo(1.0f)
 
         val result = TouchCoverageEvaluator.evaluate(subject)
-        assertThat(result.outcome).isEqualTo(CheckOutcome.PASS)
-        assertThat(result.outcome).isNotEqualTo(CheckOutcome.UNKNOWN)
+        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
+        assertThat(result.headline).contains("Not enough")
     }
 
     @Test
-    fun `the report counts coverage over reachable cells, not every cell`() {
-        // The realme reading that prompted this: 3 cells under the gesture strip, 509 covered out of
-        // 512. Reporting "509 / 512, 99.4%" told the buyer they had missed three tiles and made a
-        // flawless screen look imperfect, which is what the "Not testable" row exists to prevent.
+    fun `the report counts every cell, with no second denominator`() {
+        // The realme reading, recounted under the new rule: three cells in the strip left uncovered
+        // now read as 12 / 15 rather than 12 / 12, because those three are part of the test.
         val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
         val result = TouchCoverageEvaluator.evaluate(coverage(untouched, topStrip))
 
         assertThat(result.measurements.first { it.label == "Cells covered" }.display)
-            .isEqualTo("${spec.cellCount - topStrip.size} / ${spec.cellCount - topStrip.size}")
-        assertThat(result.measurements.first { it.label == "Coverage" }.display)
-            .isEqualTo("100.0 %")
-        // The forgiven cells are still disclosed rather than vanishing into a rounder number.
-        assertThat(result.measurements.first { it.label == "Not testable" }.display)
-            .isEqualTo("3 cells")
+            .isEqualTo("${spec.cellCount - 3} / ${spec.cellCount}")
+        assertThat(result.measurements.map { it.label }).doesNotContain("Not testable")
     }
 
     @Test
-    fun `with nothing reserved the count is unchanged`() {
-        // Guards the common case: a phone that reserves nothing must still report every cell.
-        val result = TouchCoverageEvaluator.evaluate(coverage(emptySet(), emptySet()))
+    fun `with no strips known a gap is still the phone's to answer for`() {
+        // The three-button phone and the Robolectric case. With no gesture insets reported, nothing
+        // is unattributable, so a real patch must still fail rather than being quietly excused.
+        val result = TouchCoverageEvaluator.evaluate(coverage(block(5, 5, 2, 2), emptySet()))
 
-        assertThat(result.measurements.first { it.label == "Cells covered" }.display)
-            .isEqualTo("${spec.cellCount} / ${spec.cellCount}")
-        assertThat(result.measurements.map { it.label }).doesNotContain("Not testable")
+        assertThat(result.outcome).isEqualTo(CheckOutcome.FAIL)
     }
 
     @Test

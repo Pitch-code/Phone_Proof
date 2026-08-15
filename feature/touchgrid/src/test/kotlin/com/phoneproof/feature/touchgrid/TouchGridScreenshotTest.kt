@@ -64,9 +64,9 @@ class TouchGridScreenshotTest {
                     onFinish = {},
                     onRetest = {},
                     // Ignored on purpose. Robolectric reports no system bars, so the live inset
-                    // reading always yields an empty set here; the reserved states below are built
-                    // by hand instead, which is why reservedCells lives in the state.
-                    onReservedCellsChanged = {},
+                    // reading always yields nothing here; the gesture-strip states below are built by
+                    // hand instead, which is why systemGestureCells lives in the state.
+                    onLayoutMeasured = { _, _, _, _, _, _ -> },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -127,8 +127,11 @@ class TouchGridScreenshotTest {
     }
 
     /**
-     * Roughly what a gesture-navigation phone reserves: a band top and bottom for the shade and the
+     * Roughly what a gesture-navigation phone claims: a band top and bottom for the shade and the
      * home swipe, and a column each side for the back swipe.
+     *
+     * These are no longer drawn differently, so the renders below look like any other sweep. That is
+     * the point of them: the grid must give the tester no reason to think the edges are out of bounds.
      */
     private fun gestureStrips(): Set<Cell> =
         block(0, 0, spec.columns, 2) +
@@ -137,45 +140,53 @@ class TouchGridScreenshotTest {
             block(spec.columns - 1, 0, 1, spec.rows)
 
     @Test
-    fun sweeping_with_reserved_edges_shown() {
-        val reserved = gestureStrips()
-        val covered = block(0, 0, spec.columns, (spec.rows * 2) / 3) - reserved
+    fun sweeping_with_the_edges_still_to_do() {
+        // Mid-sweep with the gesture strips known and untouched. Previously this render showed them
+        // dimmed with "no need to touch here" written across them; now they are ordinary empty cells,
+        // and the count in the readout includes them, so 100% means the whole screen.
+        val gestures = gestureStrips()
+        val covered = block(0, 0, spec.columns, (spec.rows * 2) / 3) - gestures
         render(
-            "touchgrid-6-reserved-edges",
+            "touchgrid-6-edges-still-to-do",
             TouchGridUiState(
                 spec = spec,
                 touchedCells = covered,
                 phase = TouchTestPhase.IN_PROGRESS,
-                reservedCells = reserved,
+                systemGestureCells = gestures,
             ),
         )
     }
 
     @Test
-    fun three_cells_missed_inside_a_reserved_strip_is_a_pass() {
+    fun three_cells_missed_inside_a_gesture_strip_is_unattributable_not_an_accusation() {
         // The realme RMX5110 false alarm, as a picture. Three cells along the top edge stayed
-        // uncovered because the system took those swipes to open the notification shade, and the
-        // app reported CAUTION on a screen with nothing wrong with it.
-        val reserved = gestureStrips()
+        // uncovered because the system took those swipes to open the notification shade.
+        //
+        // The remedy changed with this PR: it used to resolve to a PASS with the strip excluded from
+        // the verdict, and now resolves to UNKNOWN asking for another sweep. What must never change is
+        // that it is not CAUTION and not FAIL — the screen has done nothing wrong.
+        val gestures = gestureStrips()
         val missed = setOf(Cell(4, 0), Cell(5, 0), Cell(6, 0))
         val covered = allCells() - missed
-        val coverage = TouchCoverage(spec, covered, reserved)
+        val coverage = TouchCoverage(spec, covered, gestures)
         val result = TouchCoverageEvaluator.evaluate(coverage)
 
         // Asserted as well as rendered. A screenshot shows the wording, but only this catches a
         // regression that quietly turns the verdict back into an accusation.
-        assertEquals(CheckOutcome.PASS, result.outcome)
+        assertEquals(CheckOutcome.UNKNOWN, result.outcome)
         assertEquals(Confidence.MEDIUM, result.confidence)
 
         render(
-            "touchgrid-7-reserved-pass",
+            "touchgrid-7-unattributable",
             TouchGridUiState(
                 spec = spec,
                 touchedCells = covered,
                 phase = TouchTestPhase.FINISHED,
                 result = result,
-                highlightedCells = coverage.untouchedCells - reserved,
-                reservedCells = reserved,
+                // No longer subtracted. The tester is being asked to sweep these again, so they have
+                // to be able to see which ones.
+                highlightedCells = coverage.untouchedCells,
+                systemGestureCells = gestures,
             ),
         )
     }

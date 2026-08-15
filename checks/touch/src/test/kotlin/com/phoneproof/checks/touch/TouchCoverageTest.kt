@@ -182,89 +182,84 @@ class TouchCoverageTrackerTest {
 }
 
 
-class TouchCoverageReservedCellsTest {
+/**
+ * The gesture strips, which are now tested rather than excused.
+ *
+ * This class used to assert the opposite: that a second grouping removed the strips before judging,
+ * and that the counts used a smaller denominator. Both are gone. The strips are swept like any other
+ * cell, and the set survives for one purpose only — deciding whether a gap can be attributed to the
+ * phone at all.
+ */
+class TouchCoverageSystemGestureCellsTest {
 
     private val spec = GridSpec(columns = 4, rows = 4)
 
-    private fun coverage(untouched: Set<Cell>, reserved: Set<Cell>): TouchCoverage {
-        val all = buildSet {
-            for (row in 0 until spec.rows) {
-                for (column in 0 until spec.columns) add(Cell(column, row))
-            }
+    private val all: Set<Cell> = buildSet {
+        for (row in 0 until spec.rows) {
+            for (column in 0 until spec.columns) add(Cell(column, row))
         }
-        return TouchCoverage(spec, all - untouched, reserved)
     }
+
+    private fun coverage(untouched: Set<Cell>, gestures: Set<Cell>): TouchCoverage =
+        TouchCoverage(spec, all - untouched, gestures)
 
     private val topRow: Set<Cell> = (0 until spec.columns).map { Cell(it, 0) }.toSet()
 
     @Test
-    fun `the two groupings differ exactly by the reserved cells`() {
-        // This is the mechanism behind the false CAUTION, stated as an assertion. The same three
-        // uncovered cells are one group of three when the platform's strip is ignored, and no
-        // group at all once it is accounted for. The old code read the first number.
-        val untouched = setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0))
-        val subject = coverage(untouched, topRow)
-
-        assertThat(subject.deadZones()).hasSize(1)
-        assertThat(subject.deadZones().first().size).isEqualTo(3)
-        assertThat(subject.testableDeadZones()).isEmpty()
-    }
-
-    @Test
-    fun `removing reserved cells can split one apparent patch into two real ones`() {
-        // Three uncovered cells in a row where only the middle one is reserved. That middle cell is
-        // the sole thing joining the outer two, so grouping before removal reports a single
-        // three-cell patch, while the honest reading is two unrelated single-cell skips. This is
-        // why reserved cells are removed before grouping rather than subtracted from the totals
-        // afterwards.
-        val untouched = setOf(Cell(0, 1), Cell(1, 1), Cell(2, 1))
-        val subject = coverage(untouched, setOf(Cell(1, 1)))
-
-        assertThat(subject.deadZones()).hasSize(1)
-        assertThat(subject.deadZones().first().size).isEqualTo(3)
-
-        val testable = subject.testableDeadZones()
-        assertThat(testable).hasSize(2)
-        assertThat(testable.map { it.size }).containsExactly(1, 1)
-    }
-
-    @Test
-    fun `untested reserved cells count only the reserved ones left uncovered`() {
-        val untouched = setOf(Cell(0, 0), Cell(2, 2))
-        val subject = coverage(untouched, topRow)
-
-        // Cell(2,2) is uncovered but not reserved, and the other three reserved cells were covered.
-        assertThat(subject.untestedReservedCells).containsExactly(Cell(0, 0))
-    }
-
-    @Test
-    fun `testable coverage ignores reserved cells in both halves of the fraction`() {
+    fun `the strips are counted in coverage like every other cell`() {
+        // The reversal, stated as an assertion. There is one ratio and it has every cell in its
+        // denominator, so a sweep that skips the top row does not report itself as complete.
         val subject = coverage(topRow, topRow)
 
-        assertThat(subject.testableCellCount).isEqualTo(12)
+        assertThat(subject.cellCount).isEqualTo(16)
         assertThat(subject.coverageRatio).isEqualTo(0.75f)
-        assertThat(subject.testableCoverageRatio).isEqualTo(1f)
     }
 
     @Test
-    fun `a grid that is entirely reserved reports zero rather than dividing by zero`() {
-        val all = buildSet {
-            for (row in 0 until spec.rows) {
-                for (column in 0 until spec.columns) add(Cell(column, row))
-            }
-        }
-        val subject = TouchCoverage(spec, all, all)
+    fun `a gap wholly inside a strip is unattributable`() {
+        val subject = coverage(setOf(Cell(0, 0), Cell(1, 0), Cell(2, 0)), topRow)
 
-        assertThat(subject.testableCellCount).isEqualTo(0)
-        assertThat(subject.testableCoverageRatio).isEqualTo(0f)
+        val zones = subject.deadZones()
+        assertThat(zones).hasSize(1)
+        assertThat(subject.isEntirelySystemGesture(zones.first())).isTrue()
     }
 
     @Test
-    fun `default reserved set is empty so existing behaviour is untouched`() {
-        val subject = TouchCoverage(spec, emptySet())
+    fun `a gap straddling a strip is attributable, because part of it is real evidence`() {
+        // The load-bearing case, and the reason the test is "wholly" rather than "overlaps". Cell(0,1)
+        // is outside the strip: the system could not have taken that swipe, so something is there to
+        // report and the patch must not be waved through.
+        val subject = coverage(setOf(Cell(0, 0), Cell(0, 1)), topRow)
 
-        assertThat(subject.reservedCells).isEmpty()
-        assertThat(subject.testableCellCount).isEqualTo(subject.cellCount)
-        assertThat(subject.testableDeadZones()).isEqualTo(subject.deadZones())
+        val zones = subject.deadZones()
+        assertThat(zones).hasSize(1)
+        assertThat(subject.isEntirelySystemGesture(zones.first())).isFalse()
+    }
+
+    @Test
+    fun `a gap outside every strip is attributable`() {
+        val subject = coverage(setOf(Cell(2, 2)), topRow)
+
+        assertThat(subject.isEntirelySystemGesture(subject.deadZones().first())).isFalse()
+    }
+
+    @Test
+    fun `with no strips known nothing is unattributable`() {
+        // Guards the isNotEmpty() check. Without it, `all { }` on an empty set is vacuously true and
+        // every gap on a phone reporting no gesture insets — the Robolectric case, and a three-button
+        // phone — would be excused as the platform's fault. That would be the original bug inverted:
+        // instead of blaming the phone for the system, it would blame the system for the phone.
+        val subject = coverage(setOf(Cell(2, 2)), emptySet())
+
+        assertThat(subject.systemGestureCells).isEmpty()
+        assertThat(subject.isEntirelySystemGesture(subject.deadZones().first())).isFalse()
+    }
+
+    @Test
+    fun `a fully swept grid has no gaps to attribute either way`() {
+        val subject = TouchCoverage(spec, all, topRow)
+
+        assertThat(subject.coverageRatio).isEqualTo(1f)
+        assertThat(subject.deadZones()).isEmpty()
     }
 }

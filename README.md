@@ -41,8 +41,10 @@ under a second:
 
 Then, one thing at a time:
 
-- **Touch coverage** maps the screen into a grid and finds contiguous unresponsive patches, counting
-  only the cells Android does not reserve for its own edge gestures.
+- **Touch coverage** maps the screen into a grid and finds contiguous unresponsive patches, right into
+  the edges — the app hides the system bars and asks Android not to take the back swipe, because the
+  edges are where a cracked digitiser shows first. Where the system still swallows a swipe, the result
+  says it could not tell rather than blaming the screen.
 - **Dead pixels and burn-in** drives the panel through plain colours at forced maximum brightness.
 - **Claimed against measured** puts what the seller said beside what the phone reports.
 - **Eight things only you can check** covers the faults no app can reach — a twisted frame, a

@@ -36,30 +36,16 @@ object TouchCoverageEvaluator {
     )
 
     fun evaluate(coverage: TouchCoverage): CheckResult {
-        // Counted over reachable cells, matching the live readout. Reporting 509 / 512 and 99.4%
-        // when 509 was every cell anyone could reach told the buyer they had missed three tiles and
-        // made a flawless screen look imperfect — the exact impression the "Not testable" row below
-        // exists to prevent. The reserved cells are disclosed on their own line instead.
-        val percent = (coverage.testableCoverageRatio * 100f)
-        val untestable = coverage.untestedReservedCells.size
-        val measurements = buildList {
-            add(
-                Measurement(
-                    "Cells covered",
-                    "${coverage.testableTouchedCount} / ${coverage.testableCellCount}",
-                ),
-            )
-            add(Measurement("Coverage", String.format("%.1f", percent), "%"))
-            // Disclosed on every outcome, including FAIL and PASS, so the report always states the
-            // limits of what was actually measured rather than only when it flatters the phone.
-            if (untestable > 0) {
-                add(Measurement("Not testable", "$untestable", "cells"))
-            }
-        }
+        // Every cell, in both halves of the fraction. The edges are part of the test now, so there is
+        // no second denominator and no "Not testable" row — the product owner's call, and it removes
+        // a line that told the buyer part of their screen was none of the app's business.
+        val percent = (coverage.coverageRatio * 100f)
+        val measurements = listOf(
+            Measurement("Cells covered", "${coverage.touchedCount} / ${coverage.cellCount}"),
+            Measurement("Coverage", String.format("%.1f", percent), "%"),
+        )
 
-        // Judged on reachable cells only. Against the raw ratio, a phone with wide gesture strips
-        // could never reach the threshold however carefully the tester swiped.
-        if (coverage.testableCoverageRatio < MIN_COVERAGE_TO_JUDGE) {
+        if (coverage.coverageRatio < MIN_COVERAGE_TO_JUDGE) {
             val needed = (MIN_COVERAGE_TO_JUDGE * 100).toInt()
             return CheckResult(
                 id = CHECK_ID,
@@ -74,10 +60,19 @@ object TouchCoverageEvaluator {
             )
         }
 
-        // testableDeadZones, not deadZones: a gap the platform caused is not evidence about the
-        // digitiser, and counting it was what made a perfect screen report CAUTION.
-        val zones = coverage.testableDeadZones()
-        val realDefects = zones.filter { it.size >= DEAD_ZONE_MIN_CELLS }
+        // Every gap, then split by whether it can be attributed to the phone at all.
+        //
+        // A gap lying wholly inside the strips Android may have intercepted is not evidence about the
+        // digitiser and never becomes a FAIL or a CAUTION, however large it is. That is not leniency:
+        // the app genuinely cannot distinguish a dead strip from a swipe the system swallowed, and
+        // guessing in either direction would be a fabrication. It is reported as unattributable, with
+        // an instruction to sweep again.
+        //
+        // "Wholly" is the load-bearing word. A patch straddling an edge has cells the system could not
+        // have taken, so it is judged on those and can still fail.
+        val zones = coverage.deadZones()
+        val (unattributable, attributable) = zones.partition { coverage.isEntirelySystemGesture(it) }
+        val realDefects = attributable.filter { it.size >= DEAD_ZONE_MIN_CELLS }
 
         if (realDefects.isNotEmpty()) {
             val worst = realDefects.first()
@@ -103,8 +98,8 @@ object TouchCoverageEvaluator {
             )
         }
 
-        if (zones.isNotEmpty()) {
-            val skipped = zones.sumOf { it.size }
+        if (attributable.isNotEmpty()) {
+            val skipped = attributable.sumOf { it.size }
             return CheckResult(
                 id = CHECK_ID,
                 title = "Touch response",
@@ -120,21 +115,31 @@ object TouchCoverageEvaluator {
             )
         }
 
-        // A pass, but an honest one. Confidence drops to MEDIUM when part of the screen was never
-        // readable, because a defect could be hiding in exactly the strip the app could not see.
-        // Claiming HIGH here would be the same overstatement the Confidence type exists to prevent.
-        if (untestable > 0) {
+        // Everything left is in a strip the system may have taken. UNKNOWN, not PASS and not CAUTION:
+        // the honest answer is that this part was not measured, and UNKNOWN is a first-class answer in
+        // this app precisely so a gap in the evidence never has to be dressed up as a result.
+        //
+        // Deliberately not a PASS with a disclaimer, which is what this used to be. A buyer reads the
+        // badge and not the small print, and a green PASS covering cells nobody managed to touch is the
+        // overstatement the whole check exists to avoid.
+        if (unattributable.isNotEmpty()) {
+            val missed = unattributable.sumOf { it.size }
             return CheckResult(
                 id = CHECK_ID,
                 title = "Touch response",
-                outcome = CheckOutcome.PASS,
+                outcome = CheckOutcome.UNKNOWN,
                 confidence = Confidence.MEDIUM,
-                headline = "Every part of the screen the app can read responded.",
-                consequence = "${plural(untestable, "cell")} sit under a strip Android keeps for " +
-                    "its own swipes, so no app can test them. Nothing suggests a fault there.",
-                action = "Check those edges by hand: type a message, and pull the notification " +
-                    "shade down from the top.",
-                measurements = measurements,
+                headline = "Android took ${plural(missed, "swipe")} at the very edge for itself.",
+                consequence = "Those cells sit exactly where the system's own gestures live — the " +
+                    "shade at the top, the home swipe at the bottom — so the app cannot tell a dead " +
+                    "strip from a swipe the phone answered instead of passing on. This is not a " +
+                    "finding about the screen either way.",
+                action = "Sweep the very top and bottom edges again, slowly and starting just " +
+                    "inside the screen. If the same cells stay dark after two tries, treat them as " +
+                    "untested and check them by hand: type a message, and pull the shade down.",
+                measurements = measurements +
+                    Measurement("Unattributed", "$missed", "cells"),
+                falsePositiveCauses = FALSE_POSITIVE_CAUSES,
             )
         }
 

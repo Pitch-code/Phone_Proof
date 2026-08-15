@@ -84,20 +84,26 @@ data class TouchCoverage(
     val spec: GridSpec,
     val touchedCells: Set<Cell>,
     /**
-     * Cells sitting under a strip Android reserves for its own edge gestures — the pull-down for
-     * the notification shade at the top, the home swipe at the bottom, the back swipe at the sides.
+     * Cells under a strip Android uses for its own edge gestures — the shade pull-down at the top,
+     * the home swipe at the bottom, the back swipe at the sides.
      *
-     * These exist because of a false alarm on real hardware. A flawless screen reported CAUTION
-     * for three cells along the top edge: the tester swiped over them, the system swallowed the
-     * gesture to open the shade, and the app never saw the touch. Blaming the phone for the
-     * platform's behaviour is the worst thing a trust tool can do, because the buyer learns to
-     * discount every result the app gives them afterwards.
+     * **These are tested like any other cell.** That is a reversal, decided by the product owner: a
+     * buyer wants to check the whole screen, and the edges are where a cracked digitiser shows first,
+     * so writing them off was giving away the most valuable part of the test. The app now asks Android
+     * to stop intercepting them — see the immersive-mode and gesture-exclusion handling in
+     * `feature:touchgrid` — rather than measuring the strips and forgiving them.
      *
-     * Reserved cells are therefore excluded from the verdict but still *shown*, and the count of
-     * ones left uncovered is disclosed. Empty by default so every existing caller and test keeps
-     * its previous meaning.
+     * So this set no longer excuses anything, and nothing is subtracted from any count. It has exactly
+     * one job left: when a gap is left **entirely inside** these strips, the app cannot tell a dead
+     * digitiser from a swipe the system swallowed, so it must say that rather than accuse the phone.
+     * That distinction exists because of a real false alarm — a flawless handset reported CAUTION for
+     * three cells along the top edge, where the system had taken the swipe to open the shade. Blaming
+     * a phone for the platform's behaviour is the worst thing a trust tool can do, because the buyer
+     * then discounts every later result too.
+     *
+     * Empty by default, which reads as "no strips known", not "no strips exist".
      */
-    val reservedCells: Set<Cell> = emptySet(),
+    val systemGestureCells: Set<Cell> = emptySet(),
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
@@ -112,28 +118,7 @@ data class TouchCoverage(
             }
         }
 
-    /** Reserved cells the tester never managed to cover. Disclosed, never counted against the phone. */
-    val untestedReservedCells: Set<Cell>
-        get() = untouchedCells intersect reservedCells
-
-    /** Cells the tester can fairly be expected to reach. */
-    val testableCellCount: Int get() = cellCount - reservedCells.size
-
-    /** Covered cells among the reachable ones. What the report counts. */
-    val testableTouchedCount: Int get() = (touchedCells - reservedCells).size
-
-    /**
-     * Coverage over the cells that can actually be reached, which is what the judging threshold
-     * has to be measured against. Using the raw ratio would make a 100% target unreachable on a
-     * phone whose gesture strips are wide, leaving the buyer stuck short of a verdict forever.
-     */
-    val testableCoverageRatio: Float
-        get() {
-            if (testableCellCount <= 0) return 0f
-            return (touchedCells - reservedCells).size.toFloat() / testableCellCount.toFloat()
-        }
-
-    /** 0f to 1f. */
+    /** 0f to 1f, over every cell. There is no longer a second, smaller denominator. */
     val coverageRatio: Float
         get() = touchedCount.toFloat() / cellCount.toFloat()
 
@@ -142,27 +127,24 @@ data class TouchCoverage(
      *
      * Diagonal adjacency is deliberately excluded: two cells touching only at a corner are
      * far more likely to be two separate finger skips than one physical defect.
-     */
-    /**
-     * Every gap, including ones the platform caused.
      *
-     * The verdict deliberately does **not** use this — see [testableDeadZones]. It is kept as the
-     * raw view because the difference between the two is exactly the bug that was fixed here, and
-     * the tests assert on both to hold that distinction in place. Reaching for this one when
-     * judging a phone is how a flawless screen gets accused.
+     * Every gap is here, including ones the platform may have caused. There used to be a second
+     * grouping that removed the gesture strips first, and the verdict used that one; now the verdict
+     * uses this, and [isEntirelySystemGesture] decides how a zone is *described* rather than whether
+     * it is counted.
      */
     fun deadZones(): List<DeadZone> = connectedZones(untouchedCells)
 
     /**
-     * Dead zones over the cells that could actually be tested.
+     * Whether a gap lies wholly inside the strips Android may have intercepted.
      *
-     * Reserved cells are removed *before* grouping rather than after, which matters: a patch
-     * straddling the top edge would otherwise be measured including its unreachable part and be
-     * promoted to a defect on the strength of cells the app never had a chance to read. Removing
-     * them first also lets a straddling patch split into two smaller pieces, each judged on the
-     * evidence that genuinely exists.
+     * The test is "wholly", not "overlaps", and the difference is the safety of the check. A patch
+     * straddling the bottom edge has cells the system could not have taken, and those cells are real
+     * evidence about the digitiser — so it is reported as a fault. Only a gap with no evidence
+     * outside the strips is unattributable.
      */
-    fun testableDeadZones(): List<DeadZone> = connectedZones(untouchedCells - reservedCells)
+    fun isEntirelySystemGesture(zone: DeadZone): Boolean =
+        systemGestureCells.isNotEmpty() && zone.cells.all { it in systemGestureCells }
 
     private fun connectedZones(cells: Set<Cell>): List<DeadZone> {
         val remaining = cells.toHashSet()

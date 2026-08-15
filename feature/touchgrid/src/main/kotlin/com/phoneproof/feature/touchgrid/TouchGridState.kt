@@ -33,45 +33,29 @@ data class TouchGridUiState(
     /** Cells to emphasise after finishing. Highlighted once, never on a loop. */
     val highlightedCells: Set<Cell> = emptySet(),
     /**
-     * Cells under a strip Android keeps for its own edge gestures, so touches there may never
-     * reach the app.
+     * Cells under a strip Android uses for its own edge gestures.
      *
-     * Part of the state rather than something the canvas works out for itself, for two reasons: the
-     * verdict needs the same set the drawing uses, and Robolectric reports no system bars at all,
-     * so a screenshot test can only show this case if it can hand the set in directly.
+     * No longer excused, and no longer drawn differently — they are swept like everywhere else. The
+     * set is kept only so the verdict can say "the system may have taken that swipe" instead of
+     * accusing the screen, and so a screenshot test can reach that case at all: Robolectric reports
+     * no system bars, so it has to be handed in directly.
      */
-    val reservedCells: Set<Cell> = emptySet(),
+    val systemGestureCells: Set<Cell> = emptySet(),
 ) {
     val cellCount: Int get() = spec.cellCount
     val touchedCount: Int get() = touchedCells.size
-    // coverageRatio lived here with a comment saying it was "kept for anything that wants the raw
-    // figure". Nothing wanted it, in production or in a test. Removed rather than left as a second,
-    // subtly wrong way to measure coverage sitting next to the right one.
-
-    /** Covered cells among those that can actually be reached. */
-    val testableTouchedCount: Int get() = (touchedCells - reservedCells).size
 
     /**
-     * The percentage the readout shows, over reachable cells only.
+     * Progress over every cell, which is both what the readout shows and what gates the finish
+     * control.
      *
-     * It used to divide by every cell, so a finished test read "466 / 512, 91%" when 457 was the most
-     * anyone could ever reach. That told the tester they had missed 46 tiles no app can touch, and
-     * made the top and bottom of a perfectly good screen look broken. It reaches 100 when the job is
-     * actually done.
+     * There were two ratios here, one over all cells and one over "reachable" cells, and the finish
+     * control gated on the smaller denominator so the edges could be skipped. With the edges part of
+     * the test there is one number, and it only reaches 100 when the whole screen has been swept —
+     * which is now the point rather than an obstacle.
      */
-    val coveragePercent: Int get() = (testableCoverageRatio * 100f).toInt()
+    val coverageRatio: Float
+        get() = touchedCount.toFloat() / cellCount.toFloat()
 
-    /** Cells the tester can fairly be asked to reach. Mirrors `TouchCoverage.testableCellCount`. */
-    val testableCellCount: Int get() = cellCount - reservedCells.size
-
-    /**
-     * Progress against reachable cells, which is what gates the finish control. The readout still
-     * shows raw coverage, because that is what the tester sees themselves doing; gating on it
-     * would strand them short of a verdict on a phone with wide gesture strips.
-     */
-    val testableCoverageRatio: Float
-        get() {
-            if (testableCellCount <= 0) return 0f
-            return (touchedCells - reservedCells).size.toFloat() / testableCellCount.toFloat()
-        }
+    val coveragePercent: Int get() = (coverageRatio * 100f).toInt()
 }
