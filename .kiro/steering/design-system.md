@@ -63,6 +63,12 @@ Haptics               CONFIRM on pass, REJECT on fail
 
 ### Rule: no looping animation, with exactly one documented exception
 
+> The guide diagrams were a **second** exception for a while, undocumented: `rememberInfiniteTransition`
+> looping every open card forever. The product owner ruled that the rule wins, so they hold still, each
+> at its own `GuideDiagram.stillFrame`. Do not reintroduce the loop — and if a diagram reads poorly,
+> change the frame it stops on rather than making it move.
+
+
 This is not a style preference. The app measures battery discharge under a load it controls.
 A perpetually animating background is an uncontrolled load and **would corrupt the measurement**.
 

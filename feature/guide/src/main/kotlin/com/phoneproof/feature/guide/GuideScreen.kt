@@ -1,12 +1,6 @@
 package com.phoneproof.feature.guide
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -47,15 +41,6 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 fun GuideScreen(
     steps: List<GuideStep>,
     expandedId: String?,
-    /**
-     * False when the system says animations are off.
-     *
-     * Respected rather than overridden. Someone who has turned animations off has usually done so
-     * for motion sensitivity or on a slow phone, and eight looping diagrams is exactly the content
-     * that setting exists to suppress. The diagrams still draw, held at a frame chosen to be
-     * legible on its own.
-     */
-    animate: Boolean,
     onToggle: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -95,7 +80,6 @@ fun GuideScreen(
                     step = step,
                     number = steps.indexOf(step) + 1,
                     expanded = step.id == expandedId,
-                    animate = animate,
                     onToggle = { onToggle(step.id) },
                 )
             }
@@ -108,7 +92,6 @@ private fun StepCard(
     step: GuideStep,
     number: Int,
     expanded: Boolean,
-    animate: Boolean,
     onToggle: () -> Unit,
 ) {
     Column(
@@ -160,7 +143,7 @@ private fun StepCard(
 
         AnimatedVisibility(visible = expanded) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Diagram(diagram = step.diagram, animate = animate)
+                Diagram(diagram = step.diagram)
 
                 Label("Why it matters")
                 Body(step.whyItMatters)
@@ -201,28 +184,13 @@ private fun StepCard(
 }
 
 @Composable
-private fun Diagram(diagram: GuideDiagram, animate: Boolean) {
-    // The animation runs only while its card is open, which is what keeps eight looping diagrams
-    // from all moving at once behind text nobody is reading. It also means the motion is tied to a
-    // deliberate tap rather than starting on its own.
-    val progress = if (animate) {
-        val transition = rememberInfiniteTransition(label = "diagram")
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                // Slow on purpose: this is a demonstration of a physical movement, and a fast loop
-                // reads as a flicker rather than an instruction.
-                animation = tween(durationMillis = 2600, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart,
-            ),
-            label = "progress",
-        ).value
-    } else {
-        // A quarter through, not zero. Several diagrams are at rest at 0f — the twist is untwisted,
-        // the tray is closed — so a still frame there would show nothing at all.
-        0.25f
-    }
+private fun Diagram(diagram: GuideDiagram) {
+    // One frame, held. There used to be a rememberInfiniteTransition here looping every open card
+    // for 2600ms forever, which was a second undocumented exception to the rule in Motion.kt that an
+    // infinite animation is a bug in this codebase. The rule wins: the frame each diagram stops on
+    // is GuideDiagram.stillFrame, chosen per diagram rather than shared, because a single constant
+    // left two of the eight showing a half-finished action.
+    val progress = diagram.stillFrame
 
     Column(
         modifier = Modifier

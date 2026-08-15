@@ -101,7 +101,7 @@ class LockedFeatureScreenshotTest {
             name = "locked-3-manual-checks",
             title = MANUAL_CHECKS_TITLE,
             explanation = "No app can test any of these for you — a twisted frame, a re-glued " +
-                "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
+                "screen, the water sticker in the SIM slot — each with a diagram showing " +
                 "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
             whatUnlockingGives = "The full walkthrough, including the account check that stops a " +
                 "phone being locked remotely after you have paid. Also unlocks claimed against " +

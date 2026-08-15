@@ -2,16 +2,50 @@ package com.phoneproof.feature.guide
 
 import androidx.compose.runtime.Immutable
 
-/** Which diagram illustrates a step. */
-enum class GuideDiagram {
-    FRAME_TWIST,
-    SCREEN_SEAM,
-    WATER_STICKER,
-    SPEAKER_SEAL,
-    LENS_DUST,
-    FINGERPRINT,
-    ACCOUNT_REMOVED,
-    CHARGING_PORT,
+/**
+ * Which diagram illustrates a step, and the single frame of it that is drawn.
+ *
+ * The diagrams used to loop. They no longer do — `Motion.kt` states that an infinite animation is a
+ * bug in this codebase, because a perpetually animating surface is an uncontrolled load and the
+ * battery check cannot take an honest reading next to one. These eight were a second, undocumented
+ * exception to that rule, and the product owner has ruled that they hold still.
+ *
+ * Which makes [stillFrame] load-bearing rather than a default. Each drawing is a function of progress
+ * over one cycle, and most of them are **at rest at 0** — the frame is untwisted, the SIM tray is
+ * closed, the finger has not touched the sensor. A single shared constant was fine when it was only
+ * the fallback for "animations are switched off"; now that it is the *only* thing anyone sees, each
+ * diagram needs the moment that actually shows its action, and that moment is not in the same place
+ * for all eight.
+ */
+enum class GuideDiagram(val stillFrame: Float) {
+    /** Fully twisted, where the creak marks appear. */
+    FRAME_TWIST(0.25f),
+
+    /**
+     * Mid-seam, not at the far end.
+     *
+     * The gap and the fingertip are driven by the same wave, so at full lift the finger is standing
+     * directly on the gap it is meant to be revealing. Half way, both are visible.
+     */
+    SCREEN_SEAM(0.5f),
+
+    /** Tray fully out, which is the only frame where the sticker can be seen at all. */
+    WATER_STICKER(0.25f),
+
+    /** Arrows spread across the grille rather than bunched. */
+    SPEAKER_SEAL(0.25f),
+
+    /** Beam centred, which is the one position that lights all three specks. */
+    LENS_DUST(0.5f),
+
+    /** Finger fully pressed. At 0.25 it is at the top of its travel, hovering over the sensor. */
+    FINGERPRINT(0.5f),
+
+    /** Fully struck through. The strike is the outcome, and anything earlier is a half-done job. */
+    ACCOUNT_REMOVED(0.75f),
+
+    /** Tilted far enough that the charge light drops out — the fault being looked for. */
+    CHARGING_PORT(0.25f),
 }
 
 /**

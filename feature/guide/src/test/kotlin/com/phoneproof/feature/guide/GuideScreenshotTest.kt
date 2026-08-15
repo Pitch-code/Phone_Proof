@@ -45,7 +45,6 @@ class GuideScreenshotTest {
                 GuideScreen(
                     steps = GuideSteps,
                     expandedId = null,
-                    animate = false,
                     onToggle = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -61,7 +60,6 @@ class GuideScreenshotTest {
                 GuideScreen(
                     steps = GuideSteps,
                     expandedId = "guide.water",
-                    animate = false,
                     onToggle = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -71,15 +69,15 @@ class GuideScreenshotTest {
     }
 
     /**
-     * Every diagram, at three points through its cycle.
+     * Every diagram, at the frame it now holds.
      *
      * The reason this exists: a Canvas drawing has no compiler to tell you it renders as an
-     * unreadable smudge, and there is no emulator here to watch the motion on. Because each diagram
-     * is a pure function of progress, a grid of frames is the only way anyone can review whether
-     * these read as the thing they are meant to depict.
+     * unreadable smudge. That mattered while these looped and nobody could watch the motion; it
+     * matters more now they are still, because a single held frame is the entire illustration. If the
+     * pose is wrong there is no next frame to redeem it.
      */
     @Test
-    fun every_diagram_at_three_points_of_its_cycle() {
+    fun every_diagram_at_the_frame_it_holds() {
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) { DiagramFrames() }
         }
@@ -176,11 +174,19 @@ class GuideScreenshotTest {
 
 
 /**
- * Every diagram, three frames each, in whichever theme wraps it.
+ * All eight diagrams at the one frame each of them holds, in whichever theme wraps it.
+ *
+ * This used to render three arbitrary points of each diagram's cycle, which was the right thing to
+ * review while they animated. They no longer do, so those frames are now ones **no user will ever
+ * see** — and the frame that does ship, `stillFrame`, was not among them. A review artifact showing
+ * three wrong frames instead of the one real one is worse than none.
+ *
+ * Two columns rather than three, because with a third of the cells there is room to make them bigger,
+ * and the whole difficulty with these drawings is that they are judged at thumbnail size.
  *
  * Shared by the dark and light renders rather than written twice: the point of the light grid is that
  * it differs from the dark one *only* by the theme, so any difference between the two images is the
- * palette and nothing else. Two hand-built copies of this layout could drift and quietly weaken that.
+ * palette and nothing else.
  */
 @Composable
 private fun DiagramFrames() {
@@ -189,30 +195,34 @@ private fun DiagramFrames() {
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
             .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        GuideDiagram.entries.forEach { diagram ->
-            Text(
-                text = diagram.name,
-                style = MaterialTheme.typography.labelSmall,
-                color = PhoneProofTheme.colors.textTertiary,
-            )
+        GuideDiagram.entries.chunked(2).forEach { pair ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                listOf(0.15f, 0.4f, 0.75f).forEach { progress ->
+                pair.forEach { diagram ->
                     Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            // The frame is in the label, so a reviewer can see which pose was chosen
+                            // without opening the enum.
+                            text = "${diagram.name}  @ ${diagram.stillFrame}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PhoneProofTheme.colors.textTertiary,
+                        )
                         GuideDiagramCanvas(
                             diagram = diagram,
-                            progress = progress,
+                            progress = diagram.stillFrame,
                             ink = PhoneProofTheme.colors.textSecondary,
                             accent = PhoneProofTheme.colors.accent,
                             warn = PhoneProofTheme.colors.caution,
                             surface = PhoneProofTheme.colors.surfaceRaised,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .aspectRatio(1.5f)
+                                // 1.6, the production aspect ratio. The old grid used 1.5, so the
+                                // cells were never quite the shape the buyer sees.
+                                .aspectRatio(1.6f)
                                 .background(PhoneProofTheme.colors.surfaceRaised),
                         )
                     }

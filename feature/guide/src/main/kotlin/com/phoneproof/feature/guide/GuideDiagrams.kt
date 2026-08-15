@@ -13,19 +13,21 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import kotlin.math.sin
 
 /**
- * The moving diagrams.
+ * The diagrams.
  *
  * Drawn with Canvas rather than shipped as GIFs or video, and the reasons are practical rather than
- * aesthetic. A set of eight animations as video would add tens of megabytes to a 13 MB app, on a
+ * aesthetic. A set of eight illustrations as video would add tens of megabytes to a 13 MB app, on a
  * phone that may be someone's only device. Stock footage cannot be licensed for a paid app without
  * paying for it, and finding a clip of a fingernail running along a phone seam is not realistic.
  * Drawing them costs kilobytes, stays sharp on any screen, and can be adjusted when the wording
  * changes.
  *
- * Every diagram is a function of `progress` in 0f..1f rather than reading a clock. That makes each
- * one a pure drawing, so a screenshot test can capture any frame it likes and a reviewer can
- * actually see the middle of the motion. An animation that only exists as elapsed time cannot be
- * reviewed at all in this project, because there is no emulator to watch it on.
+ * Every diagram is still a function of `progress` in 0f..1f rather than reading a clock, and that is
+ * worth keeping now that they no longer animate. It is what lets each one be posed: the frame that
+ * ships is [GuideDiagram.stillFrame], picked per diagram, and picking it is only possible because any
+ * frame can be asked for and rendered. A drawing that existed only as elapsed time could not be
+ * posed, and could not be reviewed at all in this project, because there is no emulator to watch it
+ * on.
  */
 @Composable
 internal fun GuideDiagramCanvas(
