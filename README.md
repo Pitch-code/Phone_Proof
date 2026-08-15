@@ -49,13 +49,17 @@ Then, one thing at a time:
 - **Claimed against measured** puts what the seller said beside what the phone reports.
 - **Eight things only you can check** covers the faults no app can reach — a twisted frame, a
   re-glued screen, the water sticker in the SIM slot — each with a diagram of the action.
+- **IMEI and the stolen-phone register** validates the fifteen digits against their Luhn check digit,
+  which catches a typo and catches a number that was never issued, then hands off to the government
+  CEIR portal — the only place that knows whether a handset has been reported stolen. Android has not
+  let apps read the IMEI since Android 10, so the number is typed in, and the screen says so.
 - **Saved reports** keep past scans and compare two phones side by side.
 
 Plus an in-app **diagnostics log** that captures errors and uncaught exceptions and copies in one
 tap — so a bug report is an exact log rather than a remembered symptom.
 
-Still to build: camera, microphone and speaker with waveform analysis, IMEI capture with checksum
-and a CEIR deep link, and photo capture during the manual walkthrough.
+Still to build: camera, microphone and speaker with waveform analysis, and photo capture during the
+manual walkthrough.
 
 ## Screens
 

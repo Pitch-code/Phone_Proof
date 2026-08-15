@@ -19,6 +19,7 @@ import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
+import com.phoneproof.feature.imei.ImeiRoute
 import com.phoneproof.feature.reports.CompareRoute
 import com.phoneproof.feature.reports.ReportDetailRoute
 import com.phoneproof.feature.reports.ReportsRoute
@@ -39,6 +40,7 @@ private object Routes {
     const val GUIDE = "guide"
     const val COMPARE = "compare"
     const val CLAIMS = "claims"
+    const val IMEI = "imei"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -91,6 +93,14 @@ fun PhoneProofNavHost(
                         subtitle = "Is it the phone you were promised?",
                         onClick = { navController.navigate(Routes.CLAIMS) },
                     ),
+                    // Listed with the checks even though the buyer types the number, because from
+                    // their side it is the same kind of task: find out something about this handset
+                    // before paying. The screen itself is candid that Android will not supply it.
+                    HomeCheck(
+                        title = "IMEI and the stolen-phone register",
+                        subtitle = "Check the number, then check it against CEIR",
+                        onClick = { navController.navigate(Routes.IMEI) },
+                    ),
                 ),
                 // The instant scan is the closest thing to the full guided run that exists, and
                 // it already includes the remote-lock check, so the primary action opens it.
@@ -117,6 +127,12 @@ fun PhoneProofNavHost(
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        // No entitlement gate. This is a measurement of the handset in front of the buyer rather than
+        // advice or a comparison, so by the rule in monetisation.md it sits outside the paywall.
+        composable(Routes.IMEI) {
+            ImeiRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.GUIDE) {

@@ -36,6 +36,9 @@ include(":core:diagnostics")
 include(":checks:touch")
 include(":checks:emilock")
 include(":checks:device")
+// Pure Kotlin even by the standards of this list: Android will not hand an app the IMEI at all, so
+// there is no platform reader to pair with it and nothing to mock.
+include(":checks:imei")
 
 // Android modules.
 include(":core:designsystem")
@@ -52,4 +55,5 @@ include(":feature:guide")
 include(":feature:claims")
 include(":feature:diagnostics")
 include(":feature:emilock")
+include(":feature:imei")
 include(":app")

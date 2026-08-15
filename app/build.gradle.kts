@@ -61,6 +61,7 @@ dependencies {
     implementation(project(":feature:screentest"))
     implementation(project(":feature:guide"))
     implementation(project(":feature:claims"))
+    implementation(project(":feature:imei"))
     implementation(project(":core:preferences"))
     implementation(project(":feature:diagnostics"))
 
