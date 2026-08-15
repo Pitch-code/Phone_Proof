@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -29,6 +30,8 @@ import com.phoneproof.core.reports.ShopBranding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
@@ -121,11 +124,20 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.textTertiary,
                 )
+                // autoCorrectEnabled = false on both, and it is not a nicety. A shop name and a
+                // phone number are precisely the two kinds of text a predictive keyboard has no
+                // business rewriting: it treats them as misspelled words and substitutes across the
+                // composing region, which is one of the two things that was scrambling this input.
                 OutlinedTextField(
                     value = state.shopName.orEmpty(),
                     onValueChange = { onShopNameChanged(it.take(ShopBranding.MAX_NAME_LENGTH)) },
                     label = { Text("Shop name") },
                     singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Next,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
@@ -133,6 +145,16 @@ fun SettingsScreen(
                     onValueChange = { onShopContactChanged(it.take(ShopBranding.MAX_CONTACT_LENGTH)) },
                     label = { Text("Phone or address") },
                     singleLine = true,
+                    // Deliberately not KeyboardType.Phone. The field takes a phone number *or* a
+                    // street address — "98765 43210 · MG Road" is the example in its own render — and
+                    // a dial pad cannot type an address. With the value no longer being replaced
+                    // under the cursor, the keyboard now stays on whichever page was chosen instead
+                    // of snapping back to letters after every digit.
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Words,
+                        autoCorrectEnabled = false,
+                        imeAction = ImeAction.Done,
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                 )
                 ActionRow(
@@ -196,10 +218,15 @@ private fun Section(
     content: @Composable () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // titleSmall and bold in secondary ink, up from labelSmall in tertiary — the smallest and
+        // faintest combination the design system has, used for the only labels that tell you where
+        // you are on the screen. "YOUR SHOP" was reported as not catching the eye; it was set two
+        // steps below the body text underneath it, so the heading was quieter than its own contents.
         Text(
             text = title.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = PhoneProofTheme.colors.textSecondary,
         )
         content()
     }
