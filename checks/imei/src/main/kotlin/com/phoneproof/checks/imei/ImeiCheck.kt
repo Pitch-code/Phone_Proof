@@ -19,7 +19,16 @@ import com.phoneproof.core.model.Measurement
  */
 object ImeiCheck {
 
-    const val CHECK_ID: String = "identity.imei_checksum"
+    /**
+     * `security.`, because the category chip on the report card is derived from this namespace.
+     *
+     * It was `identity.` first, which is arguably the more precise word and was wrong for a practical
+     * reason: `CheckCategory` maps four namespaces and falls back to a generic "CHECK" chip for
+     * anything else, so the card came out uncategorised while every other check announced itself. A
+     * stolen-handset register belongs with the remote-lock check regardless, and inventing a fifth
+     * category for one row would have been the worse fix.
+     */
+    const val CHECK_ID: String = "security.imei_checksum"
 
     private const val TITLE = "IMEI checksum"
 
@@ -68,8 +77,14 @@ object ImeiCheck {
             )
         }
 
+        // Note what is *not* here: the IMEI itself.
+        //
+        // The render showed the same fifteen digits three times on one screen — in the field, in the
+        // large grouped line under it, and again in this table a hundred pixels below that. The
+        // grouped line is the one that earns its place, because comparing against a worn sticker is
+        // easier in large tabular digits. If this check is ever added to a saved report, where the
+        // screen is not there to carry it, the row comes back with that work.
         val measurements = buildList {
-            add(Measurement("IMEI", imei.formatted))
             imei.typeAllocationCode?.let { add(Measurement("Model code", it)) }
         }
 

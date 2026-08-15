@@ -111,6 +111,6 @@ class ImeiCheckTest {
 
     @Test
     fun `check id is stable so saved reports keep comparing correctly`() {
-        assertThat(ImeiCheck.evaluate(valid).id).isEqualTo("identity.imei_checksum")
+        assertThat(ImeiCheck.evaluate(valid).id).isEqualTo("security.imei_checksum")
     }
 }
