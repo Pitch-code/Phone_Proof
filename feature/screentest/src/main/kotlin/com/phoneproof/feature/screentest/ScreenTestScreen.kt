@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -110,11 +111,13 @@ private fun Intro(
             style = MaterialTheme.typography.bodyMedium,
             color = PhoneProofTheme.colors.caution,
         )
+        // Secondary rather than tertiary ink. These are the operating instructions for the test —
+        // the reader cannot do it correctly without them — and they were the palest text on the page.
         Text(
             text = "Turn the brightness up, hold the phone straight on, and tap anywhere to move " +
                 "to the next colour.",
             style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofTheme.colors.textTertiary,
+            color = PhoneProofTheme.colors.textSecondary,
         )
 
         Spacer(Modifier.height(6.dp))
@@ -149,14 +152,13 @@ private fun PatternLayout(
             .background(pattern.colour)
             .clickable(onClick = onPatternSeen),
     ) {
-        // The only thing drawn over the pattern, kept small and pushed into a corner. Anything
-        // larger would hide the very pixels the buyer is inspecting.
-        val ink = if (pattern.isLight) Color.Black.copy(alpha = 0.45f) else Color.White.copy(alpha = 0.5f)
-
-        // A second, stronger ink for the two lines that actually have to be read. The faint wash is
-        // right for "tap for the next colour", which the buyer only needs once, and wrong for the
-        // instruction telling them what a fault looks like on this particular colour.
-        val strongInk = if (pattern.isLight) {
+        // One ink, at full strength. There used to be a second at 45% for the lines judged less
+        // important, on the reasoning that a faint wash hides fewer pixels — but 45% of the panel
+        // colour on the panel colour is close to invisible, and it was reported as unreadable. The
+        // saving was a few hundred pixels at the bottom of the screen; the cost was the only control
+        // on it. Keeping the text small and cornered is what protects the pixels being inspected,
+        // not making it faint.
+        val ink = if (pattern.isLight) {
             Color.Black.copy(alpha = 0.82f)
         } else {
             Color.White.copy(alpha = 0.88f)
@@ -175,7 +177,7 @@ private fun PatternLayout(
             Text(
                 text = "${pattern.name} · ${state.position} of ${state.total}",
                 style = MaterialTheme.typography.titleMedium,
-                color = strongInk,
+                color = ink,
             )
             // lookFor was written for all six patterns and then never rendered, while its own
             // docstring claimed it was shown. So the pattern screen told the buyer nothing about
@@ -186,21 +188,29 @@ private fun PatternLayout(
                 // bodyMedium, up from labelSmall. This is the most useful sentence on the screen —
                 // it is what tells the buyer that stuck pixels are invisible on white.
                 style = MaterialTheme.typography.bodyMedium,
-                color = strongInk,
+                color = ink,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
+            // bodyMedium in the stronger ink, up from labelSmall at 45%. Reported as unreadable, and
+            // it was the faintest text in the app: the smallest style at under half opacity, on a
+            // screen deliberately viewed at arm's length while the phone is tilted to catch light.
             Text(
                 text = "Tap for the next colour",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.bodyMedium,
                 color = ink,
             )
             // Underlined, because the render showed it looking exactly like the static hint above
             // it — a control nobody can tell is a control. An underline reads as tappable while
             // costing almost no pixels, which a button or a filled chip would not.
+            // titleMedium and bold in full-strength ink. This is the only control on the screen and
+            // it was set in the same faint 45% labelSmall as the hint above it — the one thing a
+            // buyer who has just spotted a dead pixel needs to find, drawn as the least visible
+            // thing on the panel.
             Text(
                 text = "I saw something",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
                 color = ink,
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
@@ -235,8 +245,8 @@ private fun Question(
         )
         Text(
             text = "$viewed of $total patterns viewed.",
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
         )
         Spacer(Modifier.height(6.dp))
 
@@ -280,10 +290,13 @@ private fun AnswerCard(
             style = MaterialTheme.typography.titleMedium,
             color = PhoneProofTheme.colors.textPrimary,
         )
+        // Secondary, not tertiary. This line is what distinguishes the three answers from each
+        // other — "points that stayed in the same place" versus "larger areas of uneven colour" —
+        // so it is doing the actual work of the question, in the faintest ink available.
         Text(
             text = detail,
             style = MaterialTheme.typography.bodyMedium,
-            color = PhoneProofTheme.colors.textTertiary,
+            color = PhoneProofTheme.colors.textSecondary,
         )
     }
 }
@@ -316,8 +329,8 @@ private fun Finished(
         Text(
             text = "Worth repeating in different light. A fault that hides indoors can be " +
                 "obvious in daylight.",
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
         )
