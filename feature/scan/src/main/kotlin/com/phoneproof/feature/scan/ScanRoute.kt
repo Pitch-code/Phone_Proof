@@ -23,7 +23,10 @@ import com.phoneproof.core.device.BatteryFactsReader
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
+import com.phoneproof.core.designsystem.SCAN_ALLOWANCE_UNLOCK
 import com.phoneproof.core.designsystem.component.LockedFeature
+import com.phoneproof.core.designsystem.scanAllowanceUsedUpExplanation
+import com.phoneproof.core.designsystem.scanAllowanceUsedUpTitle
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
@@ -93,12 +96,9 @@ fun ScanRoute(
 
     if (outOfScans) {
         LockedFeature(
-            title = "You have used both free scans",
-            explanation = "The free trial covers ${Entitlement.FREE_SCAN_LIMIT} full scans of a " +
-                "phone, and both are done. Nothing is wrong with this phone or with the app — the " +
-                "trial has simply ended.",
-            whatUnlockingGives = "Scan as many phones as you like, keep every report instead of " +
-                "the last two, save a report as a PDF, and compare two phones side by side.",
+            title = scanAllowanceUsedUpTitle(Entitlement.FREE_SCAN_LIMIT),
+            explanation = scanAllowanceUsedUpExplanation(Entitlement.FREE_SCAN_LIMIT),
+            whatUnlockingGives = SCAN_ALLOWANCE_UNLOCK,
             onOpenSettings = onOpenSettings,
             modifier = modifier,
         )

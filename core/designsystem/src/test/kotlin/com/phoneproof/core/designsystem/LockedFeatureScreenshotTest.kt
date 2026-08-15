@@ -58,13 +58,16 @@ class LockedFeatureScreenshotTest {
     fun the_scan_allowance_running_out() {
         // The wording that matters most: it has to be clear nothing is wrong with the phone or the
         // app, only that the trial ended.
+        //
+        // The real strings now, not retyped ones. This test used to hand-copy them with a literal 2
+        // in place of the constant, so the paywall being reviewed here and the paywall that ships
+        // were two separate pieces of prose that merely happened to match. Two is passed as the
+        // scenario, which is honest: this render is the two-scan case.
         render(
             name = "locked-1-scans-used",
-            title = "You have used both free scans",
-            explanation = "The free trial covers 2 full scans of a phone, and both are done. " +
-                "Nothing is wrong with this phone or with the app — the trial has simply ended.",
-            whatUnlockingGives = "Scan as many phones as you like, keep every report instead of " +
-                "the last two, save a report as a PDF, and compare two phones side by side.",
+            title = scanAllowanceUsedUpTitle(scanLimit = 2),
+            explanation = scanAllowanceUsedUpExplanation(scanLimit = 2),
+            whatUnlockingGives = SCAN_ALLOWANCE_UNLOCK,
         )
     }
 
