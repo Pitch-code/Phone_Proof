@@ -140,7 +140,19 @@ fun CheckResultCard(
             Text(
                 text = it,
                 style = MaterialTheme.typography.labelLarge,
-                color = accent,
+                // The outcome colour, except for UNKNOWN.
+                //
+                // Colouring the action by outcome is right for PASS, CAUTION and FAIL: it ties what to
+                // do to how bad it is. UNKNOWN's colour is a deliberately quiet grey — correct for the
+                // badge, which must not shout about the absence of a finding — and on a dark card it
+                // made the action the least readable line on the screen. That is the one line the
+                // buyer has to act on, and "can't tell" results are the ones where they most need
+                // telling what to do next.
+                color = if (result.outcome == CheckOutcome.UNKNOWN) {
+                    PhoneProofTheme.colors.textPrimary
+                } else {
+                    accent
+                },
             )
         }
 
