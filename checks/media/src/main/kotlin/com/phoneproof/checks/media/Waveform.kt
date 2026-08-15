@@ -58,7 +58,10 @@ data class AudioWindow(
                 val magnitude = abs(sample.toInt())
                 if (magnitude > loudest) loudest = magnitude
             }
-            return (loudest.toFloat() / FULL_SCALE).coerceAtMost(1f)
+            // Divide in Double, then narrow. FULL_SCALE is a Double, so converting first produced a
+            // Double where a Float was declared — and coerceAtMost has no Double/Float overload to
+            // paper over it.
+            return (loudest / FULL_SCALE).toFloat().coerceAtMost(1f)
         }
 
     /**
