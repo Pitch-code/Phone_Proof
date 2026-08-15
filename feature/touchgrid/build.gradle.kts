@@ -50,6 +50,10 @@ tasks.withType<Test>().configureEach {
 dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
+    // Added for the immersive-mode handling in TouchGridRoute: if hiding the system bars fails, the
+    // edges quietly become hard to touch, which looks exactly like a dead screen. That has to be in
+    // the log rather than invisible.
+    implementation(project(":core:diagnostics"))
     implementation(project(":checks:touch"))
 
     implementation(libs.androidx.core.ktx)

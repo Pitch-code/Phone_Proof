@@ -114,8 +114,21 @@ the true physical edges of the screen, and insetting it would leave the strips b
 bars untestable — which is exactly where dead touch zones tend to be. Only the overlay on top of
 that canvas is inset.
 
-⚠️ Robolectric reports no system bars, so **inset behaviour cannot be verified by screenshot
-test.** It has to be checked on a device. Do not claim an inset fix is verified from a render.
+Drawing to the edge is not enough on its own, and that took a while to accept. Touches there still
+went to the system: a swipe at the top opened the shade, a swipe at the bottom went home. So the
+touch test now also **hides the system bars for its duration** (`BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`,
+restored on dispose) and applies **`Modifier.systemGestureExclusion()`** to the canvas. The product
+owner's ruling is that the edges are part of the test; the app's job is to claim them, not to excuse
+them.
+
+Where the system still wins, the verdict reports the gap as **unattributable** — `UNKNOWN`, with an
+instruction to sweep again — and never as a fault. Gesture exclusion covers only the back swipe on the
+left and right, is capped at 200 dp per edge, and OEM skins vary in how much of the home and shade
+gesture they keep while immersive, so that fallback is load-bearing rather than defensive.
+
+⚠️ Robolectric reports no system bars, so **inset behaviour, immersive mode and gesture exclusion
+cannot be verified by screenshot test.** They have to be checked on a device. Do not claim any of it
+is verified from a render.
 
 ## Screen-level notes
 
