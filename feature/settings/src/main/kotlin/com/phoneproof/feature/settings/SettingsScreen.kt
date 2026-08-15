@@ -483,9 +483,12 @@ private fun FreeTrialCard(active: Boolean, scansLeft: Int?) {
 
         if (active) {
             Text(
+                // "both scans used" was the third place the number two was written into the English.
+                // Phrased as what is left rather than what is gone, it matches the two branches below
+                // it and stays true at any limit.
                 text = when (scansLeft) {
                     null -> "Active on this device"
-                    0 -> "Active — both scans used"
+                    0 -> "Active — no scans left"
                     1 -> "Active — 1 scan left"
                     else -> "Active — $scansLeft scans left"
                 },

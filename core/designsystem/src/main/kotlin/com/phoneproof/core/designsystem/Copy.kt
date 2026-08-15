@@ -41,3 +41,32 @@ const val ADVISORY_TRIAL_EXCLUSION: String =
     "The free trial leaves this screen out. Nothing has run out and nothing is wrong with this " +
         "phone — the trial measures everything the app can measure, and this screen gives advice " +
         "rather than taking a measurement."
+
+
+/**
+ * The scan allowance running out, worded so it survives the allowance changing.
+ *
+ * This used to read "You have used **both** free scans", with the number two written into the English
+ * while the number itself came from `Entitlement.FREE_SCAN_LIMIT`. Raise the trial to three and the
+ * title keeps saying "both" — the app would be stating a limit it is not enforcing, on the screen
+ * where a buyer is being asked to pay. The same word was in the explanation ("and both are done") and
+ * in Settings ("Active — both scans used").
+ *
+ * Functions taking the limit rather than constants, because these are the only two strings in the app
+ * that have to agree with a number. The limit is not read from `Entitlement` here: `core:preferences`
+ * depends on this module, so this module cannot depend on it back. The caller passes it in, which has
+ * the useful side effect that `LockedFeatureScreenshotTest` can render the two-scan case while still
+ * using the real wording — it previously retyped this copy with a literal `2`, which is exactly how
+ * the rendered paywall and the shipped paywall drift apart.
+ */
+fun scanAllowanceUsedUpTitle(scanLimit: Int): String = "You have used all $scanLimit free scans"
+
+/** @see scanAllowanceUsedUpTitle */
+fun scanAllowanceUsedUpExplanation(scanLimit: Int): String =
+    "The free trial covers $scanLimit full scans of a phone, and they are all used. Nothing is " +
+        "wrong with this phone or with the app — the trial has simply ended."
+
+/** What paying changes, for the scan allowance. No number in it, so it needs no argument. */
+const val SCAN_ALLOWANCE_UNLOCK: String =
+    "Scan as many phones as you like, keep every report instead of the last two, save a report as a " +
+        "PDF, and compare two phones side by side."
