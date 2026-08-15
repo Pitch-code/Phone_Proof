@@ -5,8 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -72,6 +75,30 @@ fun SettingsRoute(
         }
     }.collectAsStateWithLifecycle(initialValue = SettingsUiState(versionName = versionName, versionCode = versionCode))
 
+    // The text the shop is typing, owned here — not read back out of DataStore.
+    //
+    // This is the fix for two reported bugs that were the same bug. Both branding fields took their
+    // `value` straight from the persisted flow, so every keystroke went: onValueChange -> launch ->
+    // dataStore.edit (a serialised disk write) -> data emits -> combine -> recomposition -> the field's
+    // value is replaced. Each replacement resets the text field's buffer and restarts the IME, which
+    // is why characters landed at stale offsets and appeared to swap places, and why the keyboard
+    // dropped back to its letters page after every digit.
+    //
+    // Two further faults fell out of the same round trip. The repository `trim()`s on write, so a
+    // trailing space came back deleted and the cursor jumped a character back — a space could never
+    // be typed in the middle of "Krishna Mobiles". And each callback rebuilt *both* fields from the
+    // last collected state, so typing a name while a contact write was still in flight could revert
+    // the other field.
+    //
+    // Null means "not touched this session", so the persisted value shows. After the first keystroke
+    // the local value wins and DataStore becomes write-only. rememberSaveable, so a rotation or the
+    // keyboard resizing the window does not discard half-typed text.
+    var typedShopName by rememberSaveable { mutableStateOf<String?>(null) }
+    var typedShopContact by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val shopName = typedShopName ?: state.shopName
+    val shopContact = typedShopContact ?: state.shopContact
+
     // PickVisualMedia rather than an open-document intent or a storage permission. It runs in the
     // system photo picker, so the app never gains access to the gallery — only to the one image the
     // shop chose. On a permission-free app this matters: asking for storage access to place a logo
@@ -89,7 +116,8 @@ fun SettingsRoute(
     }
 
     SettingsScreen(
-        state = state,
+        // The branding fields come from local state; everything else from the persisted flow.
+        state = state.copy(shopName = shopName, shopContact = shopContact),
         onThemeSelected = { mode ->
             scope.launch { repository.setThemeMode(mode) }
             Diagnostics.info(TAG, "theme set to ${mode.name}")
@@ -103,10 +131,15 @@ fun SettingsRoute(
             Diagnostics.info(TAG, "plan tapped: ${plan.productId} (billing unavailable)")
         },
         onShopNameChanged = { name ->
-            scope.launch { repository.setShopBranding(name, state.shopContact) }
+            // Local state first and synchronously, so the field redraws from the keystroke rather
+            // than from the disk. The write still happens per keystroke, which is cheap enough for
+            // two short strings, but nothing waits on it and nothing reads its result back.
+            typedShopName = name
+            scope.launch { repository.setShopBranding(name, shopContact) }
         },
         onShopContactChanged = { contact ->
-            scope.launch { repository.setShopBranding(state.shopName, contact) }
+            typedShopContact = contact
+            scope.launch { repository.setShopBranding(shopName, contact) }
         },
         onPickLogo = {
             logoPicker.launch(
