@@ -8,6 +8,8 @@ name: Verify
 on:
   push:
     branches: ["**"]
+    # Tags build too, because a tag is how an installable APK gets published. See the release job.
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -80,3 +82,44 @@ jobs:
           name: app-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+
+  # Publishing the APK so it can be installed on a real phone by tapping one link.
+  #
+  # This exists because a GitHub Actions artifact is a poor way to hand someone a build: the download
+  # needs a GitHub login, and it arrives as a zip that a phone will not install without a file
+  # manager. A release asset is a direct download that Android opens straight into the installer.
+  #
+  # It is a separate job purely to keep least privilege. Attaching an asset needs `contents: write`,
+  # and the build job that runs on every push and every pull request has no business holding a write
+  # token; this one only ever runs for a tag. It also depends on `verify`, so nothing can be published
+  # that did not compile, pass its tests and match its committed screenshots.
+  release:
+    name: Attach the APK to the release
+    needs: verify
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download the APK that passed
+        uses: actions/download-artifact@v4
+        with:
+          name: app-debug-apk
+          path: apk
+
+      - name: Name it after the tag
+        # app-debug.apk tells whoever downloads it nothing about which build they have.
+        run: |
+          set -euo pipefail
+          mv apk/app-debug.apk "apk/phoneproof-${GITHUB_REF_NAME}.apk"
+          ls -la apk/
+
+      - name: Attach it
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apk/*.apk
+          fail_on_unmatched_files: true
+          # The release is usually created before the tag is pushed, and this must not blank its notes.
+          append_body: false
