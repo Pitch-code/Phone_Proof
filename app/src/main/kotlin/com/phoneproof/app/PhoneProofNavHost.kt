@@ -17,6 +17,7 @@ import com.phoneproof.core.run.RunSession
 import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.audiotest.AudioTestRoute
+import com.phoneproof.feature.buttons.VolumeButtonsRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
@@ -63,6 +64,7 @@ internal object Routes {
     const val AUDIO = "audio"
     const val CAMERA = "camera"
     const val SENSORS = "sensors"
+    const val VOLUME_BUTTONS = "volume-buttons"
     const val RUN = "run"
     const val VERDICT = "verdict"
     const val REPORT_DETAIL = "reports/{reportId}"
@@ -179,6 +181,13 @@ fun PhoneProofNavHost(
 
         // No entitlement gate and no permission gate: it measures the handset in front of the buyer,
         // and Android asks for nothing to read these sensors below 200 Hz.
+        composable(Routes.VOLUME_BUTTONS) {
+            VolumeButtonsRoute(
+                onResults = { runSession.record(Routes.VOLUME_BUTTONS, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
         composable(Routes.SENSORS) {
             SensorTestRoute(
                 onResults = { runSession.record(Routes.SENSORS, it) },
