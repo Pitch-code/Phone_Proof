@@ -1,0 +1,227 @@
+package com.phoneproof.checks.vibration
+
+import com.phoneproof.core.model.CheckOutcome
+import com.phoneproof.core.model.CheckResult
+import com.phoneproof.core.model.Confidence
+import com.phoneproof.core.model.Measurement
+import java.util.Locale
+
+/** Why the app could not get as far as measuring anything. */
+enum class VibrationAttempt {
+    /** The phone reports no vibration motor at all. */
+    NO_MOTOR,
+
+    /** The platform refused the request, so nothing was ever asked of the motor. */
+    REFUSED,
+
+    /** No working accelerometer, so there is nothing to feel the phone with. */
+    NO_ACCELEROMETER,
+
+    /** The motor was asked to run and the accelerometer was watching. */
+    MEASURED,
+}
+
+/**
+ * What the accelerometer felt while the motor was supposed to be running.
+ *
+ * Both figures are the mean absolute change between consecutive accelerometer samples, in m/s². That is
+ * chosen over the plain variation in magnitude because a vibrating phone barely changes how much
+ * acceleration it feels overall — gravity dominates — while changing it very fast. Rate of change is the
+ * signal; the size of the reading is not.
+ */
+data class VibrationTrace(
+    val attempt: VibrationAttempt,
+    /** Movement while the phone was meant to be sitting still. */
+    val restingJerk: Double = 0.0,
+    /** Movement while the motor was running. */
+    val activeJerk: Double = 0.0,
+    /** How long the motor was asked to run. */
+    val requestedMillis: Long = 0L,
+    /** Whether the phone can vary vibration strength, which is worth reporting and never judged. */
+    val hasAmplitudeControl: Boolean = false,
+)
+
+/**
+ * Did the vibration motor actually move?
+ *
+ * ## Measured, not asked
+ *
+ * `Vibrator.vibrate()` tells you nothing. It returns without complaint on a phone whose motor has been
+ * disconnected for a year, because all it reports is that Android accepted the request — there is no API
+ * anywhere that says the weight actually spun. Every phone-testing app therefore ends up asking the buyer
+ * "did you feel that?", which on a handset being passed back and forth in a shop is a question people answer
+ * wrongly and confidently.
+ *
+ * But the phone has an accelerometer, and a vibrating phone is a shaking phone. So the app can feel it: take
+ * a quiet baseline, run the motor, and compare. That turns the one hardware test that is traditionally a
+ * matter of opinion into a measurement, and it needs nothing from the buyer except that they hold still.
+ *
+ * ## Why rate of change rather than level
+ *
+ * A vibrating phone does not feel *more* acceleration on average — gravity is still gravity. It feels
+ * acceleration that changes direction dozens of times a second. So the measurement is the mean absolute
+ * difference between consecutive samples, which sits near zero on a phone at rest and jumps by an order of
+ * magnitude the moment a motor spins.
+ *
+ * ## What it refuses to conclude
+ *
+ * A phone resting on a folded coat, or held loosely in a palm, absorbs most of the movement. So a negative
+ * result here is never a bare failure: it is a caution that names the surface as the first suspect, exactly
+ * as the camera check names a finger over the lens.
+ */
+object VibrationCheck {
+
+    const val CHECK_ID: String = "hardware.vibration"
+
+    private const val TITLE = "Vibration"
+
+    /**
+     * The motor has to produce this many times the resting movement.
+     *
+     * Three. A running motor typically produces ten to fifty times the jerk of a still phone, so this is a
+     * long way below what working hardware achieves — the margin is there because a phone on a soft surface
+     * loses most of its movement to the surface.
+     */
+    const val SHAKE_RATIO: Double = 3.0
+
+    /**
+     * And it has to clear this absolutely, in m/s² of mean change between samples.
+     *
+     * The ratio alone is not enough. A phone lying on a stone slab can have a resting jerk near zero, and
+     * three times almost-nothing is still almost-nothing — so a tiny absolute movement could satisfy the
+     * ratio without the motor having done anything a person would feel.
+     */
+    const val MINIMUM_ACTIVE_JERK: Double = 0.35
+
+    /**
+     * Above this much resting movement, the phone was not still enough to measure against.
+     *
+     * The buyer was holding it wrong, walking, or in a moving vehicle. Nothing can be concluded, and saying
+     * so is far better than comparing a motor against a baseline that already contains a bus.
+     */
+    const val TOO_RESTLESS: Double = 0.8
+
+    private val FALSE_POSITIVE_CAUSES = listOf(
+        "A phone resting on a coat, a cushion or a palm absorbs most of the movement.",
+        "Do Not Disturb and some battery savers suppress vibration entirely.",
+        "A phone gripped tightly damps the motor far more than one lying on a hard surface.",
+        "A few phones use a soft haptic engine whose gentlest pattern is genuinely hard to feel.",
+    )
+
+    fun evaluate(trace: VibrationTrace): CheckResult {
+        val measurements = buildList {
+            if (trace.attempt == VibrationAttempt.MEASURED) {
+                add(Measurement("Movement while still", format(trace.restingJerk), "m/s²"))
+                add(Measurement("Movement while buzzing", format(trace.activeJerk), "m/s²"))
+                add(Measurement("Times stronger", "${format(ratio(trace))}×"))
+                add(Measurement("Motor run for", "${trace.requestedMillis}", "ms"))
+            }
+            add(
+                Measurement(
+                    "Strength control",
+                    if (trace.hasAmplitudeControl) "yes" else "on or off only",
+                ),
+            )
+        }
+
+        when (trace.attempt) {
+            VibrationAttempt.NO_MOTOR -> return CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.UNKNOWN,
+                // HIGH: the phone was asked what it has and it answered. That is a fact, not a failure.
+                confidence = Confidence.HIGH,
+                headline = "This phone reports no vibration motor, so there is nothing to test.",
+                action = "Unusual for a phone. Worth checking that silent mode still gets your " +
+                    "attention before you rely on it.",
+                measurements = measurements,
+            )
+
+            VibrationAttempt.REFUSED -> return CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                headline = "The phone would not let the app run the motor, so nothing was tested.",
+                action = "Check Do Not Disturb is off and try again. Otherwise set a one-minute " +
+                    "alarm and feel it for yourself.",
+                measurements = measurements,
+            )
+
+            VibrationAttempt.NO_ACCELEROMETER -> return CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                // Named plainly, because this test is only a measurement thanks to the accelerometer. With
+                // no working one the app is reduced to asking, which is what it exists not to do.
+                headline = "There is no working accelerometer to feel the phone with, so the motor " +
+                    "could not be measured.",
+                action = "Run the sensor test first. If the accelerometer is dead, that is the more " +
+                    "serious finding of the two.",
+                measurements = measurements,
+            )
+
+            VibrationAttempt.MEASURED -> Unit
+        }
+
+        if (trace.restingJerk > TOO_RESTLESS) {
+            return CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                headline = "The phone was moving too much to measure a buzz against.",
+                action = "Rest it on a table, or hold it still in your palm, and run it again.",
+                measurements = measurements,
+            )
+        }
+
+        val strongEnough = ratio(trace) >= SHAKE_RATIO && trace.activeJerk >= MINIMUM_ACTIVE_JERK
+
+        return if (strongEnough) {
+            CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.PASS,
+                confidence = Confidence.HIGH,
+                // Says how it knows. This is the one hardware test in the app that usually comes down to
+                // opinion, and the whole point is that here it did not.
+                headline = "The accelerometer felt the phone shake — ${format(ratio(trace))} times " +
+                    "more movement than at rest. Nobody had to be asked.",
+                measurements = measurements,
+            )
+        } else {
+            CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                // CAUTION, never a bare failure. The app cannot see what the phone was resting on, and a
+                // folded coat absorbs almost everything — the same reasoning that keeps the camera check
+                // from failing a phone with a finger over the lens.
+                outcome = CheckOutcome.CAUTION,
+                confidence = Confidence.MEDIUM,
+                headline = "Android accepted the vibration and the phone barely moved.",
+                consequence = "A dead motor means silent mode stops getting your attention: you will " +
+                    "miss calls with the phone in your pocket, and every alarm becomes a sound " +
+                    "everyone around you hears too.",
+                action = "Put the phone on a hard table, not your hand, and run it again. If it " +
+                    "still does not move, the motor is a repair — worth 800 off.",
+                measurements = measurements,
+                falsePositiveCauses = FALSE_POSITIVE_CAUSES,
+            )
+        }
+    }
+
+    /**
+     * How much more the phone moved while buzzing.
+     *
+     * The floor on the divisor is what stops a phone on a stone slab producing an enormous meaningless
+     * number — and, since the absolute test runs alongside this, a huge ratio on tiny movement still fails.
+     */
+    fun ratio(trace: VibrationTrace): Double =
+        trace.activeJerk / trace.restingJerk.coerceAtLeast(RATIO_FLOOR)
+
+    private const val RATIO_FLOOR = 0.02
+
+    private fun format(value: Double): String = String.format(Locale.ROOT, "%.2f", value)
+}

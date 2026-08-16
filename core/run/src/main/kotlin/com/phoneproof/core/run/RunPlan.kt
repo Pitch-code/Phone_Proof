@@ -90,6 +90,15 @@ object RunPlan {
             effort = StepEffort.HANDS_ON,
             typicalSeconds = 20,
         ),
+        // Right after the buttons: both are things done to the outside of the phone, and this one asks the
+        // buyer for nothing at all beyond holding still.
+        RunStep(
+            id = "vibration",
+            title = "Vibration",
+            why = "Measured with the accelerometer, so nobody has to be asked if they felt it",
+            effort = StepEffort.HANDS_ON,
+            typicalSeconds = 20,
+        ),
         RunStep(
             id = "sensors",
             title = "Sensors that still work",

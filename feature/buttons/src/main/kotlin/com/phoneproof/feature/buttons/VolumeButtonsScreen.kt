@@ -57,11 +57,16 @@ fun VolumeButtonsScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(10.dp))
-        Text(
-            text = "Volume buttons",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        // Dropped once the result card is on screen: a single-check screen and its card carry the same name,
+        // and the heading repeated directly above it reads as a rendering mistake. The card keeps the title
+        // because saved reports have nothing else to supply the context.
+        if (state.stage != VolumeStage.DONE) {
+            Text(
+                text = "Volume buttons",
+                style = MaterialTheme.typography.titleLarge,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+        }
 
         if (state.stage == VolumeStage.DONE) {
             state.result?.let { CheckResultCard(it) }

@@ -33,6 +33,7 @@ import com.phoneproof.feature.run.RunRoute
 import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
 import com.phoneproof.feature.sensortest.SensorTestRoute
+import com.phoneproof.feature.vibration.VibrationRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
@@ -65,6 +66,7 @@ internal object Routes {
     const val CAMERA = "camera"
     const val SENSORS = "sensors"
     const val VOLUME_BUTTONS = "volume-buttons"
+    const val VIBRATION = "vibration"
     const val RUN = "run"
     const val VERDICT = "verdict"
     const val REPORT_DETAIL = "reports/{reportId}"
@@ -184,6 +186,13 @@ fun PhoneProofNavHost(
         composable(Routes.VOLUME_BUTTONS) {
             VolumeButtonsRoute(
                 onResults = { runSession.record(Routes.VOLUME_BUTTONS, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.VIBRATION) {
+            VibrationRoute(
+                onResults = { runSession.record(Routes.VIBRATION, it) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
