@@ -126,27 +126,32 @@ fun AudioTestScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                 )
+                // Both answers drawn identically, and this took a render to get right.
+                //
+                // The first version made "Yes" a filled accent button and "No" an outline, which is the
+                // ordinary Compose convention for a primary action and a secondary one — and it is
+                // exactly wrong here. It puts the app's thumb on the scale in favour of the reassuring
+                // answer, and the reassuring answer is the one that costs the buyer money. There is no
+                // primary action on this question: the app has no stake in which is true, and the
+                // buttons have to say so.
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    // "No" is not styled as a warning. Making the honest answer look dangerous is how a
-                    // buyer gets nudged into the reassuring one, and the reassuring one is the answer
-                    // that costs them money.
                     OutlinedButton(
                         onClick = { onAnswerHeard(false) },
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(1f).height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                    ) { Text("No") }
-                    Button(
+                    ) {
+                        Text("No", style = MaterialTheme.typography.titleMedium)
+                    }
+                    OutlinedButton(
                         onClick = { onAnswerHeard(true) },
-                        modifier = Modifier.weight(1f).height(48.dp),
+                        modifier = Modifier.weight(1f).height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = PhoneProofTheme.colors.accent,
-                            contentColor = Color.White,
-                        ),
-                    ) { Text("Yes") }
+                    ) {
+                        Text("Yes", style = MaterialTheme.typography.titleMedium)
+                    }
                 }
             }
 
