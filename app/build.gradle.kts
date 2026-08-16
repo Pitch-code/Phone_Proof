@@ -63,6 +63,7 @@ dependencies {
     implementation(project(":feature:claims"))
     implementation(project(":feature:imei"))
     implementation(project(":feature:audiotest"))
+    implementation(project(":feature:cameratest"))
     implementation(project(":core:preferences"))
     implementation(project(":feature:diagnostics"))
 
