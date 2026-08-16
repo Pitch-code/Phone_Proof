@@ -34,6 +34,7 @@ rootProject.name = "PhoneProof"
 include(":core:model")
 include(":core:diagnostics")
 include(":checks:buttons")
+include(":checks:radios")
 include(":checks:touch")
 include(":checks:vibration")
 include(":checks:emilock")
