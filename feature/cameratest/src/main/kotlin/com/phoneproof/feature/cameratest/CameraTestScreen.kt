@@ -9,8 +9,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -22,6 +24,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -185,33 +188,53 @@ fun CameraTestScreen(
 private fun CameraFrame(image: ImageBitmap?, rotation: Int, live: Boolean) {
     if (image == null) return
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Image(
-            bitmap = image,
-            contentDescription = if (live) {
-                "Live frames from the camera being tested"
-            } else {
-                "The last frame this camera sent"
-            },
-            contentScale = ContentScale.Crop,
-            // Low, deliberately: this is a 320x240 frame blown up, and smoothing it would imply a
-            // sharpness the app never measured.
-            filterQuality = FilterQuality.Low,
+    // The caption sits beside the picture rather than under it. Stacked, the first render left two thirds
+    // of every row empty and repeated an identical sentence under each of the two cameras, which is how an
+    // explanation starts reading as template text.
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // A fixed container with the rotation applied to the image inside it, not to the box. Rotating the
+        // box would rotate its rounded corners and its border along with the picture.
+        Box(
             modifier = Modifier
-                .size(140.dp)
+                .size(120.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(10.dp))
-                .graphicsLayer { rotationZ = rotation.toFloat() },
-        )
-        Text(
-            text = if (live) {
-                "What the sensor is sending now — brightness only"
-            } else {
-                "What the sensor sent. Brightness only, which is all this test judges."
-            },
-            style = MaterialTheme.typography.labelSmall,
-            color = PhoneProofTheme.colors.textTertiary,
-        )
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(10.dp)),
+        ) {
+            Image(
+                bitmap = image,
+                contentDescription = if (live) {
+                    "Live frames from the camera being tested"
+                } else {
+                    "The last frame this camera sent"
+                },
+                contentScale = ContentScale.Crop,
+                // Low, deliberately: this is a 320x240 frame blown up, and smoothing it would imply a
+                // sharpness the app never measured.
+                filterQuality = FilterQuality.Low,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { rotationZ = rotation.toFloat() },
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = if (live) "Live from this camera" else "The frames this camera sent",
+                style = MaterialTheme.typography.titleSmall,
+                color = PhoneProofTheme.colors.textSecondary,
+            )
+            Text(
+                // Says why it is not in colour, so a greyscale picture is never read as a fault. The app
+                // only reads the brightness plane, so showing colour would be rendering something it never
+                // looked at.
+                text = "Grey because only brightness is measured, not colour.",
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
+        }
     }
 }
 
