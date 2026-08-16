@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,6 +30,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
@@ -46,6 +48,8 @@ fun AudioTestScreen(
     onStartMicrophone: () -> Unit,
     onStartSpeaker: () -> Unit,
     onAnswerHeard: (Boolean) -> Unit,
+    onDeclineToAnswer: () -> Unit,
+    onPlayBack: () -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -115,45 +119,39 @@ fun AudioTestScreen(
         when (state.stage) {
             AudioStage.READY -> Primary(text = "Test the microphone", onClick = onStartMicrophone)
 
-            AudioStage.MICROPHONE_DONE ->
+            AudioStage.MICROPHONE_DONE -> {
                 Primary(text = "Now test the speaker", onClick = onStartSpeaker)
-
-            AudioStage.ASKING -> {
-                Text(
-                    text = "Did you hear the tone?",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = PhoneProofTheme.colors.textPrimary,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
-                )
-                // Both answers drawn identically, and this took a render to get right.
-                //
-                // The first version made "Yes" a filled accent button and "No" an outline, which is the
-                // ordinary Compose convention for a primary action and a secondary one — and it is
-                // exactly wrong here. It puts the app's thumb on the scale in favour of the reassuring
-                // answer, and the reassuring answer is the one that costs the buyer money. There is no
-                // primary action on this question: the app has no stake in which is true, and the
-                // buttons have to say so.
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
+                // Offered before the speaker test, not after: this is the moment the buyer has just
+                // spoken and can still remember what they said. A level meter and a verdict prove the
+                // microphone works; hearing their own voice back is the only way to judge whether it
+                // sounds muffled, distant or crackly — which is what they will live with on calls.
+                if (state.canPlayBack) {
                     OutlinedButton(
-                        onClick = { onAnswerHeard(false) },
-                        modifier = Modifier.weight(1f).height(52.dp),
+                        onClick = onPlayBack,
+                        enabled = !state.isPlayingBack,
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
                     ) {
-                        Text("No", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = if (state.isPlayingBack) {
+                                "Playing your recording…"
+                            } else {
+                                "Play back what you said"
+                            },
+                        )
                     }
-                    OutlinedButton(
-                        onClick = { onAnswerHeard(true) },
-                        modifier = Modifier.weight(1f).height(52.dp),
-                        shape = RoundedCornerShape(12.dp),
-                    ) {
-                        Text("Yes", style = MaterialTheme.typography.titleMedium)
-                    }
+                    Text(
+                        // Says it out loud on the screen where it matters, not only in the permission
+                        // dialog the buyer has already tapped through.
+                        text = "Played from memory. Nothing was saved to this phone.",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PhoneProofTheme.colors.textTertiary,
+                    )
                 }
             }
+
+            // The question itself is a dialog now — see below. This is what is left behind it.
+            AudioStage.ASKING -> Instruction(text = "Waiting for your answer about the tone.")
 
             AudioStage.FINISHED -> OutlinedButton(
                 onClick = onRestart,
@@ -171,6 +169,87 @@ fun AudioTestScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textSecondary,
             )
+        }
+    }
+
+    if (state.stage == AudioStage.ASKING) {
+        ToneQuestionDialog(
+            onAnswerHeard = onAnswerHeard,
+            onDecline = onDeclineToAnswer,
+        )
+    }
+}
+
+/**
+ * The one question in this app that has to interrupt.
+ *
+ * It used to be the last thing in a scrolling column, below two result cards — and on a real phone it was
+ * off the bottom of the screen. A buyer had to think to scroll for it, which meant most of them never
+ * answered, and the screen sat there looking as though the test had finished inconclusively.
+ *
+ * A dialog because this genuinely blocks: nothing else on the screen means anything until it is answered.
+ * Dismissible, though, and with an explicit third option — the app is asking for a favour, not demanding
+ * one, and a question with no way out is how you get people tapping whichever button makes it go away.
+ */
+@Composable
+private fun ToneQuestionDialog(
+    onAnswerHeard: (Boolean) -> Unit,
+    onDecline: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDecline) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(PhoneProofTheme.colors.surfaceRaised, RoundedCornerShape(16.dp))
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(16.dp))
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = "Did you hear the tone?",
+                style = MaterialTheme.typography.headlineSmall,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+            Text(
+                text = "The app played a 1 kHz tone and could not pick it out of the recording. That " +
+                    "happens in a noisy room and is not by itself a fault, so this one is your ear's " +
+                    "to decide.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PhoneProofTheme.colors.textSecondary,
+            )
+            // Both answers drawn identically, and this took a render to get right.
+            //
+            // The first version made "Yes" a filled accent button and "No" an outline, which is the
+            // ordinary Compose convention for a primary action and a secondary one — and it is exactly
+            // wrong here. It puts the app's thumb on the scale in favour of the reassuring answer, and
+            // the reassuring answer is the one that costs the buyer money. There is no primary action on
+            // this question: the app has no stake in which is true, and the buttons have to say so.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                OutlinedButton(
+                    onClick = { onAnswerHeard(false) },
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text("No", style = MaterialTheme.typography.titleMedium)
+                }
+                OutlinedButton(
+                    onClick = { onAnswerHeard(true) },
+                    modifier = Modifier.weight(1f).height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                ) {
+                    Text("Yes", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+            TextButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "I would rather not say",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PhoneProofTheme.colors.textTertiary,
+                )
+            }
         }
     }
 }

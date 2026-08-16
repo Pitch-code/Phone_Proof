@@ -2,6 +2,7 @@ package com.phoneproof.feature.audiotest
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -57,6 +58,8 @@ class AudioTestScreenshotTest {
                     onStartMicrophone = {},
                     onStartSpeaker = {},
                     onAnswerHeard = {},
+                    onDeclineToAnswer = {},
+                    onPlayBack = {},
                     onRestart = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -110,19 +113,80 @@ class AudioTestScreenshotTest {
 
     @Test
     fun the_tone_could_not_be_measured_so_the_buyer_is_asked() {
-        // Measure-then-ask, rendered. "No" must not look more dangerous than "Yes": making the honest
-        // answer look alarming is how a buyer gets nudged into the reassuring one.
+        // What is left on the screen behind the dialog. Note there is no speaker card: the provisional
+        // CAN'T TELL used to be published here as a verdict while the question sat underneath it, so the
+        // app answered and then asked. Reported from a real phone.
         render(
             "4-asking",
+            askingState(),
+        )
+    }
+
+    @Test
+    fun the_question_itself_interrupts() {
+        // The question used to be the last thing in a scrolling column, below two result cards, and on a
+        // real phone it was off the bottom of the screen — so most buyers never saw it and the test looked
+        // as though it had simply finished inconclusively.
+        //
+        // Captured as the dialog node rather than the root, because a Dialog is its own window and
+        // onRoot() would render the screen behind it.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.LIGHT) {
+                AudioTestScreen(
+                    state = askingState(),
+                    onStartMicrophone = {},
+                    onStartSpeaker = {},
+                    onAnswerHeard = {},
+                    onDeclineToAnswer = {},
+                    onPlayBack = {},
+                    onRestart = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onNode(isDialog()).captureRoboImage("$outputDir/audio-7-tone-question.png")
+    }
+
+    @Test
+    fun the_microphone_can_be_played_back() {
+        // "Play back what you said" only exists once there is a recording, and it has to sit with the
+        // microphone result rather than at the end of the screen: this is the moment the buyer still
+        // remembers what they said.
+        render(
+            "8-playback-offered",
             AudioTestUiState(
-                stage = AudioStage.ASKING,
+                stage = AudioStage.MICROPHONE_DONE,
                 levels = spokenLevels(),
                 microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
-                speaker = SpeakerCheck.evaluate(toneRatio = 0.04f, roomFloor = 0.3f),
                 volume = MediaVolume(current = 12, max = 15),
+                canPlayBack = true,
             ),
         )
     }
+
+    @Test
+    fun playback_in_progress_cannot_be_started_twice() {
+        render(
+            "9-playing-back",
+            AudioTestUiState(
+                stage = AudioStage.MICROPHONE_DONE,
+                levels = spokenLevels(),
+                microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+                volume = MediaVolume(current = 12, max = 15),
+                canPlayBack = true,
+                isPlayingBack = true,
+            ),
+        )
+    }
+
+    private fun askingState() = AudioTestUiState(
+        stage = AudioStage.ASKING,
+        levels = spokenLevels(),
+        microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+        volume = MediaVolume(current = 12, max = 15),
+        pendingToneRatio = 0.04f,
+        pendingRoomFloor = 0.3f,
+    )
 
     @Test
     fun neither_the_app_nor_the_buyer_heard_it() {

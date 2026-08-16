@@ -2,6 +2,7 @@ package com.phoneproof.feature.audiotest
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.phoneproof.checks.media.AudioWindow
 import com.phoneproof.checks.media.HeardTone
 import com.phoneproof.checks.media.MicrophoneCheck
 import com.phoneproof.checks.media.SpeakerCheck
@@ -30,6 +31,15 @@ class AudioTestViewModel(
     private val _uiState = MutableStateFlow(AudioTestUiState(volume = probe.mediaVolume()))
     val uiState: StateFlow<AudioTestUiState> = _uiState.asStateFlow()
 
+    /**
+     * The buyer's voice, kept only so it can be played back to them.
+     *
+     * Held here rather than in the UI state because three seconds at 44.1 kHz is a quarter of a megabyte
+     * and state objects are compared on every recomposition. Never written to disk — the permission screen
+     * promises a stranger that nothing is saved, and this is where that promise is kept or broken.
+     */
+    private var lastRecording: AudioWindow? = null
+
     /** Re-read on resume, because the buyer is told to turn the volume up and may go and do it. */
     fun refreshVolume() {
         _uiState.value = _uiState.value.copy(volume = probe.mediaVolume())
@@ -54,10 +64,12 @@ class AudioTestViewModel(
             }
 
             val analysis = analyse(window)
+            lastRecording = window
             _uiState.value = _uiState.value.copy(
                 stage = AudioStage.MICROPHONE_DONE,
                 levels = window.frameLevels(),
                 microphone = MicrophoneCheck.evaluate(analysis),
+                canPlayBack = true,
             )
         }
     }
@@ -99,11 +111,45 @@ class AudioTestViewModel(
             _uiState.value = _uiState.value.copy(
                 stage = if (settled) AudioStage.FINISHED else AudioStage.ASKING,
                 levels = window.frameLevels(),
-                speaker = result,
+                // Only published when it is final. Reported from a real phone: the provisional CAN'T TELL
+                // appeared as a verdict card while the question sat underneath it, so the app gave an
+                // answer and then asked for one. The measurement waits in the pending fields below and
+                // becomes a verdict in answerHeard or declineToAnswer.
+                speaker = if (settled) result else null,
                 // Kept so the answer can be folded into the same measurement rather than re-recording.
                 pendingToneRatio = ratio,
                 pendingRoomFloor = analysis.noiseFloor,
             )
+        }
+    }
+
+    /**
+     * The buyer would rather not say, or dismissed the question.
+     *
+     * Publishes the inconclusive measurement as the verdict, which is the honest outcome: the app could
+     * not measure it and the one person who could hear it declined to judge. Better than pretending the
+     * question was never asked, and far better than guessing on their behalf.
+     */
+    fun declineToAnswer() {
+        val state = _uiState.value
+        _uiState.value = state.copy(
+            stage = AudioStage.FINISHED,
+            speaker = SpeakerCheck.evaluate(
+                toneRatio = state.pendingToneRatio,
+                roomFloor = state.pendingRoomFloor,
+            ),
+        )
+    }
+
+    /** Plays the buyer's own recording back, so they can judge the microphone with their ears. */
+    fun playBack() {
+        val recording = lastRecording ?: return
+        if (_uiState.value.isPlayingBack) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isPlayingBack = true)
+            probe.play(recording)
+            _uiState.value = _uiState.value.copy(isPlayingBack = false)
         }
     }
 
@@ -120,6 +166,7 @@ class AudioTestViewModel(
     }
 
     fun restart() {
+        lastRecording = null
         _uiState.value = AudioTestUiState(volume = probe.mediaVolume())
     }
 
