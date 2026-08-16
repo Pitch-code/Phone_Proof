@@ -34,8 +34,11 @@ fun GuideRoute(
             //
             // Opens "No app can test" rather than "Eight things no app can test": the render showed
             // the old opening repeating the first two words of the title directly beneath it.
-            // "a moving diagram" until the diagrams stopped moving. A paywall describing a feature
-            // the buyer has not seen yet is the last place in the app that should oversell it.
+            //
+            // "Moving" is accurate again — the diagrams animate while a step is open. It was removed
+            // while they held still, because a paywall describing a feature the buyer has not seen yet
+            // is the last place in the app that should oversell it, and it has to track the truth in
+            // both directions.
             explanation = "No app can test any of these for you — a twisted frame, a re-glued " +
                 "screen, the water sticker in the SIM slot — each with a moving diagram showing " +
                 "how to check it.\n\n" + ADVISORY_TRIAL_EXCLUSION,
