@@ -65,12 +65,18 @@ class VibrationCheckTest {
     // ------------------------------------------------------------------ the two thresholds
 
     @Test
-    fun a_big_ratio_on_tiny_movement_is_not_enough() {
-        // A phone on a stone slab can rest at almost zero, and three times almost-nothing is still
-        // almost-nothing. Without the absolute floor this would pass on a motor nobody could feel.
-        val trace = measured(resting = 0.001, active = 0.05)
+    fun a_big_ratio_on_movement_too_small_to_feel_is_not_enough() {
+        // A phone on a stone slab rests at almost zero, so the ratio is easy to satisfy — ten times
+        // almost-nothing is still almost-nothing. Without the absolute floor this would pass a motor nobody
+        // could feel.
+        //
+        // The first version of this test used 0.05 m/s² and did not demonstrate anything, because the ratio
+        // floor had already capped the divisor and the ratio came out at 2.5. The test failed and was right
+        // to: the numbers have to clear one threshold and miss the other for the case to mean what it says.
+        val trace = measured(resting = 0.005, active = 0.2)
 
         assertThat(VibrationCheck.ratio(trace)).isGreaterThan(VibrationCheck.SHAKE_RATIO)
+        assertThat(trace.activeJerk).isLessThan(VibrationCheck.MINIMUM_ACTIVE_JERK)
         assertThat(VibrationCheck.evaluate(trace).outcome).isEqualTo(CheckOutcome.CAUTION)
     }
 
