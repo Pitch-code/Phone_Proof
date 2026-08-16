@@ -1,6 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      The app's first permission, and it arrives with the check that needs it rather than ahead of it —
+      android-standards.md requires that, and it is also the only way a buyer standing in a shop will
+      ever grant it. It is requested on the microphone screen with the reason on screen first, and every
+      check reports UNKNOWN rather than a fault if it is refused.
+
+      Used for two measurements and nothing else: three seconds to measure the microphone, and about a
+      second and a half to listen for a test tone from the loudspeaker. The samples are analysed in
+      memory and discarded. Nothing is written to storage and there is no network code in this app.
+
+      Deliberately NOT requested: READ_PHONE_STATE. The IMEI has been privileged since Android 10 on
+      every device regardless of target SDK, so asking would gain nothing and look alarming.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!--
+      Declared as not required, so the app still installs on a handset without one. A phone with no
+      microphone is not a phone, but a tablet is a plausible device for a shop to run this on, and the
+      microphone screen degrades to saying it cannot record rather than the app being uninstallable.
+    -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+
     <queries>
         <!--
           Makes device-administrator apps visible so their real name can be shown instead of a raw

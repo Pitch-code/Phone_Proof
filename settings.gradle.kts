@@ -45,6 +45,11 @@ include(":checks:media")
 
 // Android modules.
 include(":core:designsystem")
+// Permission plumbing, kept out of core:designsystem so a module that wants a colour does not inherit
+// activity-result APIs.
+include(":core:permissions")
+// Audio capture: the AudioRecord/AudioTrack layer feeding checks:media.
+include(":core:media")
 include(":core:device")
 include(":core:preferences")
 include(":core:reports")
@@ -59,4 +64,5 @@ include(":feature:claims")
 include(":feature:diagnostics")
 include(":feature:emilock")
 include(":feature:imei")
+include(":feature:audiotest")
 include(":app")
