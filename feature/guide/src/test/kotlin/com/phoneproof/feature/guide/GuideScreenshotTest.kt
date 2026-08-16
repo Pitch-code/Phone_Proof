@@ -83,6 +83,69 @@ class GuideScreenshotTest {
     }
 
     /**
+     * The photo row, which needs scrolling to reach.
+     *
+     * This exists because the screenshot gate passed a change nobody could see. Adding the photo row to
+     * the expanded card altered no committed PNG at all: the row sits below the fold, `onRoot()` captures
+     * only what is on screen, and `guide-2-step-open.png` came out byte-identical. A whole feature can be
+     * added to this screen, pass CI, and never be looked at — which is the hole the gate exists to close.
+     *
+     * `performScrollTo` walks the `LazyColumn` down to the button. The node is in the semantics tree even
+     * where it is clipped, which is exactly why the gate could not tell the difference.
+     */
+    @Test
+    fun the_photo_row_before_anything_is_taken() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                GuideScreen(
+                    steps = GuideSteps,
+                    expandedId = "guide.water",
+                    animate = false,
+                    photos = emptyMap(),
+                    onToggle = {},
+                    onTakePhoto = {},
+                    onSharePhoto = {},
+                    onDeletePhoto = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onNodeWithText("Take a photo").performScrollTo()
+        composeRule.onRoot().captureRoboImage("$outputDir/guide-6-photo-row.png")
+    }
+
+    /**
+     * The row once a photograph exists: thumbnail, then retake, share and delete.
+     *
+     * The path deliberately points at nothing, so the decode fails and the placeholder draws. That covers
+     * what is worth reviewing — three buttons across a narrow screen, which is where they would collide —
+     * without needing a real JPEG on disk.
+     *
+     * The decoded image itself stays unrendered. Writing a bitmap into test storage would be testing
+     * Robolectric's JPEG decoder rather than this app.
+     */
+    @Test
+    fun the_photo_row_once_a_photo_exists() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                GuideScreen(
+                    steps = GuideSteps,
+                    expandedId = "guide.water",
+                    animate = false,
+                    photos = mapOf("guide.water" to "/not/a/real/photo.jpg"),
+                    onToggle = {},
+                    onTakePhoto = {},
+                    onSharePhoto = {},
+                    onDeletePhoto = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onNodeWithText("Retake").performScrollTo()
+        composeRule.onRoot().captureRoboImage("$outputDir/guide-7-photo-taken.png")
+    }
+
+    /**
      * Every diagram, at the frame it now holds.
      *
      * The reason this exists: a Canvas drawing has no compiler to tell you it renders as an
