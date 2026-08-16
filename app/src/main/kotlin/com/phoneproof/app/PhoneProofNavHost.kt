@@ -20,6 +20,7 @@ import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
+import com.phoneproof.feature.home.ChecksScreen
 import com.phoneproof.feature.home.HomeCatalogue
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
@@ -45,6 +46,7 @@ import com.phoneproof.feature.touchgrid.TouchGridRoute
  */
 internal object Routes {
     const val HOME = "home"
+    const val CHECKS = "checks"
     const val TOUCH = "touch"
     const val LOCK = "lock"
     const val SCAN = "scan"
@@ -64,6 +66,21 @@ internal object Routes {
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
+}
+
+/**
+ * Opens a test screen, at most once on the back stack.
+ *
+ * Every check can be reached from three places — the checks list, the guided run's checklist, and the
+ * "not tested" rows on the verdict — so without `launchSingleTop` a buyer who visits the camera test from
+ * two of them ends up with two copies stacked. Back then appears not to work: it dismisses one copy and
+ * lands on an identical screen, so the second press looks like the first did nothing.
+ *
+ * Reported from a real phone as "going back is not working properly sometimes", which is exactly what
+ * duplicate destinations feel like.
+ */
+private fun NavHostController.navigateToCheck(route: String) {
+    navigate(route) { launchSingleTop = true }
 }
 
 /**
@@ -101,17 +118,8 @@ fun PhoneProofNavHost(
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                // Built from HomeCatalogue rather than written out here, so the screenshot test can
-                // render the same list. It used to be spelled out in both places and the test's copy fell
-                // five entries behind without anything failing.
-                checks = HomeCatalogue.map { entry ->
-                    HomeCheck(
-                        title = entry.title,
-                        subtitle = entry.subtitle,
-                        onClick = { navController.navigate(entry.route) },
-                    )
-                },
                 onStartFullTest = { navController.navigate(Routes.RUN) },
+                onOpenChecks = { navController.navigate(Routes.CHECKS) },
                 // The guide is no longer one of the checks: it has its own heading on Home, because
                 // it is advice for the buyer's hands rather than something the phone measures.
                 onOpenGuide = { navController.navigate(Routes.GUIDE) },
@@ -124,6 +132,22 @@ fun PhoneProofNavHost(
                     null
                 } else {
                     (Entitlement.FREE_SCAN_LIMIT - scansUsed).coerceAtLeast(0)
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        // The individual checks, moved off Home. Built from HomeCatalogue so the screenshot test can
+        // render the same list; it used to be spelled out in both places and the test's copy fell five
+        // entries behind without anything failing.
+        composable(Routes.CHECKS) {
+            ChecksScreen(
+                checks = HomeCatalogue.map { entry ->
+                    HomeCheck(
+                        title = entry.title,
+                        subtitle = entry.subtitle,
+                        onClick = { navController.navigateToCheck(entry.route) },
+                    )
                 },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -165,7 +189,7 @@ fun PhoneProofNavHost(
         composable(Routes.RUN) {
             RunRoute(
                 session = runSession,
-                onOpenStep = { route -> navController.navigate(route) },
+                onOpenStep = { route -> navController.navigateToCheck(route) },
                 onSeeVerdict = { navController.navigate(Routes.VERDICT) },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -174,7 +198,7 @@ fun PhoneProofNavHost(
         composable(Routes.VERDICT) {
             RunVerdictRoute(
                 session = runSession,
-                onOpenStep = { route -> navController.navigate(route) },
+                onOpenStep = { route -> navController.navigateToCheck(route) },
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 // Back to Home rather than to a fresh checklist: someone who has finished with one
                 // phone is usually done, and the ones who are not are standing in front of the next

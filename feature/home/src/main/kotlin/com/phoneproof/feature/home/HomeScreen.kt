@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextAlign
@@ -55,8 +57,8 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
  */
 @Composable
 fun HomeScreen(
-    checks: List<HomeCheck>,
     onStartFullTest: () -> Unit,
+    onOpenChecks: () -> Unit,
     onOpenGuide: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -81,18 +83,44 @@ fun HomeScreen(
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(16.dp))
 
-        Text(
-            text = "PhoneProof",
-            style = MaterialTheme.typography.displaySmall,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
-        Text(
-            text = "Find the faults before you pay for them.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = PhoneProofTheme.colors.textSecondary,
-        )
+        // The gear sits in a header row rather than in a row at the very bottom of the page.
+        // Reported from a real phone: reaching Settings meant scrolling past nine checks every time,
+        // which is a long way to go for the theme switch and the thing that unlocks the paid tier.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    text = "PhoneProof",
+                    style = MaterialTheme.typography.displaySmall,
+                    color = PhoneProofTheme.colors.textPrimary,
+                )
+                Text(
+                    text = "Find the faults before you pay for them.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = PhoneProofTheme.colors.textSecondary,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .clickable(onClick = onOpenSettings),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    // Named for a screen reader. It is the only control on this screen with no label.
+                    contentDescription = "Settings",
+                    tint = PhoneProofTheme.colors.textSecondary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
 
         Spacer(Modifier.height(6.dp))
 
@@ -160,14 +188,19 @@ fun HomeScreen(
             textAlign = TextAlign.Center,
         )
 
-        SectionLabel("Test one thing at a time")
-        checks.forEach { check ->
-            NavigationRow(
-                title = check.title,
-                subtitle = check.subtitle,
-                onClick = check.onClick,
-            )
-        }
+        // One row, not nine.
+        //
+        // Every check the guided run walks through was also listed here, which raised a fair question
+        // from a real user: why is the same thing on the screen twice, and what is the button for? The
+        // two do different jobs — the run sequences everything and ends in a verdict, the list is for
+        // someone who wants a single answer or to re-run one test — but nine duplicate rows pushed the
+        // primary action up into a scroll and made it look like a shortcut rather than the main path.
+        SectionLabel("Or test one thing at a time")
+        NavigationRow(
+            title = "The checks on their own",
+            subtitle = "Pick a single test, or run one again",
+            onClick = onOpenChecks,
+        )
 
         // Its own heading, because it is the opposite of everything above it: advice for the buyer's
         // hands rather than a measurement the phone can make. Grouping it with the checks implied the
@@ -188,28 +221,13 @@ fun HomeScreen(
             subtitle = "Read a past test, or compare two phones",
             onClick = onOpenReports,
         )
-        NavigationRow(
-            title = "Settings",
-            subtitle = "Theme, premium, privacy and diagnostics",
-            onClick = onOpenSettings,
-            leading = {
-                // A real icon rather than the plain grey text this used to be. It sat at the very
-                // bottom looking like a footnote, and on a full screen it was not there at all.
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = null,
-                    tint = PhoneProofTheme.colors.textSecondary,
-                    modifier = Modifier.size(20.dp),
-                )
-            },
-        )
 
         Spacer(Modifier.height(28.dp))
     }
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+internal fun SectionLabel(text: String) {
     Text(
         text = text.uppercase(),
         style = MaterialTheme.typography.labelSmall,
@@ -219,7 +237,7 @@ private fun SectionLabel(text: String) {
 }
 
 @Composable
-private fun NavigationRow(
+internal fun NavigationRow(
     title: String,
     subtitle: String,
     onClick: () -> Unit,

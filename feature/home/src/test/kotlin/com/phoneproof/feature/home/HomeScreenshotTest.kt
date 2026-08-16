@@ -25,23 +25,12 @@ class HomeScreenshotTest {
     private val outputDir: String =
         System.getProperty("phoneproof.screenshotDir") ?: "build/screenshots"
 
-    /**
-     * Every check the app actually offers, taken from the list the navigation graph uses.
-     *
-     * This was a hand-written copy, and the copy fell five entries behind the real screen — the
-     * microphone, the cameras and the IMEI were all missing from it while their PRs were reviewed
-     * against these renders. Reading [HomeCatalogue] means a check added to Home cannot be left out of
-     * the picture that is supposed to prove Home still fits.
-     */
-    private fun realChecks(): List<HomeCheck> =
-        HomeCatalogue.map { HomeCheck(it.title, it.subtitle) {} }
-
     private fun render(name: String) {
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 HomeScreen(
-                    checks = realChecks(),
                     onStartFullTest = {},
+                    onOpenChecks = {},
                     onOpenGuide = {},
                     onOpenReports = {},
                     onOpenSettings = {},
@@ -75,8 +64,8 @@ class HomeScreenshotTest {
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) {
                 HomeScreen(
-                    checks = realChecks(),
                     onStartFullTest = {},
+                    onOpenChecks = {},
                     onOpenGuide = {},
                     onOpenReports = {},
                     onOpenSettings = {},
@@ -91,8 +80,57 @@ class HomeScreenshotTest {
     @Test
     @Config(qualifiers = "w411dp-h1800dp-xhdpi")
     fun home_full_column() {
-        // The whole scrolling column in one image. This is the render that proves Settings and Saved
-        // reports exist at all, which the phone-sized shot cannot show now that Home scrolls.
+        // The whole column in one image. Home now fits a phone screen without scrolling, which is the
+        // point of moving the nine checks off it — but this render is what proves it stays that way.
         render("home-2-full")
+    }
+
+    @Test
+    fun the_checks_on_their_own() {
+        // Every check the app offers, read from the list the navigation graph uses. That list used to be
+        // hand-copied into this file and fell five entries behind the real screen, so the microphone, the
+        // cameras and the IMEI were all missing while their PRs were reviewed against these renders.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                ChecksScreen(
+                    checks = HomeCatalogue.map { HomeCheck(it.title, it.subtitle) {} },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/checks-1-list.png")
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h1800dp-xhdpi")
+    fun the_checks_on_their_own_full_column() {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                ChecksScreen(
+                    checks = HomeCatalogue.map { HomeCheck(it.title, it.subtitle) {} },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/checks-2-full.png")
+    }
+
+    @Test
+    fun home_in_light_mode() {
+        // The header gear is new and light mode has produced two real bugs in this project already.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.LIGHT) {
+                HomeScreen(
+                    onStartFullTest = {},
+                    onOpenChecks = {},
+                    onOpenGuide = {},
+                    onOpenReports = {},
+                    onOpenSettings = {},
+                    freeScansLeft = 2,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/home-5-light.png")
     }
 }
