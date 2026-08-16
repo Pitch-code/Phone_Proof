@@ -97,7 +97,17 @@ class SensorLivenessTest {
             unsubscribed(SensorKind.PROXIMITY),
         )
 
-        assertThat(findings.stateOf(SensorKind.PROXIMITY)).isEqualTo(SensorState.NOT_EXERCISED)
+        // Its own state, not merely "not exercised". The buyer did everything asked of them here, so a
+        // line telling them to cover the phone again would be blaming them for our failure.
+        assertThat(findings.stateOf(SensorKind.PROXIMITY)).isEqualTo(SensorState.UNAVAILABLE)
+    }
+
+    @Test
+    fun a_sensor_the_phone_claims_but_never_sends_a_trace_for_is_also_unavailable() {
+        val findings = analyse(accelerometerTilted(), gyroscopeTurning())
+
+        // Nothing arrived about the compass at all, which is not the same as the compass being silent.
+        assertThat(findings.stateOf(SensorKind.MAGNETOMETER)).isEqualTo(SensorState.UNAVAILABLE)
     }
 
     // ------------------------------------------------------------------ real faults

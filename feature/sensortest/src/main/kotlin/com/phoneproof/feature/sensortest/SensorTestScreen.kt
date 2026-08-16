@@ -55,6 +55,15 @@ fun SensorTestScreen(
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // While a gesture is running the screen holds one instruction and two meters and nothing else, so
+    // it is centred and does not scroll: the buyer is tilting the phone and watching the middle of it,
+    // and the first render had all of that huddled at the top above two thirds of empty black.
+    val duringGesture = state.phase == SensorPhase.MOTION || state.phase == SensorPhase.COVER
+
+    // Remembered unconditionally. Creating it inside the branch would mean calling a composable in
+    // some compositions and not others, which is not allowed and would crash on the phase change.
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -64,17 +73,22 @@ fun SensorTestScreen(
             // route and the rendered meters ran off the right-hand edge with their labels clipped —
             // a layout bug that only existed in the review, which is the worst place for one to hide.
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
+            .then(if (duringGesture) Modifier else Modifier.verticalScroll(scrollState))
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = if (duringGesture) {
+            Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+        } else {
+            Arrangement.spacedBy(12.dp)
+        },
     ) {
-        Spacer(Modifier.height(10.dp))
-
-        Text(
-            text = "Sensors",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        if (!duringGesture) {
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = "Sensors",
+                style = MaterialTheme.typography.titleLarge,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+        }
 
         when (state.phase) {
             SensorPhase.READY -> Ready(state, onStart)
@@ -83,7 +97,7 @@ fun SensorTestScreen(
             SensorPhase.DONE -> Done(state, onRestart)
         }
 
-        Spacer(Modifier.height(28.dp))
+        if (!duringGesture) Spacer(Modifier.height(28.dp))
     }
 }
 

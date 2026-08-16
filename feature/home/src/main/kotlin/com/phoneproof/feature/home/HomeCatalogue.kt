@@ -30,7 +30,9 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
     HomeCheckEntry(
         route = "scan",
         title = "Instant scan",
-        subtitle = "Software, storage, sensors and screen — no waiting",
+        // "sensors" removed: the scan only reads the parts list, and now that a test actually
+        // exercises them, a subtitle claiming both would be taking credit for the other screen's work.
+        subtitle = "Software, storage, battery and screen — no waiting",
     ),
     HomeCheckEntry(
         route = "lock",

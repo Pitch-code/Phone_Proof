@@ -29,6 +29,15 @@ enum class SensorState {
      * proximity sensor is broken when the buyer simply never covered it.
      */
     NOT_EXERCISED,
+
+    /**
+     * The app never managed to subscribe, so the hardware was never on trial.
+     *
+     * Kept apart from [NOT_EXERCISED] because the two need opposite sentences. "The phone was not moved
+     * far enough" is a fair thing to tell a buyer who did not move it, and a nonsense thing to tell one
+     * whose phone the app failed to connect to. This one is our failure, and says so.
+     */
+    UNAVAILABLE,
 }
 
 data class SensorFinding(
@@ -130,7 +139,7 @@ object SensorLiveness {
                 kind = kind,
                 stats = s,
                 state = when {
-                    !registered.getValue(kind) -> SensorState.NOT_EXERCISED
+                    !registered.getValue(kind) -> SensorState.UNAVAILABLE
                     s.count == 0 -> SensorState.SILENT
                     else -> when (kind) {
                         SensorKind.ACCELEROMETER -> accelerometerState(s, rotated)

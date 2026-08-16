@@ -36,12 +36,23 @@ object SensorCheck {
                 measurements = measurements,
             )
 
+            SensorState.UNAVAILABLE -> CheckResult(
+                id = idFor(kind),
+                title = title(kind),
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                headline = "This app could not connect to the ${plainName(kind)}. That is a gap in " +
+                    "the report rather than anything known about the phone.",
+                action = "Close the app, open it again and re-run this test.",
+                measurements = measurements,
+            )
+
             SensorState.NOT_EXERCISED -> CheckResult(
                 id = idFor(kind),
                 title = title(kind),
                 outcome = CheckOutcome.UNKNOWN,
                 confidence = Confidence.LOW,
-                headline = notExercisedHeadline(kind),
+                headline = notExercisedHeadline(kind, s),
                 // An action even though nothing is wrong: the buyer can fix this one themselves in
                 // five seconds, and a "can't tell" they could have prevented is worth saying so.
                 action = when (kind) {
@@ -243,13 +254,29 @@ object SensorCheck {
         else -> "Reported a value outside anything physically sensible."
     }
 
-    private fun notExercisedHeadline(kind: SensorKind): String = when (kind) {
-        SensorKind.PROXIMITY, SensorKind.LIGHT ->
-            "Nothing to report: the top of the screen was never covered, so there was nothing for " +
-                "this sensor to react to."
-        else ->
-            "Nothing to report: the phone was not moved far enough for this sensor to have " +
-                "anything to measure."
+    /**
+     * One sentence per sensor, and not one shared sentence.
+     *
+     * The first version used the same line for the accelerometer and the gyroscope, and the render put
+     * the two cards one above the other reading word for word the same — which makes an honest result
+     * look like an unfilled template. Each of these now says what specifically did not happen, and the
+     * accelerometer's admits what it *does* know, because gravity proved its calibration even though
+     * nobody tilted it.
+     */
+    private fun notExercisedHeadline(kind: SensorKind, s: TraceStats): String = when (kind) {
+        SensorKind.ACCELEROMETER ->
+            "It reads gravity correctly at ${oneDecimal(s.magnitudeMean)} m/s², so it is calibrated " +
+                "— but the phone was not tilted far enough to see whether it follows movement."
+        SensorKind.GYROSCOPE ->
+            "The phone was never turned, so there was no rotation for this sensor to have missed."
+        SensorKind.MAGNETOMETER ->
+            "The compass reported nothing worth judging, and the phone was not turned enough to " +
+                "press it."
+        SensorKind.PROXIMITY ->
+            "Your hand never reached the sensor, so it had nothing to detect. The light sensor " +
+                "agrees it stayed light up there."
+        SensorKind.LIGHT ->
+            "The top of the screen never went dark, so this sensor had no change to follow."
     }
 
     private fun measurementsFor(kind: SensorKind, s: TraceStats): List<Measurement> = buildList {

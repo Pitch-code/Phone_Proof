@@ -56,6 +56,62 @@ class SensorCheckTest {
     }
 
     @Test
+    fun a_sensor_the_app_could_not_reach_blames_the_app_and_not_the_phone() {
+        SensorKind.entries.forEach { kind ->
+            val result = resultFor(kind, SensorState.UNAVAILABLE)
+            assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
+            assertThat(result.headline).contains("could not connect")
+            assertThat(result.headline).contains("rather than anything known about the phone")
+        }
+    }
+
+    @Test
+    fun the_two_kinds_of_cant_tell_never_read_the_same() {
+        // One is "you did not do the gesture", the other is "we could not connect". Telling a buyer to
+        // tilt the phone again when the app failed to subscribe would be blaming them for our bug.
+        val notDone = resultFor(SensorKind.GYROSCOPE, SensorState.NOT_EXERCISED)
+        val unreachable = resultFor(SensorKind.GYROSCOPE, SensorState.UNAVAILABLE)
+
+        assertThat(notDone.headline).isNotEqualTo(unreachable.headline)
+        assertThat(notDone.action).isNotEqualTo(unreachable.action)
+    }
+
+    @Test
+    fun no_two_sensors_share_a_cant_tell_sentence() {
+        // Two cards stacked with word-for-word the same line makes an honest result look like an
+        // unfilled template, which is what the first render of this screen showed.
+        val headlines = SensorKind.entries.map {
+            resultFor(it, SensorState.NOT_EXERCISED).headline
+        }
+        assertThat(headlines).containsNoDuplicates()
+    }
+
+    @Test
+    fun an_untilted_accelerometer_still_admits_that_gravity_checks_out() {
+        // It proved its calibration by lying still and reading 9.8. Saying only "cannot tell" would
+        // throw away the one thing this sensor can establish without being waved about.
+        val result = SensorCheck.results(
+            SensorLiveness.analyse(
+                listOf(
+                    SensorTrace(
+                        SensorKind.ACCELEROMETER,
+                        List(60) { SensorReading(0f, 0f, 9.81f) },
+                    ),
+                    SensorTrace(
+                        SensorKind.GYROSCOPE,
+                        List(60) { SensorReading(0.001f, 0.001f, 0.001f) },
+                    ),
+                ),
+                setOf(SensorKind.ACCELEROMETER),
+            ),
+        ).single()
+
+        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
+        assertThat(result.headline).contains("reads gravity correctly at 9.8")
+        assertThat(result.headline).contains("not tilted far enough")
+    }
+
+    @Test
     fun a_cant_tell_still_says_how_the_buyer_could_get_an_answer() {
         // Unusual for an UNKNOWN to carry an action, and deliberate: this is the one kind of "cannot
         // tell" in the whole app that the buyer can clear themselves in five seconds.
