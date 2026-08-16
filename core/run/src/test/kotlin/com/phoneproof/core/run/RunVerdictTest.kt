@@ -53,7 +53,9 @@ class RunVerdictTest {
         )
 
         assertThat(result.grade).isEqualTo(RunGrade.INCOMPLETE)
-        assertThat(result.detail).contains("microphone and speaker")
+        // Named from the step's own title rather than a copy of it, so renaming the step cannot make this
+        // assertion quietly stop checking anything. It caught the earpiece rename that produced it.
+        assertThat(result.detail).contains(RunPlan.step("audio")!!.title.lowercase())
         assertThat(result.detail).contains("A phone is not clean because nobody looked.")
         assertThat(result.skipped.map { it.id }).containsExactly("audio")
     }
