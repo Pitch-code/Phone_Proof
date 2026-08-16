@@ -109,6 +109,16 @@ object RunPlan {
             effort = StepEffort.HANDS_ON,
             typicalSeconds = 20,
         ),
+        // Needs a charger, which may not be in the room — so it sits at the end of the measured steps
+        // and is not essential. A buyer with no cable to hand must still be able to reach a clean verdict.
+        RunStep(
+            id = "charging",
+            title = "Charging",
+            why = "A loose socket charges fine while you watch and gives up overnight",
+            effort = StepEffort.HANDS_ON,
+            typicalSeconds = 30,
+            essential = false,
+        ),
         RunStep(
             id = "sensors",
             title = "Sensors that still work",
