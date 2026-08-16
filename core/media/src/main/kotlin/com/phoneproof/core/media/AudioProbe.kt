@@ -10,11 +10,10 @@ import android.media.AudioTrack
 import android.media.MediaRecorder
 import com.phoneproof.checks.media.AudioWindow
 import com.phoneproof.checks.media.ToneDetector
+import com.phoneproof.checks.media.TonePlan
 import com.phoneproof.core.diagnostics.Diagnostics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlin.math.PI
-import kotlin.math.sin
 
 /** What the media volume was set to, which decides whether a speaker test can mean anything. */
 data class MediaVolume(val current: Int, val max: Int) {
@@ -157,18 +156,23 @@ class AudioProbe(private val context: Context) {
     /**
      * Starts a continuous 1 kHz tone on the media stream and returns the track so it can be stopped.
      *
-     * One cycle-aligned buffer set to loop, rather than a long buffer written repeatedly: the loop point
-     * is sample-exact, so there is no click or phase discontinuity where it wraps. A click is broadband,
-     * and broadband energy is exactly what would flatter the tone detector into a false positive.
+     * The buffer comes from [TonePlan], which exists because this is where the speaker test was broken.
+     * It used to compute `(rate / TEST_TONE_HZ).toInt()` — `44.1` truncated to `44` at 44.1 kHz — so the
+     * phone emitted 1002.27 Hz while the detector listened at exactly 1000, and the test reported nothing
+     * in a silent room on every handset that settled on 44.1 kHz. That is the first rate tried.
+     *
+     * The plan yields a buffer holding a whole number of cycles at the true frequency, so the loop point
+     * stays sample-exact — a click is broadband, and broadband energy is what would flatter the detector
+     * into a false positive — while the frequency is now the one being looked for.
      */
     private fun startTone(rate: Int): AudioTrack? = runCatching {
-        val cyclesPerBuffer = 100
-        val samplesPerCycle = (rate / ToneDetector.TEST_TONE_HZ).toInt()
-        val count = samplesPerCycle * cyclesPerBuffer
-        val buffer = ShortArray(count) { index ->
-            val angle = 2.0 * PI * index / samplesPerCycle
-            (sin(angle) * TONE_AMPLITUDE * Short.MAX_VALUE).toInt().toShort()
-        }
+        val plan = TonePlan.of(rate, ToneDetector.TEST_TONE_HZ)
+        val count = plan.samples
+        val buffer = plan.pcm16(TONE_AMPLITUDE)
+        Diagnostics.info(
+            TAG,
+            "tone: ${plan.frequencyHz} Hz, ${plan.cycles} cycles in $count samples at $rate Hz",
+        )
 
         val track = AudioTrack.Builder()
             .setAudioAttributes(

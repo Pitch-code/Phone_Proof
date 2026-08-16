@@ -21,6 +21,12 @@ import kotlin.math.cos
  * with two running variables and no allocation — a few lines instead of a library, no new dependency in
  * an app watching its size, and it runs comfortably on the cheap handsets this app exists for.
  */
+/** The best match found in a band, and the frequency it was found at. */
+data class ToneMatch(
+    val ratio: Float,
+    val frequencyHz: Float,
+)
+
 object ToneDetector {
 
     /**
@@ -65,6 +71,65 @@ object ToneDetector {
         val toneEnergy = magnitudeSquared * 2.0 / samples.size
         return (toneEnergy / totalEnergy).toFloat().coerceIn(0f, 1f)
     }
+
+    /**
+     * The strongest tone found near [targetHz], and where it was.
+     *
+     * ## Why a band and not a single frequency
+     *
+     * [toneRatio] answers a very precise question, and precision is a liability here. Over a three-second
+     * window its bins are about a third of a hertz wide, so a tone even two hertz off reads as nothing at
+     * all. Two separate things push the real tone off the mark:
+     *
+     *  - **Arithmetic.** The tone generator used to truncate its samples-per-cycle and emit 1002.27 Hz
+     *    while this looked at 1000. [TonePlan] fixes that at the source, and this is the second line of
+     *    defence rather than a substitute for it.
+     *  - **Clocks.** Playback and capture run off separate clocks on a lot of handsets, and a few hertz of
+     *    genuine offset over three seconds is ordinary. No amount of care in the generator removes that,
+     *    because it is the hardware disagreeing with itself.
+     *
+     * Searching a narrow band costs one extra pass per probe — Goertzel allocates nothing — and turns a
+     * test that demands the universe cooperate to the third decimal place into one that works on a cheap
+     * phone in a shop.
+     *
+     * ## Why this does not invite false positives
+     *
+     * Taking the best of many probes biases upward, which would matter if the bar were near the noise.
+     * It is not: broadband noise spreads its energy across every bin, so each probe's *normalised* ratio
+     * stays near `2/n` however many are tried, orders of magnitude below
+     * [SpeakerCheck.TONE_DETECTED_RATIO]. A test asserts that white noise stays under the bar.
+     */
+    fun bestToneRatio(
+        window: AudioWindow,
+        targetHz: Float,
+        toleranceHz: Float = DEFAULT_TOLERANCE_HZ,
+    ): ToneMatch {
+        if (window.samples.isEmpty() || targetHz <= 0f) return ToneMatch(0f, targetHz)
+        if (toleranceHz <= 0f) return ToneMatch(toneRatio(window, targetHz), targetHz)
+
+        // Half a bin, so no peak can hide between two probes, clamped so a short window does not produce
+        // a needlessly coarse sweep and a long one does not produce thousands of probes.
+        val binWidth = window.sampleRate.toFloat() / window.samples.size
+        val span = toleranceHz * 2f
+        val step = (binWidth / 2f).coerceIn(0.1f, 2f).let { candidate ->
+            if (span / candidate > MAX_PROBES) span / MAX_PROBES else candidate
+        }
+
+        var best = ToneMatch(toneRatio(window, targetHz), targetHz)
+        var hz = targetHz - toleranceHz
+        while (hz <= targetHz + toleranceHz) {
+            val ratio = toneRatio(window, hz)
+            if (ratio > best.ratio) best = ToneMatch(ratio, hz)
+            hz += step
+        }
+        return best
+    }
+
+    /** How far either side of the target to look. Eight hertz covers ordinary playback-capture drift. */
+    const val DEFAULT_TOLERANCE_HZ: Float = 8f
+
+    /** Bounds the work on a long recording. 64 probes over 3 seconds is a few milliseconds. */
+    private const val MAX_PROBES = 64
 
     /**
      * The frequency the app plays for the speaker test.
