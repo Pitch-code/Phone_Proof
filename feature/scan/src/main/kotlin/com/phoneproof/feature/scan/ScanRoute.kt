@@ -52,6 +52,7 @@ fun ScanRoute(
      * which keeps two, one run would fill the entire history and evict the previous phone.
      */
     saveOwnReport: Boolean = true,
+    viewModel: ScanViewModel = viewModel(),
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()

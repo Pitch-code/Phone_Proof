@@ -1,0 +1,1049 @@
+﻿2026-08-16T09:30:50.2428169Z Current runner version: '2.336.0'
+2026-08-16T09:30:50.2463444Z ##[group]Runner Image Provisioner
+2026-08-16T09:30:50.2464933Z Hosted Compute Agent
+2026-08-16T09:30:50.2465882Z Version: 20260729.566
+2026-08-16T09:30:50.2466903Z Commit: cf7153fe6e25b664e8693c24944bf2b00355d109
+2026-08-16T09:30:50.2468198Z Build Date: 2026-07-29T19:17:02Z
+2026-08-16T09:30:50.2469251Z Worker ID: {d423262b-9e14-4979-9367-cd959d31056e}
+2026-08-16T09:30:50.2470788Z Azure Region: eastus
+2026-08-16T09:30:50.2471938Z ##[endgroup]
+2026-08-16T09:30:50.2474157Z ##[group]Operating System
+2026-08-16T09:30:50.2475811Z Ubuntu
+2026-08-16T09:30:50.2476642Z 24.04.4
+2026-08-16T09:30:50.2477487Z LTS
+2026-08-16T09:30:50.2478324Z ##[endgroup]
+2026-08-16T09:30:50.2479229Z ##[group]Runner Image
+2026-08-16T09:30:50.2480281Z Image: ubuntu-24.04
+2026-08-16T09:30:50.2481446Z Version: 20260810.271.1
+2026-08-16T09:30:50.2483648Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260810.271/images/ubuntu/Ubuntu2404-Readme.md
+2026-08-16T09:30:50.2486254Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260810.271
+2026-08-16T09:30:50.2487973Z ##[endgroup]
+2026-08-16T09:30:50.2489704Z ##[group]GITHUB_TOKEN Permissions
+2026-08-16T09:30:50.2493135Z Contents: read
+2026-08-16T09:30:50.2494040Z Metadata: read
+2026-08-16T09:30:50.2494984Z ##[endgroup]
+2026-08-16T09:30:50.2497957Z Secret source: Actions
+2026-08-16T09:30:50.2500123Z Prepare workflow directory
+2026-08-16T09:30:50.2969082Z Prepare all required actions
+2026-08-16T09:30:50.3016919Z Getting action download info
+2026-08-16T09:30:50.4615490Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-08-16T09:30:50.5871623Z Download action repository 'actions/setup-java@v4' (SHA:cf277c60eb25467037889841efdb72551f06f6c3)
+2026-08-16T09:30:50.8075425Z Download action repository 'gradle/actions@v4' (SHA:ed408507eac070d1f99cc633dbcf757c94c7933a)
+2026-08-16T09:30:51.4139530Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-08-16T09:30:51.6914626Z Complete job name: Build, test, render screens
+2026-08-16T09:30:51.7961295Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:30:51.7972063Z ##[group]Run actions/checkout@v4
+2026-08-16T09:30:51.7973311Z with:
+2026-08-16T09:30:51.7974174Z   repository: Pitch-code/Phone_Proof
+2026-08-16T09:30:51.7982868Z   token: ***
+2026-08-16T09:30:51.7983700Z   ssh-strict: true
+2026-08-16T09:30:51.7984580Z   ssh-user: git
+2026-08-16T09:30:51.7985447Z   persist-credentials: true
+2026-08-16T09:30:51.7986400Z   clean: true
+2026-08-16T09:30:51.8053644Z   sparse-checkout-cone-mode: true
+2026-08-16T09:30:51.8054902Z   fetch-depth: 1
+2026-08-16T09:30:51.8055834Z   fetch-tags: false
+2026-08-16T09:30:51.8056757Z   show-progress: true
+2026-08-16T09:30:51.8057651Z   lfs: false
+2026-08-16T09:30:51.8058491Z   submodules: false
+2026-08-16T09:30:51.8059378Z   set-safe-directory: true
+2026-08-16T09:30:51.8060386Z   allow-unsafe-pr-checkout: false
+2026-08-16T09:30:51.8062289Z ##[endgroup]
+2026-08-16T09:30:51.9127382Z Syncing repository: Pitch-code/Phone_Proof
+2026-08-16T09:30:51.9131547Z ##[group]Getting Git version info
+2026-08-16T09:30:51.9133001Z Working directory is '/home/runner/work/Phone_Proof/Phone_Proof'
+2026-08-16T09:30:51.9135529Z [command]/usr/bin/git version
+2026-08-16T09:30:51.9183724Z git version 2.54.0
+2026-08-16T09:30:51.9248947Z ##[endgroup]
+2026-08-16T09:30:51.9259907Z Temporarily overriding HOME='/home/runner/work/_temp/7c9cf986-c606-478b-9ea8-0a9a7c2b0a51' before making global git config changes
+2026-08-16T09:30:51.9264873Z Adding repository directory to the temporary git global config as a safe directory
+2026-08-16T09:30:51.9267429Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Phone_Proof/Phone_Proof
+2026-08-16T09:30:51.9296124Z Deleting the contents of '/home/runner/work/Phone_Proof/Phone_Proof'
+2026-08-16T09:30:51.9301736Z ##[group]Initializing the repository
+2026-08-16T09:30:51.9309479Z [command]/usr/bin/git init /home/runner/work/Phone_Proof/Phone_Proof
+2026-08-16T09:30:51.9412337Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-08-16T09:30:51.9414411Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-08-16T09:30:51.9416265Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-08-16T09:30:51.9418033Z hint: call:
+2026-08-16T09:30:51.9418833Z hint:
+2026-08-16T09:30:51.9419845Z hint: 	git config --global init.defaultBranch <name>
+2026-08-16T09:30:51.9421369Z hint:
+2026-08-16T09:30:51.9422521Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-08-16T09:30:51.9424356Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-08-16T09:30:51.9425854Z hint:
+2026-08-16T09:30:51.9426671Z hint: 	git branch -m <name>
+2026-08-16T09:30:51.9427606Z hint:
+2026-08-16T09:30:51.9428841Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-08-16T09:30:51.9436334Z Initialized empty Git repository in /home/runner/work/Phone_Proof/Phone_Proof/.git/
+2026-08-16T09:30:51.9448018Z [command]/usr/bin/git remote add origin https://github.com/Pitch-code/Phone_Proof
+2026-08-16T09:30:51.9511776Z ##[endgroup]
+2026-08-16T09:30:51.9514387Z ##[group]Disabling automatic garbage collection
+2026-08-16T09:30:51.9516590Z [command]/usr/bin/git config --local gc.auto 0
+2026-08-16T09:30:51.9538940Z ##[endgroup]
+2026-08-16T09:30:51.9541585Z ##[group]Setting up auth
+2026-08-16T09:30:51.9547033Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-08-16T09:30:51.9593906Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-08-16T09:30:51.9997140Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-08-16T09:30:52.0039719Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-08-16T09:30:52.0269463Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-08-16T09:30:52.0306919Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-08-16T09:30:52.0530290Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-08-16T09:30:52.0569080Z ##[endgroup]
+2026-08-16T09:30:52.0570864Z ##[group]Fetching the repository
+2026-08-16T09:30:52.0579730Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +d3e01c4431361fe2fe672d5c81e7e644632d0fdf:refs/remotes/origin/guided-run
+2026-08-16T09:30:52.8309596Z From https://github.com/Pitch-code/Phone_Proof
+2026-08-16T09:30:52.8312182Z  * [new ref]         d3e01c4431361fe2fe672d5c81e7e644632d0fdf -> origin/guided-run
+2026-08-16T09:30:52.8347829Z ##[endgroup]
+2026-08-16T09:30:52.8348745Z ##[group]Determining the checkout info
+2026-08-16T09:30:52.8351768Z ##[endgroup]
+2026-08-16T09:30:52.8358247Z [command]/usr/bin/git sparse-checkout disable
+2026-08-16T09:30:52.8411549Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-08-16T09:30:52.8445345Z ##[group]Checking out the ref
+2026-08-16T09:30:52.8451055Z [command]/usr/bin/git checkout --progress --force -B guided-run refs/remotes/origin/guided-run
+2026-08-16T09:30:52.9039848Z Switched to a new branch 'guided-run'
+2026-08-16T09:30:52.9042374Z branch 'guided-run' set up to track 'origin/guided-run'.
+2026-08-16T09:30:52.9049389Z ##[endgroup]
+2026-08-16T09:30:52.9096713Z [command]/usr/bin/git log -1 --format=%H
+2026-08-16T09:30:52.9125035Z d3e01c4431361fe2fe672d5c81e7e644632d0fdf
+2026-08-16T09:30:52.9421298Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:30:52.9423101Z ##[group]Run actions/setup-java@v4
+2026-08-16T09:30:52.9423410Z with:
+2026-08-16T09:30:52.9423668Z   distribution: temurin
+2026-08-16T09:30:52.9423947Z   java-version: 17
+2026-08-16T09:30:52.9424214Z   java-package: jdk
+2026-08-16T09:30:52.9424470Z   check-latest: false
+2026-08-16T09:30:52.9424729Z   server-id: github
+2026-08-16T09:30:52.9424989Z   server-username: GITHUB_ACTOR
+2026-08-16T09:30:52.9425294Z   server-password: GITHUB_TOKEN
+2026-08-16T09:30:52.9425601Z   overwrite-settings: true
+2026-08-16T09:30:52.9425911Z   job-status: success
+2026-08-16T09:30:52.9428433Z   token: ***
+2026-08-16T09:30:52.9428688Z ##[endgroup]
+2026-08-16T09:30:53.1075525Z ##[warning]setup-java v4 is deprecated and will no longer receive updates. Please migrate to actions/setup-java@v5.
+2026-08-16T09:30:53.1084124Z ##[group]Installed distributions
+2026-08-16T09:30:53.1254126Z Resolved Java 17.0.20+8 from tool-cache
+2026-08-16T09:30:53.1254996Z Setting Java 17.0.20+8 as the default
+2026-08-16T09:30:53.1265815Z (node:2238) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-16T09:30:53.1266860Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-16T09:30:53.1269942Z Creating toolchains.xml for JDK version 17 from temurin
+2026-08-16T09:30:53.1348038Z Writing to /home/runner/.m2/toolchains.xml
+2026-08-16T09:30:53.1349299Z 
+2026-08-16T09:30:53.1349830Z Java configuration:
+2026-08-16T09:30:53.1350211Z   Distribution: temurin
+2026-08-16T09:30:53.1350863Z   Version: 17.0.20+8
+2026-08-16T09:30:53.1351325Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:30:53.1351724Z 
+2026-08-16T09:30:53.1352166Z ##[endgroup]
+2026-08-16T09:30:53.1372171Z Creating settings.xml with server-id: github
+2026-08-16T09:30:53.1402435Z Writing to /home/runner/.m2/settings.xml
+2026-08-16T09:30:53.1792354Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:30:53.1794822Z ##[group]Run gradle/actions/setup-gradle@v4
+2026-08-16T09:30:53.1795465Z with:
+2026-08-16T09:30:53.1795969Z   cache-disabled: false
+2026-08-16T09:30:53.1796603Z   cache-read-only: true
+2026-08-16T09:30:53.1797130Z   cache-write-only: false
+2026-08-16T09:30:53.1797732Z   cache-overwrite-existing: false
+2026-08-16T09:30:53.1798294Z   cache-cleanup: on-success
+2026-08-16T09:30:53.1798899Z   gradle-home-cache-includes: caches
+notifications
+
+2026-08-16T09:30:53.1799530Z   add-job-summary: always
+2026-08-16T09:30:53.1800033Z   add-job-summary-as-pr-comment: never
+2026-08-16T09:30:53.1800826Z   dependency-graph: disabled
+2026-08-16T09:30:53.1801401Z   dependency-graph-report-dir: dependency-graph-reports
+2026-08-16T09:30:53.1801834Z   dependency-graph-continue-on-failure: true
+2026-08-16T09:30:53.1802191Z   build-scan-publish: false
+2026-08-16T09:30:53.1802485Z   validate-wrappers: true
+2026-08-16T09:30:53.1802779Z   allow-snapshot-wrappers: false
+2026-08-16T09:30:53.1803100Z   gradle-home-cache-strict-match: false
+2026-08-16T09:30:53.1803601Z   workflow-job-context: null
+2026-08-16T09:30:53.1806497Z   github-token: ***
+2026-08-16T09:30:53.1807247Z env:
+2026-08-16T09:30:53.1807944Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:30:53.1809253Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:30:53.1809984Z ##[endgroup]
+2026-08-16T09:30:54.5270286Z Merged default JDK locations into /home/runner/.m2/toolchains.xml
+2026-08-16T09:30:54.5273329Z ##[group]Restore Gradle state from cache
+2026-08-16T09:30:54.5853179Z Cache hit for restore-key: gradle-home-v1|Linux-X64|verify[3f160b0bc1153399e12aee89b3244df0]-7499183e58f5d27fc74635d7911f7281b159a38c
+2026-08-16T09:30:54.9978079Z Received 48093045 of 48093045 (100.0%), 126.0 MBs/sec
+2026-08-16T09:30:54.9980654Z Cache Size: ~46 MB (48093045 B)
+2026-08-16T09:30:55.0015332Z [command]/usr/bin/tar -xf /home/runner/work/_temp/2d06ed4d-24c7-44ef-ae24-4a8e3580da0e/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:55.2345098Z Cache restored successfully
+2026-08-16T09:30:55.2369601Z Restored cache entry with key gradle-home-v1|Linux-X64|verify[3f160b0bc1153399e12aee89b3244df0]-d3e01c4431361fe2fe672d5c81e7e644632d0fdf to /home/runner/.gradle/caches,/home/runner/.gradle/notifications,/home/runner/.gradle/.setup-gradle in 708ms
+2026-08-16T09:30:55.3044551Z Cache hit for: gradle-dependencies-v1-f75c0dbf812d46d4680ab1ba658195bf
+2026-08-16T09:30:55.3070359Z Cache hit for: gradle-generated-gradle-jars-v1-25b2c315cd2e13470e39deb0538ff4bf
+2026-08-16T09:30:55.3119447Z Cache hit for: gradle-instrumented-jars-v1-a534c9114034e449bd09ad8738a9df0b
+2026-08-16T09:30:55.3124477Z Cache hit for: gradle-transforms-v1-706bb3b4230878f3e6446ff86a88385b
+2026-08-16T09:30:55.3133015Z Cache hit for: gradle-wrapper-zips-v1-757181886b05e0ae9a93551c58d4d054
+2026-08-16T09:30:55.3136154Z Cache hit for: gradle-groovy-dsl-v1-9f65dff234037c21345ad4526b4a48ac
+2026-08-16T09:30:55.3167118Z Cache hit for: gradle-kotlin-dsl-v1-eb2c06e6d3637af8d5bcb653e784cdf0
+2026-08-16T09:30:55.5948018Z Received 122014 of 122014 (100.0%), 0.6 MBs/sec
+2026-08-16T09:30:55.5948848Z Cache Size: ~0 MB (122014 B)
+2026-08-16T09:30:55.6377872Z Received 197568 of 197568 (100.0%), 1.0 MBs/sec
+2026-08-16T09:30:55.6378768Z Cache Size: ~0 MB (197568 B)
+2026-08-16T09:30:55.7909232Z Received 2077141 of 2077141 (100.0%), 5.2 MBs/sec
+2026-08-16T09:30:55.7910040Z Cache Size: ~2 MB (2077141 B)
+2026-08-16T09:30:55.7927358Z [command]/usr/bin/tar -xf /home/runner/work/_temp/9b2ba7c5-f3aa-4dee-a5b0-b2aba059fc41/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:55.8504112Z Cache restored successfully
+2026-08-16T09:30:55.8551294Z Restored cache entry with key gradle-instrumented-jars-v1-a534c9114034e449bd09ad8738a9df0b to /home/runner/.gradle/caches/jars-*/*/ in 616ms
+2026-08-16T09:30:55.8872609Z [command]/usr/bin/tar -xf /home/runner/work/_temp/aa689bbf-3ede-4e3d-b1a7-e9a82b5fbeb8/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:55.9531038Z Cache restored successfully
+2026-08-16T09:30:55.9620338Z Restored cache entry with key gradle-groovy-dsl-v1-9f65dff234037c21345ad4526b4a48ac to /home/runner/.gradle/caches/*/groovy-dsl/*/ in 721ms
+2026-08-16T09:30:56.1193641Z [command]/usr/bin/tar -xf /home/runner/work/_temp/cc4de8eb-582e-459d-b87f-8c190aab065d/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:56.1912244Z Received 41361641 of 41361641 (100.0%), 46.2 MBs/sec
+2026-08-16T09:30:56.1915300Z Cache Size: ~39 MB (41361641 B)
+2026-08-16T09:30:56.3515739Z Received 25165824 of 523283973 (4.8%), 24.0 MBs/sec
+2026-08-16T09:30:56.3795763Z Received 75497472 of 137381403 (55.0%), 70.9 MBs/sec
+2026-08-16T09:30:56.4276363Z Received 33554432 of 480240196 (7.0%), 32.0 MBs/sec
+2026-08-16T09:30:56.5979388Z [command]/usr/bin/tar -xf /home/runner/work/_temp/98908cb2-7466-417e-97fb-8eeb1812f9f2/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:57.3117672Z Cache restored successfully
+2026-08-16T09:30:57.3735503Z Restored cache entry with key gradle-generated-gradle-jars-v1-25b2c315cd2e13470e39deb0538ff4bf to /home/runner/.gradle/caches/8.14.5/generated-gradle-jars/gradle-api-8.14.5.jar in 2136ms
+2026-08-16T09:30:57.3737748Z Received 121634816 of 523283973 (23.2%), 57.3 MBs/sec
+2026-08-16T09:30:57.3797130Z Received 134217728 of 137381403 (97.7%), 63.5 MBs/sec
+2026-08-16T09:30:57.4537122Z Received 134217728 of 480240196 (27.9%), 63.1 MBs/sec
+2026-08-16T09:30:57.5287375Z Cache restored successfully
+2026-08-16T09:30:57.5315552Z Restored cache entry with key gradle-kotlin-dsl-v1-eb2c06e6d3637af8d5bcb653e784cdf0 to /home/runner/.gradle/caches/*/kotlin-dsl/accessors/*/,/home/runner/.gradle/caches/*/kotlin-dsl/scripts/*/ in 2293ms
+2026-08-16T09:30:57.5883446Z Received 137381403 of 137381403 (100.0%), 58.9 MBs/sec
+2026-08-16T09:30:57.5885769Z Cache Size: ~131 MB (137381403 B)
+2026-08-16T09:30:57.7712800Z [command]/usr/bin/tar -xf /home/runner/work/_temp/1c957d0c-0990-4a7a-b795-be2df5a8930f/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:58.1898475Z Cache restored successfully
+2026-08-16T09:30:58.2056655Z Restored cache entry with key gradle-wrapper-zips-v1-757181886b05e0ae9a93551c58d4d054 to /home/runner/.gradle/wrapper/dists/gradle-8.14.5-bin/690y85m0j9nfaub7xoiayko8a in 2968ms
+2026-08-16T09:30:58.4261307Z Received 268435456 of 523283973 (51.3%), 83.3 MBs/sec
+2026-08-16T09:30:58.4539599Z Received 293601280 of 480240196 (61.1%), 92.5 MBs/sec
+2026-08-16T09:30:59.2892975Z Received 480240196 of 480240196 (100.0%), 118.6 MBs/sec
+2026-08-16T09:30:59.2895685Z Cache Size: ~458 MB (480240196 B)
+2026-08-16T09:30:59.3653075Z [command]/usr/bin/tar -xf /home/runner/work/_temp/f72b6ce9-f361-4b9a-ae0f-4c9892d04294/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:30:59.4291885Z Received 440401920 of 523283973 (84.2%), 103.0 MBs/sec
+2026-08-16T09:30:59.8221959Z Received 523283973 of 523283973 (100.0%), 111.6 MBs/sec
+2026-08-16T09:30:59.8227414Z Cache Size: ~499 MB (523283973 B)
+2026-08-16T09:30:59.8552711Z [command]/usr/bin/tar -xf /home/runner/work/_temp/8ab6d349-87f8-440e-8ba2-b416345aece8/cache.tzst -P -C /home/runner/work/Phone_Proof/Phone_Proof --use-compress-program unzstd
+2026-08-16T09:31:01.6365608Z Cache restored successfully
+2026-08-16T09:31:01.6602797Z Restored cache entry with key gradle-dependencies-v1-f75c0dbf812d46d4680ab1ba658195bf to /home/runner/.gradle/caches/modules-*/files-*/*/*/*/* in 6421ms
+2026-08-16T09:31:05.5391423Z Cache restored successfully
+2026-08-16T09:31:05.5593016Z Restored cache entry with key gradle-transforms-v1-706bb3b4230878f3e6446ff86a88385b to /home/runner/.gradle/caches/transforms-4/*/,/home/runner/.gradle/caches/*/transforms/*/ in 10319ms
+2026-08-16T09:31:05.5968023Z ##[endgroup]
+2026-08-16T09:31:05.6170790Z ##[group]All Gradle Wrapper jars are valid
+2026-08-16T09:31:05.6172157Z ✓ Found known Gradle Wrapper JAR files:
+2026-08-16T09:31:05.6173091Z   7d3a4ac4de1c32b59bc6a4eb8ecb8e612ccd0cf1ae1e99f66902da64df296172 gradle/wrapper/gradle-wrapper.jar
+2026-08-16T09:31:05.6173869Z ##[endgroup]
+2026-08-16T09:31:05.6556073Z ##[group]Run ./gradlew assembleDebug --stacktrace
+2026-08-16T09:31:05.6556557Z [36;1m./gradlew assembleDebug --stacktrace[0m
+2026-08-16T09:31:05.6597942Z shell: /usr/bin/bash -e {0}
+2026-08-16T09:31:05.6598244Z env:
+2026-08-16T09:31:05.6598599Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:31:05.6599160Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:31:05.6599637Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-08-16T09:31:05.6599986Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-08-16T09:31:05.6600322Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-08-16T09:31:05.6600978Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-08-16T09:31:05.6601485Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-08-16T09:31:05.6602020Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-08-16T09:31:05.6602393Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-08-16T09:31:05.6602965Z ##[endgroup]
+2026-08-16T09:31:07.7516082Z Starting a Gradle Daemon (subsequent builds will be faster)
+2026-08-16T09:31:10.9514096Z Calculating task graph as no cached configuration is available for tasks: assembleDebug
+2026-08-16T09:31:41.8612096Z > Task :app:preBuild UP-TO-DATE
+2026-08-16T09:31:41.8636298Z > Task :app:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:41.8644685Z > Task :core:model:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:41.8645769Z > Task :core:run:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:41.8646636Z > Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+2026-08-16T09:31:41.8647336Z > Task :core:model:processResources NO-SOURCE
+2026-08-16T09:31:41.8647976Z > Task :core:run:processResources NO-SOURCE
+2026-08-16T09:31:41.8648795Z > Task :core:diagnostics:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:41.8649783Z > Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:41.9531776Z > Task :core:diagnostics:processResources NO-SOURCE
+2026-08-16T09:31:41.9601337Z > Task :core:designsystem:preBuild UP-TO-DATE
+2026-08-16T09:31:41.9631676Z > Task :core:designsystem:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:41.9661308Z > Task :app:generateDebugBuildConfig FROM-CACHE
+2026-08-16T09:31:41.9711661Z > Task :core:device:preBuild UP-TO-DATE
+2026-08-16T09:31:41.9724992Z > Task :core:device:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0546514Z > Task :core:device:writeDebugAarMetadata
+2026-08-16T09:31:42.0590067Z > Task :core:designsystem:writeDebugAarMetadata
+2026-08-16T09:31:42.0591105Z > Task :core:media:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0593205Z > Task :core:permissions:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0594277Z > Task :core:media:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0595282Z > Task :core:permissions:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0596209Z > Task :core:diagnostics:compileKotlin FROM-CACHE
+2026-08-16T09:31:42.0599302Z > Task :core:media:writeDebugAarMetadata
+2026-08-16T09:31:42.0600238Z > Task :core:permissions:writeDebugAarMetadata
+2026-08-16T09:31:42.0601381Z > Task :core:preferences:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0602285Z > Task :feature:audiotest:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0603223Z > Task :core:preferences:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0604170Z > Task :feature:audiotest:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0605154Z > Task :core:diagnostics:compileJava NO-SOURCE
+2026-08-16T09:31:42.0606349Z > Task :core:diagnostics:classes UP-TO-DATE
+2026-08-16T09:31:42.0609274Z > Task :core:preferences:writeDebugAarMetadata
+2026-08-16T09:31:42.0611942Z > Task :feature:cameratest:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0625429Z > Task :feature:cameratest:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0626347Z > Task :feature:audiotest:writeDebugAarMetadata
+2026-08-16T09:31:42.0627262Z > Task :feature:claims:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0628081Z > Task :feature:claims:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0629314Z > Task :feature:cameratest:writeDebugAarMetadata
+2026-08-16T09:31:42.0630307Z > Task :feature:diagnostics:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0631478Z > Task :core:model:compileKotlin FROM-CACHE
+2026-08-16T09:31:42.0632418Z > Task :feature:diagnostics:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0633344Z > Task :feature:claims:writeDebugAarMetadata
+2026-08-16T09:31:42.0634450Z > Task :core:model:compileJava NO-SOURCE
+2026-08-16T09:31:42.0635795Z > Task :feature:emilock:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0636712Z > Task :core:model:classes UP-TO-DATE
+2026-08-16T09:31:42.0637610Z > Task :feature:emilock:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0640226Z > Task :feature:diagnostics:writeDebugAarMetadata
+2026-08-16T09:31:42.0642671Z > Task :feature:guide:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0644747Z > Task :feature:guide:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0645501Z > Task :feature:emilock:writeDebugAarMetadata
+2026-08-16T09:31:42.0646215Z > Task :feature:guide:writeDebugAarMetadata
+2026-08-16T09:31:42.0647208Z > Task :feature:imei:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0647898Z > Task :feature:imei:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0648577Z > Task :feature:home:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0649239Z > Task :feature:home:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0649895Z > Task :feature:imei:writeDebugAarMetadata
+2026-08-16T09:31:42.0650778Z > Task :feature:reports:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0651490Z > Task :feature:reports:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0652179Z > Task :feature:home:writeDebugAarMetadata
+2026-08-16T09:31:42.0652813Z > Task :feature:run:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0653454Z > Task :feature:run:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.0654114Z > Task :feature:reports:writeDebugAarMetadata
+2026-08-16T09:31:42.0654771Z > Task :feature:scan:preBuild UP-TO-DATE
+2026-08-16T09:31:42.0655410Z > Task :feature:scan:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.1524849Z > Task :feature:run:writeDebugAarMetadata
+2026-08-16T09:31:42.1544038Z > Task :feature:screentest:preBuild UP-TO-DATE
+2026-08-16T09:31:42.1594845Z > Task :feature:screentest:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.1620482Z > Task :feature:scan:writeDebugAarMetadata
+2026-08-16T09:31:42.1681205Z > Task :feature:settings:preBuild UP-TO-DATE
+2026-08-16T09:31:42.1696822Z > Task :feature:settings:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.1724795Z > Task :feature:screentest:writeDebugAarMetadata
+2026-08-16T09:31:42.1744666Z > Task :core:model:jar
+2026-08-16T09:31:42.1792265Z > Task :core:diagnostics:jar
+2026-08-16T09:31:42.1795495Z > Task :feature:settings:writeDebugAarMetadata
+2026-08-16T09:31:42.1796251Z > Task :feature:touchgrid:preBuild UP-TO-DATE
+2026-08-16T09:31:42.1796932Z > Task :feature:touchgrid:preDebugBuild UP-TO-DATE
+2026-08-16T09:31:42.1797546Z > Task :feature:touchgrid:writeDebugAarMetadata
+2026-08-16T09:31:42.1798208Z > Task :core:device:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1799009Z > Task :core:designsystem:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1799839Z > Task :core:permissions:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1800899Z > Task :core:media:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1801890Z > Task :feature:audiotest:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1802730Z > Task :core:preferences:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1803534Z > Task :feature:cameratest:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1804421Z > Task :feature:claims:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1805282Z > Task :feature:diagnostics:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.1806183Z > Task :feature:emilock:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2497796Z > Task :feature:guide:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2520842Z > Task :feature:home:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2555363Z > Task :feature:imei:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2571702Z > Task :feature:reports:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2572932Z > Task :feature:run:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2574091Z > Task :feature:scan:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2575280Z > Task :feature:screentest:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2576525Z > Task :feature:settings:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2577693Z > Task :feature:touchgrid:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.2578898Z > Task :app:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.2579850Z > Task :core:designsystem:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.2581147Z > Task :core:designsystem:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.2582200Z > Task :core:designsystem:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.2583198Z > Task :core:device:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.3510929Z > Task :core:device:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.3525460Z > Task :core:device:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.3551212Z > Task :core:media:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.3581245Z > Task :core:media:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.3611181Z > Task :core:media:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.3612228Z > Task :core:permissions:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.3641256Z > Task :core:permissions:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.3671221Z > Task :core:permissions:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.3672324Z > Task :core:preferences:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.3700700Z > Task :core:preferences:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.3701837Z > Task :core:preferences:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.3703035Z > Task :feature:audiotest:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.3704012Z > Task :feature:audiotest:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.4532050Z > Task :feature:audiotest:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.4536198Z > Task :feature:cameratest:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.4561485Z > Task :feature:cameratest:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.4591414Z > Task :feature:cameratest:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.4601358Z > Task :feature:claims:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.4622789Z > Task :feature:claims:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.5541679Z > Task :feature:claims:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.5542805Z > Task :feature:diagnostics:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.5575813Z > Task :feature:diagnostics:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.5618497Z > Task :feature:diagnostics:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.5669786Z > Task :feature:emilock:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.5671615Z > Task :feature:emilock:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.5705617Z > Task :feature:emilock:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.5741351Z > Task :app:processDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.5759689Z > Task :feature:guide:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.5779363Z > Task :app:compileDebugNavigationResources FROM-CACHE
+2026-08-16T09:31:42.5803654Z > Task :feature:guide:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.5831667Z > Task :feature:home:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.5844610Z > Task :feature:home:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.5863547Z > Task :feature:guide:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.6569084Z > Task :feature:home:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.6621944Z > Task :feature:imei:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.6651560Z > Task :feature:reports:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.6681442Z > Task :app:checkDebugAarMetadata
+2026-08-16T09:31:42.6741311Z > Task :feature:reports:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.6791273Z > Task :feature:imei:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.6814239Z > Task :feature:run:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.6834521Z > Task :feature:run:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.6891494Z > Task :feature:reports:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.6946684Z > Task :feature:imei:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7001596Z > Task :feature:scan:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.7023406Z > Task :feature:screentest:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.7024515Z > Task :feature:screentest:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.7025520Z > Task :feature:scan:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.7026527Z > Task :feature:screentest:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7027958Z > Task :feature:scan:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7028897Z > Task :feature:settings:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.7029862Z > Task :feature:touchgrid:generateDebugResValues FROM-CACHE
+2026-08-16T09:31:42.7506219Z > Task :feature:settings:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.7531422Z > Task :feature:touchgrid:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.7536713Z > Task :feature:settings:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7553165Z > Task :app:generateDebugResources FROM-CACHE
+2026-08-16T09:31:42.7554991Z > Task :feature:touchgrid:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7555912Z > Task :app:packageDebugResources FROM-CACHE
+2026-08-16T09:31:42.7556746Z > Task :app:createDebugCompatibleScreenManifests
+2026-08-16T09:31:42.7578365Z > Task :app:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:42.7579446Z > Task :core:designsystem:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:42.7582834Z > Task :core:designsystem:processDebugManifest FROM-CACHE
+2026-08-16T09:31:42.7583816Z > Task :core:device:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.6522602Z > Task :app:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:43.6554209Z > Task :feature:run:packageDebugResources
+2026-08-16T09:31:43.6591334Z > Task :core:device:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.6615367Z > Task :core:media:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.6635800Z > Task :core:media:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.6642046Z > Task :core:permissions:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.6680940Z > Task :core:permissions:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.6690466Z > Task :core:preferences:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.6736933Z > Task :core:preferences:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.7522467Z > Task :feature:audiotest:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.7553940Z > Task :feature:audiotest:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.7579180Z > Task :feature:cameratest:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.7601529Z > Task :feature:cameratest:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.7612940Z > Task :feature:claims:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.7646399Z > Task :feature:claims:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.7707102Z > Task :app:mapDebugSourceSetPaths
+2026-08-16T09:31:43.7708042Z > Task :feature:diagnostics:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.7741437Z > Task :feature:diagnostics:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.8511362Z > Task :feature:emilock:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8523672Z > Task :feature:emilock:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.8547176Z > Task :feature:guide:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8567073Z > Task :feature:home:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8602792Z > Task :feature:guide:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.8608505Z > Task :feature:imei:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8641925Z > Task :feature:home:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.8679690Z > Task :feature:reports:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8716951Z > Task :feature:imei:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.8726082Z > Task :feature:run:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.8767878Z > Task :app:mergeDebugResources FROM-CACHE
+2026-08-16T09:31:43.8795427Z > Task :feature:reports:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.9551952Z > Task :feature:scan:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.9553051Z > Task :feature:scan:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.9621950Z > Task :feature:screentest:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.9671554Z > Task :feature:settings:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.9681501Z > Task :feature:screentest:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.9741390Z > Task :feature:touchgrid:extractDeepLinksDebug FROM-CACHE
+2026-08-16T09:31:43.9783819Z > Task :feature:settings:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.9811426Z > Task :core:designsystem:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:43.9861522Z > Task :feature:touchgrid:processDebugManifest FROM-CACHE
+2026-08-16T09:31:43.9881496Z > Task :core:designsystem:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:43.9903623Z > Task :core:device:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:43.9961729Z > Task :core:device:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0002135Z > Task :core:designsystem:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0049104Z > Task :core:device:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0061328Z > Task :core:media:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.0091282Z > Task :core:media:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0509192Z > Task :core:permissions:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.0549064Z > Task :core:permissions:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0571317Z > Task :core:media:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0601596Z > Task :core:preferences:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.0608444Z > Task :core:permissions:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0633853Z > Task :core:preferences:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0660201Z > Task :feature:audiotest:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.0691347Z > Task :core:preferences:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0714692Z > Task :feature:audiotest:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0771689Z > Task :feature:audiotest:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.0861908Z > Task :feature:cameratest:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.0887690Z > Task :feature:cameratest:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.0912658Z > Task :feature:claims:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1001706Z > Task :feature:cameratest:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1076487Z > Task :feature:claims:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1151541Z > Task :feature:diagnostics:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1191340Z > Task :feature:claims:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1273329Z > Task :feature:diagnostics:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1344404Z > Task :feature:emilock:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1384798Z > Task :feature:emilock:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1473738Z > Task :feature:diagnostics:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1526678Z > Task :feature:guide:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1561481Z > Task :feature:guide:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1584858Z > Task :feature:emilock:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1642201Z > Task :feature:run:processDebugManifest
+2026-08-16T09:31:44.1704491Z > Task :feature:home:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1756024Z > Task :feature:guide:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1811581Z > Task :feature:home:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1841239Z > Task :feature:imei:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1869054Z > Task :feature:imei:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1912235Z > Task :feature:home:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1941460Z > Task :feature:reports:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.1942419Z > Task :feature:imei:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.1971378Z > Task :feature:reports:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.1992367Z > Task :feature:run:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.2021347Z > Task :feature:reports:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.2042320Z > Task :feature:run:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.2051352Z > Task :feature:scan:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.2512056Z > Task :feature:scan:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.2571427Z > Task :feature:scan:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.2620358Z > Task :feature:screentest:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.2656840Z > Task :feature:screentest:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.2669363Z > Task :feature:screentest:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.2736841Z > Task :feature:settings:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.2752149Z > Task :feature:settings:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.2773423Z > Task :feature:settings:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.2830720Z > Task :feature:touchgrid:compileDebugLibraryResources FROM-CACHE
+2026-08-16T09:31:44.2841236Z > Task :feature:touchgrid:parseDebugLocalResources FROM-CACHE
+2026-08-16T09:31:44.2859609Z > Task :feature:touchgrid:generateDebugRFile FROM-CACHE
+2026-08-16T09:31:44.2861249Z > Task :core:designsystem:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.4518925Z > Task :feature:run:generateDebugRFile
+2026-08-16T09:31:44.4581774Z > Task :core:designsystem:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.4622957Z > Task :core:preferences:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.5501648Z > Task :core:preferences:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.5502713Z > Task :checks:media:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.5503563Z > Task :core:designsystem:compileDebugKotlin FROM-CACHE
+2026-08-16T09:31:44.5504304Z > Task :core:designsystem:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:44.6530939Z > Task :checks:media:compileKotlin FROM-CACHE
+2026-08-16T09:31:44.6611505Z > Task :checks:media:compileJava NO-SOURCE
+2026-08-16T09:31:44.6612235Z > Task :checks:media:processResources NO-SOURCE
+2026-08-16T09:31:44.6703252Z > Task :checks:media:classes UP-TO-DATE
+2026-08-16T09:31:44.6758909Z > Task :checks:media:jar
+2026-08-16T09:31:44.6821470Z > Task :core:media:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.6851402Z > Task :core:designsystem:bundleLibCompileToJarDebug
+2026-08-16T09:31:44.8500014Z > Task :core:media:compileDebugKotlin FROM-CACHE
+2026-08-16T09:31:44.8515333Z > Task :core:media:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.8516440Z > Task :core:preferences:compileDebugKotlin FROM-CACHE
+2026-08-16T09:31:44.8545141Z > Task :core:media:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:44.8549578Z > Task :core:preferences:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:44.8550736Z > Task :core:media:bundleLibCompileToJarDebug
+2026-08-16T09:31:44.8551846Z > Task :core:permissions:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.8553475Z > Task :core:preferences:bundleLibCompileToJarDebug
+2026-08-16T09:31:44.8554603Z > Task :core:permissions:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.8566858Z > Task :feature:audiotest:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.8570991Z > Task :app:processDebugMainManifest
+2026-08-16T09:31:44.8572022Z > Task :feature:audiotest:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.8587612Z > Task :feature:cameratest:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.8601360Z > Task :app:processDebugManifest FROM-CACHE
+2026-08-16T09:31:44.8608161Z > Task :feature:cameratest:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:44.8610137Z > Task :checks:device:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:44.8619308Z > Task :app:processDebugManifestForPackage FROM-CACHE
+2026-08-16T09:31:44.9508888Z > Task :core:permissions:compileDebugKotlin FROM-CACHE
+2026-08-16T09:31:44.9614243Z > Task :core:permissions:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:44.9655086Z > Task :checks:device:compileKotlin FROM-CACHE
+2026-08-16T09:31:44.9681631Z > Task :checks:device:compileJava NO-SOURCE
+2026-08-16T09:31:44.9734305Z > Task :checks:device:processResources NO-SOURCE
+2026-08-16T09:31:45.0497271Z > Task :checks:device:classes UP-TO-DATE
+2026-08-16T09:31:45.0522219Z > Task :core:permissions:bundleLibCompileToJarDebug
+2026-08-16T09:31:45.0574824Z > Task :checks:device:jar
+2026-08-16T09:31:45.8532559Z > Task :app:processDebugResources
+2026-08-16T09:31:45.8561634Z > Task :checks:emilock:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:45.9525004Z > Task :checks:emilock:compileKotlin FROM-CACHE
+2026-08-16T09:31:45.9571370Z > Task :checks:emilock:compileJava NO-SOURCE
+2026-08-16T09:31:45.9622659Z > Task :checks:emilock:processResources NO-SOURCE
+2026-08-16T09:31:45.9645217Z > Task :checks:emilock:classes UP-TO-DATE
+2026-08-16T09:31:45.9651564Z > Task :checks:emilock:jar
+2026-08-16T09:31:45.9653239Z > Task :core:device:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:54.4507521Z > Task :core:device:compileDebugKotlin
+2026-08-16T09:31:54.4591587Z > Task :feature:cameratest:compileDebugKotlin
+2026-08-16T09:31:54.4621246Z > Task :core:run:compileKotlin
+2026-08-16T09:31:54.4622213Z > Task :core:device:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:54.4622926Z > Task :core:device:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:54.4623685Z > Task :feature:cameratest:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:54.4624391Z > Task :core:run:compileJava NO-SOURCE
+2026-08-16T09:31:54.4624939Z > Task :core:run:classes UP-TO-DATE
+2026-08-16T09:31:54.4625508Z > Task :feature:audiotest:compileDebugKotlin
+2026-08-16T09:31:54.4626223Z > Task :feature:audiotest:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:54.4626946Z > Task :core:device:bundleLibCompileToJarDebug
+2026-08-16T09:31:54.4627752Z > Task :feature:claims:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:54.4628636Z > Task :feature:cameratest:bundleLibCompileToJarDebug
+2026-08-16T09:31:54.4629343Z > Task :feature:claims:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:54.4629936Z > Task :core:run:jar
+2026-08-16T09:31:54.4630464Z > Task :feature:audiotest:bundleLibCompileToJarDebug
+2026-08-16T09:31:54.4631567Z > Task :feature:diagnostics:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:54.4632604Z > Task :feature:emilock:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:54.4633509Z > Task :feature:diagnostics:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:54.4634250Z > Task :feature:emilock:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:54.4635158Z > Task :feature:guide:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:54.5513531Z > Task :feature:guide:compileDebugKotlin FROM-CACHE
+2026-08-16T09:31:54.5541847Z > Task :feature:guide:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:54.5558176Z > Task :feature:guide:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:54.5561718Z > Task :feature:guide:bundleLibCompileToJarDebug
+2026-08-16T09:31:54.5562650Z > Task :feature:home:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:57.1541904Z > Task :feature:emilock:compileDebugKotlin
+2026-08-16T09:31:57.1600842Z > Task :feature:emilock:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:57.1621455Z > Task :feature:emilock:bundleLibCompileToJarDebug
+2026-08-16T09:31:57.1662278Z > Task :feature:home:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:57.1740088Z > Task :checks:imei:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:57.1797204Z > Task :checks:imei:compileKotlin FROM-CACHE
+2026-08-16T09:31:57.1861285Z > Task :checks:imei:compileJava NO-SOURCE
+2026-08-16T09:31:57.1891358Z > Task :checks:imei:processResources NO-SOURCE
+2026-08-16T09:31:57.1951295Z > Task :checks:imei:classes UP-TO-DATE
+2026-08-16T09:31:57.1991290Z > Task :checks:imei:jar
+2026-08-16T09:31:57.2021507Z > Task :feature:imei:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:58.3508249Z > Task :feature:home:compileDebugKotlin
+2026-08-16T09:31:58.3517910Z > Task :feature:home:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:58.4495693Z > Task :feature:home:bundleLibCompileToJarDebug
+2026-08-16T09:31:58.4520128Z > Task :feature:imei:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:58.4544359Z > Task :core:reports:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:58.5496148Z > Task :feature:claims:compileDebugKotlin
+2026-08-16T09:31:58.5525716Z > Task :feature:claims:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:58.5541086Z > Task :feature:claims:bundleLibCompileToJarDebug
+2026-08-16T09:31:58.5571174Z > Task :core:reports:processResources NO-SOURCE
+2026-08-16T09:31:58.5601340Z > Task :feature:reports:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:58.5621382Z > Task :feature:reports:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:58.6553704Z > Task :feature:run:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:58.6571403Z > Task :feature:run:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:58.6601591Z > Task :feature:scan:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:58.6631767Z > Task :feature:scan:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:58.6642692Z > Task :feature:screentest:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:59.0516186Z > Task :feature:diagnostics:compileDebugKotlin
+2026-08-16T09:31:59.0601784Z > Task :feature:diagnostics:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:31:59.0682021Z > Task :feature:diagnostics:bundleLibCompileToJarDebug
+2026-08-16T09:31:59.0762653Z > Task :feature:screentest:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:59.0872162Z > Task :feature:settings:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:59.0973066Z > Task :feature:settings:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:31:59.0986737Z > Task :checks:touch:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:31:59.1497073Z > Task :checks:touch:compileKotlin FROM-CACHE
+2026-08-16T09:31:59.1586527Z > Task :checks:touch:compileJava NO-SOURCE
+2026-08-16T09:31:59.1636240Z > Task :checks:touch:processResources NO-SOURCE
+2026-08-16T09:31:59.1698448Z > Task :checks:touch:classes UP-TO-DATE
+2026-08-16T09:31:59.1731304Z > Task :checks:touch:jar
+2026-08-16T09:31:59.1746017Z > Task :feature:touchgrid:checkKotlinGradlePluginConfigurationErrors SKIPPED
+2026-08-16T09:32:00.5503744Z 
+2026-08-16T09:32:00.5572489Z > Task :feature:imei:compileDebugKotlin
+2026-08-16T09:32:00.5628845Z w: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/imei/src/main/kotlin/com/phoneproof/feature/imei/ImeiRoute.kt:41:21 'val LocalClipboardManager: ProvidableCompositionLocal<ClipboardManager>' is deprecated. Use LocalClipboard instead which supports suspend functions.
+2026-08-16T09:32:00.6553756Z 
+2026-08-16T09:32:00.6603250Z > Task :feature:imei:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:32:00.6699937Z > Task :feature:imei:bundleLibCompileToJarDebug
+2026-08-16T09:32:00.6772165Z > Task :feature:touchgrid:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:32:00.6824658Z > Task :app:javaPreCompileDebug FROM-CACHE
+2026-08-16T09:32:00.6878500Z > Task :app:mergeDebugShaders
+2026-08-16T09:32:00.6944966Z > Task :app:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.7014054Z > Task :app:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.7071526Z > Task :core:designsystem:mergeDebugShaders
+2026-08-16T09:32:00.7143808Z > Task :core:designsystem:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.7171301Z > Task :core:designsystem:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.7561820Z > Task :core:designsystem:mergeDebugAssets
+2026-08-16T09:32:00.7591349Z > Task :core:device:mergeDebugShaders
+2026-08-16T09:32:00.7641773Z > Task :core:device:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.7681483Z > Task :core:device:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.7741511Z > Task :core:device:mergeDebugAssets
+2026-08-16T09:32:00.7771270Z > Task :core:media:mergeDebugShaders
+2026-08-16T09:32:00.7772377Z > Task :core:media:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.7773087Z > Task :core:media:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.7773662Z > Task :core:media:mergeDebugAssets
+2026-08-16T09:32:00.7774232Z > Task :core:permissions:mergeDebugShaders
+2026-08-16T09:32:00.7774901Z > Task :core:permissions:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.7775640Z > Task :core:permissions:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.7776282Z > Task :core:permissions:mergeDebugAssets
+2026-08-16T09:32:00.8541767Z > Task :core:preferences:mergeDebugShaders
+2026-08-16T09:32:00.8581472Z > Task :core:preferences:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.8611516Z > Task :core:preferences:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.8641342Z > Task :core:preferences:mergeDebugAssets
+2026-08-16T09:32:00.8719479Z > Task :feature:audiotest:mergeDebugShaders
+2026-08-16T09:32:00.8731507Z > Task :feature:audiotest:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.8774149Z > Task :feature:audiotest:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.8815445Z > Task :feature:audiotest:mergeDebugAssets
+2026-08-16T09:32:00.8861214Z > Task :feature:cameratest:mergeDebugShaders
+2026-08-16T09:32:00.8911502Z > Task :feature:cameratest:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.8938269Z > Task :feature:cameratest:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.9011955Z > Task :feature:cameratest:mergeDebugAssets
+2026-08-16T09:32:00.9539502Z > Task :feature:claims:mergeDebugShaders
+2026-08-16T09:32:00.9551247Z > Task :feature:claims:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.9611508Z > Task :feature:claims:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.9661644Z > Task :feature:claims:mergeDebugAssets
+2026-08-16T09:32:00.9671355Z > Task :feature:diagnostics:mergeDebugShaders
+2026-08-16T09:32:00.9728344Z > Task :feature:diagnostics:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.9781772Z > Task :feature:diagnostics:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.9791326Z > Task :feature:diagnostics:mergeDebugAssets
+2026-08-16T09:32:00.9851481Z > Task :feature:emilock:mergeDebugShaders
+2026-08-16T09:32:00.9911643Z > Task :feature:emilock:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:00.9961688Z > Task :feature:emilock:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:00.9971255Z > Task :feature:emilock:mergeDebugAssets
+2026-08-16T09:32:01.0497132Z > Task :feature:guide:mergeDebugShaders
+2026-08-16T09:32:01.0531406Z > Task :feature:guide:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.0581591Z > Task :feature:guide:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.0621548Z > Task :feature:guide:mergeDebugAssets
+2026-08-16T09:32:01.0663539Z > Task :feature:home:mergeDebugShaders
+2026-08-16T09:32:01.0721884Z > Task :feature:home:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.0751512Z > Task :feature:home:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.0801510Z > Task :feature:home:mergeDebugAssets
+2026-08-16T09:32:01.0841458Z > Task :feature:imei:mergeDebugShaders
+2026-08-16T09:32:01.0905347Z > Task :feature:imei:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.0931366Z > Task :feature:imei:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.1021702Z > Task :feature:imei:mergeDebugAssets
+2026-08-16T09:32:01.1081690Z > Task :feature:reports:mergeDebugShaders
+2026-08-16T09:32:01.1584448Z > Task :feature:reports:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.1671722Z > Task :feature:reports:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.1717641Z > Task :feature:reports:mergeDebugAssets
+2026-08-16T09:32:01.1792055Z > Task :feature:run:mergeDebugShaders
+2026-08-16T09:32:01.1903490Z > Task :feature:run:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.1960158Z > Task :feature:run:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.1991403Z > Task :feature:run:mergeDebugAssets
+2026-08-16T09:32:01.2029414Z > Task :feature:scan:mergeDebugShaders
+2026-08-16T09:32:01.2101765Z > Task :feature:scan:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.2216504Z > Task :feature:scan:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.2221371Z > Task :feature:scan:mergeDebugAssets
+2026-08-16T09:32:01.2281661Z > Task :feature:screentest:mergeDebugShaders
+2026-08-16T09:32:01.2301506Z > Task :feature:screentest:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.2302315Z > Task :feature:screentest:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.2559105Z > Task :feature:screentest:mergeDebugAssets
+2026-08-16T09:32:01.2583173Z > Task :feature:settings:mergeDebugShaders
+2026-08-16T09:32:01.2611449Z > Task :feature:settings:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.2684342Z > Task :feature:settings:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.2721438Z > Task :feature:settings:mergeDebugAssets
+2026-08-16T09:32:01.2741216Z > Task :feature:touchgrid:mergeDebugShaders
+2026-08-16T09:32:01.2787110Z > Task :feature:touchgrid:compileDebugShaders NO-SOURCE
+2026-08-16T09:32:01.2831438Z > Task :feature:touchgrid:generateDebugAssets UP-TO-DATE
+2026-08-16T09:32:01.2901745Z > Task :feature:touchgrid:mergeDebugAssets
+2026-08-16T09:32:01.4541796Z > Task :app:mergeDebugAssets
+2026-08-16T09:32:01.4601584Z > Task :app:compressDebugAssets FROM-CACHE
+2026-08-16T09:32:01.4631738Z > Task :feature:home:bundleLibRuntimeToJarDebug
+2026-08-16T09:32:01.5513807Z > Task :feature:emilock:bundleLibRuntimeToJarDebug
+2026-08-16T09:32:01.5571725Z > Task :feature:guide:bundleLibRuntimeToJarDebug
+2026-08-16T09:32:01.5601997Z > Task :feature:claims:bundleLibRuntimeToJarDebug
+2026-08-16T09:32:04.0506950Z > Task :feature:screentest:compileDebugKotlin
+2026-08-16T09:32:04.0541539Z > Task :feature:screentest:compileDebugJavaWithJavac NO-SOURCE
+2026-08-16T09:32:04.0614488Z > Task :feature:screentest:bundleLibCompileToJarDebug
+2026-08-16T09:32:04.1502931Z > Task :feature:screentest:bundleLibRuntimeToJarDebug
+2026-08-16T09:32:04.2502352Z > Task :core:reports:compileKotlin
+2026-08-16T09:32:04.2551510Z > Task :core:reports:compileJava NO-SOURCE
+2026-08-16T09:32:04.2582946Z > Task :core:reports:classes UP-TO-DATE
+2026-08-16T09:32:04.3561866Z > Task :core:reports:jar
+2026-08-16T09:32:05.9571119Z > Task :feature:touchgrid:compileDebugKotlin
+2026-08-16T09:32:08.9506163Z 
+2026-08-16T09:32:08.9521679Z > Task :feature:scan:compileDebugKotlin FAILED
+2026-08-16T09:32:08.9524189Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:15 Property delegate must have a 'getValue(Nothing?, KProperty0<ERROR CLASS: Cannot infer argument for type parameter T>)' method. None of the following functions is applicable:
+2026-08-16T09:32:08.9571808Z fun <T> State<T>.getValue(thisObj: Any?, property: KProperty<*>): T
+2026-08-16T09:32:08.9582331Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:18 Cannot infer type for type parameter 'VM'. Specify it explicitly.
+2026-08-16T09:32:08.9642697Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:18 Function invocation 'viewModel(...)' expected.
+2026-08-16T09:32:08.9702340Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:18 Cannot infer type for type parameter 'T'. Specify it explicitly.
+2026-08-16T09:32:08.9752050Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:28 Unresolved reference 'uiState'.
+2026-08-16T09:32:08.9764268Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:57:36 Cannot infer type for type parameter 'T'. Specify it explicitly.
+2026-08-16T09:32:08.9813762Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:77:21 Cannot infer type for type parameter 'T'. Specify it explicitly.
+2026-08-16T09:32:08.9872260Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:82:13 Cannot infer type for type parameter 'VM'. Specify it explicitly.
+2026-08-16T09:32:08.9875556Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:82:13 @Composable invocations can only happen from the context of a @Composable function
+2026-08-16T09:32:08.9878052Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:82:13 Function invocation 'viewModel(...)' expected.
+2026-08-16T09:32:08.9880255Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:82:23 Unresolved reference 'start'.
+2026-08-16T09:32:08.9882592Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:99:51 Unresolved reference 'startScan'.
+2026-08-16T09:32:08.9884759Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:101:26 Unresolved reference 'results'.
+2026-08-16T09:32:08.9886904Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:101:41 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9888995Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:102:19 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9891461Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:102:45 Unresolved reference 'results'.
+2026-08-16T09:32:08.9893562Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:105:24 Unresolved reference 'scanId'.
+2026-08-16T09:32:08.9895722Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:116:34 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9897827Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:117:38 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9899862Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:117:56 Unresolved reference 'results'.
+2026-08-16T09:32:08.9932408Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:132:34 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9934613Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:134:38 Unresolved reference 'finished'.
+2026-08-16T09:32:08.9936761Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:135:29 Unresolved reference 'results'.
+2026-08-16T09:32:08.9939506Z e: file:///home/runner/work/Phone_Proof/Phone_Proof/feature/scan/src/main/kotlin/com/phoneproof/feature/scan/ScanRoute.kt:145:26 Argument type mismatch: actual type is 'Any', but 'String' was expected.
+2026-08-16T09:32:10.9495880Z 
+2026-08-16T09:32:10.9507505Z > Task :feature:run:compileDebugKotlin
+2026-08-16T09:32:10.9521210Z > Task :feature:reports:compileDebugKotlin
+2026-08-16T09:32:11.0496459Z > Task :feature:settings:compileDebugKotlin
+2026-08-16T09:32:11.1518211Z 
+2026-08-16T09:32:11.1518791Z FAILURE: Build failed with an exception.
+2026-08-16T09:32:11.1519276Z 
+2026-08-16T09:32:11.1519457Z * What went wrong:
+2026-08-16T09:32:11.1520050Z Execution failed for task ':feature:scan:compileDebugKotlin'.
+2026-08-16T09:32:11.1522360Z > A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+2026-08-16T09:32:11.1523785Z    > Compilation error. See log for more details
+2026-08-16T09:32:11.1524238Z 
+2026-08-16T09:32:11.1524415Z * Try:
+2026-08-16T09:32:11.1525370Z > Run with --info or --debug option to get more log output.
+2026-08-16T09:32:11.1526090Z > Run with --scan to get full insights.
+2026-08-16T09:32:11.1526744Z > Get more help at https://help.gradle.org.
+2026-08-16T09:32:11.1527150Z 
+2026-08-16T09:32:11.1527334Z * Exception is:
+2026-08-16T09:32:11.1528265Z org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':feature:scan:compileDebugKotlin'.
+2026-08-16T09:32:11.1530097Z 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+2026-08-16T09:32:11.1531864Z 	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+2026-08-16T09:32:11.1533303Z 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+2026-08-16T09:32:11.1535261Z 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+2026-08-16T09:32:11.1537269Z 	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+2026-08-16T09:32:11.1539312Z 	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+2026-08-16T09:32:11.1549309Z 	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+2026-08-16T09:32:11.1551519Z 	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+2026-08-16T09:32:11.1553245Z 	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+2026-08-16T09:32:11.1554926Z 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+2026-08-16T09:32:11.1556642Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+2026-08-16T09:32:11.1558274Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+2026-08-16T09:32:11.1559837Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+2026-08-16T09:32:11.1561829Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+2026-08-16T09:32:11.1563929Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+2026-08-16T09:32:11.1565776Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+2026-08-16T09:32:11.1567393Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1569005Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+2026-08-16T09:32:11.1571113Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1572831Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+2026-08-16T09:32:11.1574500Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+2026-08-16T09:32:11.1576001Z 	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+2026-08-16T09:32:11.1577699Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+2026-08-16T09:32:11.1579707Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+2026-08-16T09:32:11.1582045Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+2026-08-16T09:32:11.1584137Z 	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+2026-08-16T09:32:11.1585946Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+2026-08-16T09:32:11.1588021Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+2026-08-16T09:32:11.1589759Z 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+2026-08-16T09:32:11.1591369Z 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+2026-08-16T09:32:11.1592781Z 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+2026-08-16T09:32:11.1594260Z 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+2026-08-16T09:32:11.1596634Z Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+2026-08-16T09:32:11.1599182Z 	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
+2026-08-16T09:32:11.1601133Z 	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+2026-08-16T09:32:11.1602503Z 	at org.gradle.internal.Factories$1.create(Factories.java:31)
+2026-08-16T09:32:11.1603734Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+2026-08-16T09:32:11.1605309Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+2026-08-16T09:32:11.1606893Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+2026-08-16T09:32:11.1608587Z 	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+2026-08-16T09:32:11.1610390Z 	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+2026-08-16T09:32:11.1612385Z 	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+2026-08-16T09:32:11.1613898Z 	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+2026-08-16T09:32:11.1615286Z 	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
+2026-08-16T09:32:11.1616705Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+2026-08-16T09:32:11.1618313Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+2026-08-16T09:32:11.1620090Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+2026-08-16T09:32:11.1622103Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1623771Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+2026-08-16T09:32:11.1625434Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1627050Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+2026-08-16T09:32:11.1628494Z 	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+2026-08-16T09:32:11.1629959Z 	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+2026-08-16T09:32:11.1631886Z 	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+2026-08-16T09:32:11.1633483Z 	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+2026-08-16T09:32:11.1635519Z 	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+2026-08-16T09:32:11.1636859Z 	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+2026-08-16T09:32:11.1638086Z 	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+2026-08-16T09:32:11.1639264Z 	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+2026-08-16T09:32:11.1641197Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+2026-08-16T09:32:11.1643334Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+2026-08-16T09:32:11.1645264Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+2026-08-16T09:32:11.1646973Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1648699Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+2026-08-16T09:32:11.1650361Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.1652268Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+2026-08-16T09:32:11.1653685Z 	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+2026-08-16T09:32:11.1654913Z 	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+2026-08-16T09:32:11.1656277Z 	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+2026-08-16T09:32:11.1657758Z 	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+2026-08-16T09:32:11.1659126Z 	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+2026-08-16T09:32:11.1665293Z 	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+2026-08-16T09:32:11.1666605Z 	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+2026-08-16T09:32:11.1667839Z 	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+2026-08-16T09:32:11.1669567Z 	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+2026-08-16T09:32:11.1671568Z 	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+2026-08-16T09:32:11.1673361Z 	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+2026-08-16T09:32:11.1675509Z 	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+2026-08-16T09:32:11.1677572Z 	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+2026-08-16T09:32:11.1679399Z 	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+2026-08-16T09:32:11.1681312Z 	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+2026-08-16T09:32:11.1682967Z gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1786872672197.json
+2026-08-16T09:32:11.2505437Z 	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+2026-08-16T09:32:11.2506512Z 323 actionable tasks: 111 executed, 212 from cache
+2026-08-16T09:32:11.2530758Z 	at org.gradle.internal.execution.steps.BuildCacheStep.executeAndStoreInCache(BuildCacheStep.java:145)
+2026-08-16T09:32:11.2531766Z Configuration cache entry stored.
+2026-08-16T09:32:11.2533587Z 	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$4(BuildCacheStep.java:101)
+2026-08-16T09:32:11.2576277Z 	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$executeWithCache$5(BuildCacheStep.java:101)
+2026-08-16T09:32:11.2591347Z 	at org.gradle.internal.Try$Success.map(Try.java:175)
+2026-08-16T09:32:11.2594273Z 	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithCache(BuildCacheStep.java:85)
+2026-08-16T09:32:11.2595771Z 	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$0(BuildCacheStep.java:74)
+2026-08-16T09:32:11.2596970Z 	at org.gradle.internal.Either$Left.fold(Either.java:115)
+2026-08-16T09:32:11.2598035Z 	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+2026-08-16T09:32:11.2599313Z 	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+2026-08-16T09:32:11.2600907Z 	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+2026-08-16T09:32:11.2602411Z 	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+2026-08-16T09:32:11.2611752Z 	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+2026-08-16T09:32:11.2639783Z 	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+2026-08-16T09:32:11.2641597Z 	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+2026-08-16T09:32:11.2643140Z 	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+2026-08-16T09:32:11.2644359Z 	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+2026-08-16T09:32:11.2645972Z 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+2026-08-16T09:32:11.2647890Z 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+2026-08-16T09:32:11.2651647Z 	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+2026-08-16T09:32:11.2653551Z 	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+2026-08-16T09:32:11.2655318Z 	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+2026-08-16T09:32:11.2656999Z 	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+2026-08-16T09:32:11.2658449Z 	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+2026-08-16T09:32:11.2659622Z 	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+2026-08-16T09:32:11.2670108Z 	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+2026-08-16T09:32:11.2681509Z 	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+2026-08-16T09:32:11.2691132Z 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+2026-08-16T09:32:11.2693784Z 	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+2026-08-16T09:32:11.2722143Z 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+2026-08-16T09:32:11.2723444Z 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+2026-08-16T09:32:11.2724961Z 	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+2026-08-16T09:32:11.2726896Z 	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+2026-08-16T09:32:11.2728774Z 	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+2026-08-16T09:32:11.2729760Z 	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+2026-08-16T09:32:11.2730901Z 	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+2026-08-16T09:32:11.2731939Z 	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+2026-08-16T09:32:11.2733523Z 	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+2026-08-16T09:32:11.2735076Z 	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+2026-08-16T09:32:11.2736494Z 	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+2026-08-16T09:32:11.2737403Z 	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+2026-08-16T09:32:11.2738222Z 	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+2026-08-16T09:32:11.2738957Z 	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+2026-08-16T09:32:11.2739935Z 	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+2026-08-16T09:32:11.2741369Z 	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+2026-08-16T09:32:11.2742449Z 	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+2026-08-16T09:32:11.2743340Z 	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+2026-08-16T09:32:11.2744066Z 	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+2026-08-16T09:32:11.2744762Z 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+2026-08-16T09:32:11.2745405Z 	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+2026-08-16T09:32:11.2746134Z 	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
+2026-08-16T09:32:11.2747043Z 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+2026-08-16T09:32:11.2748037Z 	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+2026-08-16T09:32:11.2749076Z 	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+2026-08-16T09:32:11.2750310Z 	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+2026-08-16T09:32:11.2762623Z 	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+2026-08-16T09:32:11.2764542Z 	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+2026-08-16T09:32:11.2766254Z 	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+2026-08-16T09:32:11.2767904Z 	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+2026-08-16T09:32:11.2769601Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+2026-08-16T09:32:11.2771465Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+2026-08-16T09:32:11.2773064Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+2026-08-16T09:32:11.2775099Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+2026-08-16T09:32:11.2777139Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+2026-08-16T09:32:11.2778959Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+2026-08-16T09:32:11.2780850Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.2782576Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+2026-08-16T09:32:11.2784149Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.2785757Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+2026-08-16T09:32:11.2787359Z 	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+2026-08-16T09:32:11.2788665Z 	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+2026-08-16T09:32:11.2790217Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+2026-08-16T09:32:11.2791877Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+2026-08-16T09:32:11.2793024Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+2026-08-16T09:32:11.2794034Z 	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+2026-08-16T09:32:11.2794998Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+2026-08-16T09:32:11.2796116Z 	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+2026-08-16T09:32:11.2797068Z 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+2026-08-16T09:32:11.2797832Z 	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+2026-08-16T09:32:11.2798612Z 	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+2026-08-16T09:32:11.2799399Z 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+2026-08-16T09:32:11.2800220Z Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+2026-08-16T09:32:11.2801377Z 	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+2026-08-16T09:32:11.2802396Z 	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:115)
+2026-08-16T09:32:11.2803446Z 	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:74)
+2026-08-16T09:32:11.2804398Z 	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+2026-08-16T09:32:11.2805141Z 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+2026-08-16T09:32:11.2805922Z 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+2026-08-16T09:32:11.2806714Z 	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+2026-08-16T09:32:11.2807531Z 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+2026-08-16T09:32:11.2808252Z 	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+2026-08-16T09:32:11.2808948Z 	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+2026-08-16T09:32:11.2809775Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+2026-08-16T09:32:11.2811178Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+2026-08-16T09:32:11.2812166Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+2026-08-16T09:32:11.2813030Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.2813884Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+2026-08-16T09:32:11.2814745Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+2026-08-16T09:32:11.2815601Z 	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+2026-08-16T09:32:11.2816432Z 	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+2026-08-16T09:32:11.2817227Z 	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+2026-08-16T09:32:11.2818015Z 	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+2026-08-16T09:32:11.2818930Z 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+2026-08-16T09:32:11.2819961Z 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+2026-08-16T09:32:11.2821174Z 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+2026-08-16T09:32:11.2821915Z 	at org.gradle.internal.Factories$1.create(Factories.java:31)
+2026-08-16T09:32:11.2822549Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+2026-08-16T09:32:11.2823377Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+2026-08-16T09:32:11.2824241Z 	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+2026-08-16T09:32:11.2825179Z 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+2026-08-16T09:32:11.2826177Z 	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+2026-08-16T09:32:11.2826807Z 	... 2 more
+2026-08-16T09:32:11.2826936Z 
+2026-08-16T09:32:11.2826941Z 
+2026-08-16T09:32:11.2827046Z BUILD FAILED in 1m 5s
+2026-08-16T09:32:11.7173650Z ##[error]Process completed with exit code 1.
+2026-08-16T09:32:11.7264739Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:32:11.7266078Z ##[group]Run actions/upload-artifact@v4
+2026-08-16T09:32:11.7266397Z with:
+2026-08-16T09:32:11.7266617Z   name: screenshots
+2026-08-16T09:32:11.7266867Z   path: screenshots/
+2026-08-16T09:32:11.7267134Z   if-no-files-found: error
+2026-08-16T09:32:11.7267424Z   compression-level: 6
+2026-08-16T09:32:11.7267682Z   overwrite: false
+2026-08-16T09:32:11.7267934Z   include-hidden-files: false
+2026-08-16T09:32:11.7268207Z env:
+2026-08-16T09:32:11.7268549Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:32:11.7269106Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:32:11.7269604Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-08-16T09:32:11.7270131Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-08-16T09:32:11.7270461Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-08-16T09:32:11.7271124Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-08-16T09:32:11.7271612Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-08-16T09:32:11.7272131Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-08-16T09:32:11.7272500Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-08-16T09:32:11.7272808Z ##[endgroup]
+2026-08-16T09:32:11.8847385Z (node:2704) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-16T09:32:11.8848452Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-16T09:32:11.9032020Z With the provided path, there will be 70 files uploaded
+2026-08-16T09:32:11.9038533Z Artifact name is valid!
+2026-08-16T09:32:11.9039056Z Root directory input is valid!
+2026-08-16T09:32:12.0507934Z Beginning upload of artifact content to blob storage
+2026-08-16T09:32:12.2983221Z (node:2704) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-08-16T09:32:12.5131424Z Uploaded bytes 5129437
+2026-08-16T09:32:12.5329151Z Finished uploading artifact content to blob storage!
+2026-08-16T09:32:12.5330205Z SHA256 digest of uploaded artifact zip is 095ace105f5b726d878d3a85cddd84b70259a5b39c2ab30f9228b1639e3b5cd3
+2026-08-16T09:32:12.5332704Z Finalizing artifact upload
+2026-08-16T09:32:12.7007295Z Artifact screenshots.zip successfully finalized. Artifact ID 9261561278
+2026-08-16T09:32:12.7008987Z Artifact screenshots has been successfully uploaded! Final size is 5129437 bytes. Artifact ID is 9261561278
+2026-08-16T09:32:12.7017096Z Artifact download URL: https://github.com/Pitch-code/Phone_Proof/actions/runs/31939240391/artifacts/9261561278
+2026-08-16T09:32:12.7171476Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:32:12.7172867Z ##[group]Run actions/upload-artifact@v4
+2026-08-16T09:32:12.7173196Z with:
+2026-08-16T09:32:12.7173432Z   name: test-reports
+2026-08-16T09:32:12.7173703Z   path: **/build/reports/tests/
+2026-08-16T09:32:12.7174010Z   if-no-files-found: ignore
+2026-08-16T09:32:12.7174304Z   compression-level: 6
+2026-08-16T09:32:12.7174567Z   overwrite: false
+2026-08-16T09:32:12.7174832Z   include-hidden-files: false
+2026-08-16T09:32:12.7175122Z env:
+2026-08-16T09:32:12.7175466Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:32:12.7176015Z   JAVA_HOME_17_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/17.0.20-8/x64
+2026-08-16T09:32:12.7176535Z   GRADLE_ACTION_ID: gradle/actions/setup-gradle
+2026-08-16T09:32:12.7176889Z   GRADLE_USER_HOME: /home/runner/.gradle
+2026-08-16T09:32:12.7177222Z   GRADLE_BUILD_ACTION_SETUP_COMPLETED: true
+2026-08-16T09:32:12.7177562Z   GRADLE_BUILD_ACTION_CACHE_RESTORED: true
+2026-08-16T09:32:12.7178045Z   DEVELOCITY_INJECTION_INIT_SCRIPT_NAME: gradle-actions.inject-develocity.init.gradle
+2026-08-16T09:32:12.7178565Z   DEVELOCITY_INJECTION_CUSTOM_VALUE: gradle-actions
+2026-08-16T09:32:12.7178926Z   GITHUB_DEPENDENCY_GRAPH_ENABLED: false
+2026-08-16T09:32:12.7179243Z ##[endgroup]
+2026-08-16T09:32:12.8794856Z (node:2716) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-16T09:32:12.8795873Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-16T09:32:13.5697968Z No files were found with the provided path: **/build/reports/tests/. No artifacts will be uploaded.
+2026-08-16T09:32:13.5949561Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:32:13.5966525Z Post job cleanup.
+2026-08-16T09:32:13.8402580Z In post-action step
+2026-08-16T09:32:13.8416253Z Cache is read-only: will not save state for use in subsequent builds.
+2026-08-16T09:32:13.8427536Z Generating Job Summary
+2026-08-16T09:32:13.8452205Z Completed post-action step
+2026-08-16T09:32:13.8631455Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:32:13.8633700Z Post job cleanup.
+2026-08-16T09:32:14.0039511Z (node:2740) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-08-16T09:32:14.0041241Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-08-16T09:32:14.0258478Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-08-16T09:32:14.0260905Z Post job cleanup.
+2026-08-16T09:32:14.1260204Z [command]/usr/bin/git version
+2026-08-16T09:32:14.1339071Z git version 2.54.0
+2026-08-16T09:32:14.1389929Z Temporarily overriding HOME='/home/runner/work/_temp/1b7433f6-a23e-4e1a-8a36-d5aef2cf5b9e' before making global git config changes
+2026-08-16T09:32:14.1400230Z Adding repository directory to the temporary git global config as a safe directory
+2026-08-16T09:32:14.1401827Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Phone_Proof/Phone_Proof
+2026-08-16T09:32:14.1459345Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-08-16T09:32:14.1514920Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-08-16T09:32:14.1843319Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-08-16T09:32:14.1902021Z http.https://github.com/.extraheader
+2026-08-16T09:32:14.1904498Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-08-16T09:32:14.1952340Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-08-16T09:32:14.2282985Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-08-16T09:32:14.2327009Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-08-16T09:32:14.2726425Z Cleaning up orphan processes
+2026-08-16T09:32:14.3076800Z Terminate orphan process: pid (2381) (java)
+2026-08-16T09:32:14.3128443Z Terminate orphan process: pid (2583) (java)
+2026-08-16T09:32:14.3185348Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-java@v4, actions/upload-artifact@v4, gradle/actions/setup-gradle@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
