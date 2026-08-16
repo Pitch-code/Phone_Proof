@@ -37,10 +37,20 @@ class RunPlanTest {
     }
 
     @Test
-    fun the_two_screen_tests_are_adjacent_so_quiet_is_only_asked_for_once() {
-        val touch = RunPlan.stepIds.indexOf("touch")
-        val patterns = RunPlan.stepIds.indexOf("screen-patterns")
-        assertThat(patterns - touch).isEqualTo(1)
+    fun the_steps_that_need_quiet_run_back_to_back_so_it_is_only_asked_for_once() {
+        // This used to assert that touch and the colour pages were exactly one apart, which pinned two
+        // indices rather than the property that matters — and it broke the moment a third screen test was
+        // added between them, even though the reason for the rule was still perfectly satisfied.
+        //
+        // The real invariant is that every step needing an undisturbed screen forms one contiguous block,
+        // so the buyer is asked to silence the phone once instead of three times.
+        val positions = RunPlan.steps
+            .mapIndexedNotNull { index, step ->
+                index.takeIf { RunCondition.NO_INTERRUPTIONS in step.needs }
+            }
+
+        assertThat(positions).isNotEmpty()
+        assertThat(positions.last() - positions.first()).isEqualTo(positions.size - 1)
     }
 
     @Test
