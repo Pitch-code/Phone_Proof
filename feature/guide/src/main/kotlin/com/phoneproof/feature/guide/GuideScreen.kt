@@ -1,6 +1,7 @@
 package com.phoneproof.feature.guide
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -11,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,14 +28,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -58,7 +67,17 @@ fun GuideScreen(
      * Also false in every screenshot test, which is what keeps the renders deterministic.
      */
     animate: Boolean,
+    /**
+     * Absolute paths of the photographs already taken, keyed by step id.
+     *
+     * Passed in rather than read here, so this screen stays a pure function of its state and the
+     * screenshot tests can render both the empty and the photographed card without touching a filesystem.
+     */
+    photos: Map<String, String>,
     onToggle: (String) -> Unit,
+    onTakePhoto: (String) -> Unit,
+    onSharePhoto: (String) -> Unit,
+    onDeletePhoto: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -98,7 +117,11 @@ fun GuideScreen(
                     number = steps.indexOf(step) + 1,
                     expanded = step.id == expandedId,
                     animate = animate,
+                    photoPath = photos[step.id],
                     onToggle = { onToggle(step.id) },
+                    onTakePhoto = { onTakePhoto(step.id) },
+                    onSharePhoto = { onSharePhoto(step.id) },
+                    onDeletePhoto = { onDeletePhoto(step.id) },
                 )
             }
         }
@@ -111,7 +134,11 @@ private fun StepCard(
     number: Int,
     expanded: Boolean,
     animate: Boolean,
+    photoPath: String?,
     onToggle: () -> Unit,
+    onTakePhoto: () -> Unit,
+    onSharePhoto: () -> Unit,
+    onDeletePhoto: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -197,10 +224,119 @@ private fun StepCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.caution,
                 )
+
+                Label("Your photo")
+                PhotoRow(
+                    photoPath = photoPath,
+                    onTakePhoto = onTakePhoto,
+                    onSharePhoto = onSharePhoto,
+                    onDeletePhoto = onDeletePhoto,
+                )
             }
         }
     }
 }
+
+/**
+ * The photograph for one step: take it, look at it, share it, or replace it.
+ *
+ * Last in the card on purpose. It is the only thing here the buyer *does* to the app rather than reads
+ * from it, and putting it above the good-sign and bad-sign lines would invite photographing the thing
+ * before knowing what to look for.
+ */
+@Composable
+private fun PhotoRow(
+    photoPath: String?,
+    onTakePhoto: () -> Unit,
+    onSharePhoto: () -> Unit,
+    onDeletePhoto: () -> Unit,
+) {
+    if (photoPath == null) {
+        Text(
+            text = "Worth photographing if you find something. It stays on this phone, and it is " +
+                "what you point at while you negotiate.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
+        )
+        OutlinedButton(
+            onClick = onTakePhoto,
+            modifier = Modifier.fillMaxWidth().height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) {
+            Text("Take a photo", style = MaterialTheme.typography.titleMedium)
+        }
+        return
+    }
+
+    Thumbnail(path = photoPath)
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        OutlinedButton(
+            onClick = onTakePhoto,
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) { Text("Retake") }
+        OutlinedButton(
+            onClick = onSharePhoto,
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) { Text("Share") }
+        OutlinedButton(
+            onClick = onDeletePhoto,
+            modifier = Modifier.weight(1f).height(44.dp),
+            shape = RoundedCornerShape(12.dp),
+        ) { Text("Delete") }
+    }
+}
+
+/**
+ * The photograph, decoded small.
+ *
+ * Decoded off the main thread through `produceState`, and downsampled while decoding. A full-size JPEG
+ * from a modern sensor is tens of megabytes as a bitmap, and decoding one on the main thread to draw a
+ * thumbnail would stutter the scroll on exactly the cheap handsets this screen exists to inspect.
+ *
+ * Keyed on the path *and* the file's modification time, so retaking a photograph replaces the image on
+ * screen. Keyed on the path alone, the second photograph would decode the new file, find the same key, and
+ * show the old bitmap — a caching bug that looks like the camera failing to save.
+ */
+@Composable
+private fun Thumbnail(path: String) {
+    val stamp = remember(path) { java.io.File(path).lastModified() }
+    val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, path, stamp) {
+        value = withContext(Dispatchers.IO) {
+            WalkthroughPhotos.decodeThumbnail(path, targetWidth = THUMBNAIL_WIDTH_PX)
+        }
+    }
+
+    val shape = RoundedCornerShape(10.dp)
+    val current = bitmap
+    if (current == null) {
+        // A placeholder of the same height, so the card does not jump when the decode lands.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1.4f)
+                .background(PhoneProofTheme.colors.surfaceRaised, shape),
+        )
+    } else {
+        Image(
+            bitmap = current.asImageBitmap(),
+            contentDescription = "The photo you took for this check",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1.4f)
+                .clip(shape),
+        )
+    }
+}
+
+/** Wide enough to look sharp across a phone, small enough that eight of them are cheap. */
+private const val THUMBNAIL_WIDTH_PX = 600
 
 @Composable
 private fun Diagram(diagram: GuideDiagram, animate: Boolean) {

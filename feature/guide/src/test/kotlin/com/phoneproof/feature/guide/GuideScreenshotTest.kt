@@ -48,7 +48,11 @@ class GuideScreenshotTest {
                     // Static, so the render is deterministic. The diagrams animate on a real
                     // device once a card is tapped.
                     animate = false,
+                    photos = emptyMap(),
                     onToggle = {},
+                    onTakePhoto = {},
+                    onSharePhoto = {},
+                    onDeletePhoto = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -64,7 +68,11 @@ class GuideScreenshotTest {
                     steps = GuideSteps,
                     expandedId = "guide.water",
                     animate = false,
+                    photos = emptyMap(),
                     onToggle = {},
+                    onTakePhoto = {},
+                    onSharePhoto = {},
+                    onDeletePhoto = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }

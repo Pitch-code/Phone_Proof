@@ -2,6 +2,8 @@ package com.phoneproof.feature.guide
 
 import android.content.Context
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.phoneproof.core.designsystem.ADVISORY_TRIAL_EXCLUSION
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.component.LockedFeature
+import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
 
@@ -58,14 +61,61 @@ fun GuideRoute(
 
     val animate = remember(context) { context.animationsEnabled() }
 
+    val photoStore = remember(context) { WalkthroughPhotos(context) }
+    var photos by remember { mutableStateOf(photoStore.all()) }
+    // Which step the camera was launched for. The result callback reports success without saying what it
+    // was for, so this has to be remembered across the trip out to the camera app — and rememberSaveable,
+    // because that trip can take this process down on a phone short of memory, which is most of them.
+    var capturingStepId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { saved ->
+        val stepId = capturingStepId
+        capturingStepId = null
+        if (stepId == null) return@rememberLauncherForActivityResult
+
+        // A cancelled capture leaves the zero-byte file that had to exist before the URI could be handed
+        // over. Cleared here, or it would show up as a photograph and render as a broken thumbnail — which
+        // reads as a bug rather than as the cancellation it was.
+        if (!saved) photoStore.discardIfEmpty(stepId)
+        photos = photoStore.all()
+    }
+
     GuideScreen(
         steps = GuideSteps,
         expandedId = expandedId,
         animate = animate,
+        photos = photos,
         onToggle = { id -> expandedId = if (expandedId == id) null else id },
+        onTakePhoto = { id ->
+            val target = photoStore.captureTarget(id)
+            if (target == null) {
+                Diagnostics.error(TAG, "no capture target for $id")
+            } else {
+                capturingStepId = id
+                // ActivityNotFoundException on a device with no camera app is a real possibility, and it
+                // must not take the screen down with it.
+                runCatching { camera.launch(target) }
+                    .onFailure {
+                        capturingStepId = null
+                        Diagnostics.error(TAG, "no camera app to launch", it)
+                    }
+            }
+        },
+        onSharePhoto = { id ->
+            photoStore.shareIntent(id)?.let { intent ->
+                runCatching { context.startActivity(intent) }
+                    .onFailure { Diagnostics.error(TAG, "sharing failed", it) }
+            }
+        },
+        onDeletePhoto = { id ->
+            photoStore.delete(id)
+            photos = photoStore.all()
+        },
         modifier = modifier,
     )
 }
+
+private const val TAG = "GuideRoute"
 
 /**
  * Whether the system has animations switched on.
