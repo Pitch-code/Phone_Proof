@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -90,8 +90,11 @@ fun MultiTouchScreen(
     }
 }
 
+// A ColumnScope receiver, so the pad can take Modifier.weight(1f) and fill whatever is left after the
+// heading and the counter. Without it the pad would need a fixed height and would be wrong on every screen
+// size but the one it was measured on.
 @Composable
-private fun Counting(
+private fun ColumnScope.Counting(
     state: MultiTouchUiState,
     onPointers: (List<Offset>) -> Unit,
     onFinish: () -> Unit,
