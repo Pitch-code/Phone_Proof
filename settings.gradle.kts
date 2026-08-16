@@ -42,6 +42,7 @@ include(":checks:imei")
 // The audio analysis. Worth keeping pure more than most: there is no microphone in the build
 // environment, so the only way to know a tone detector detects tones is to feed it a synthesised tone.
 include(":checks:media")
+include(":checks:sensors")
 
 // Android modules.
 include(":core:designsystem")
@@ -52,6 +53,7 @@ include(":core:permissions")
 include(":core:media")
 include(":core:device")
 include(":core:preferences")
+include(":core:sensors")
 include(":core:reports")
 include(":core:run")
 include(":feature:touchgrid")
@@ -67,5 +69,6 @@ include(":feature:emilock")
 include(":feature:imei")
 include(":feature:audiotest")
 include(":feature:cameratest")
+include(":feature:sensortest")
 include(":feature:run")
 include(":app")
