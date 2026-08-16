@@ -85,6 +85,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Does it charge, how fast, and does it keep charging",
     ),
     HomeCheckEntry(
+        route = "radios",
+        title = "Wi-Fi and Bluetooth",
+        subtitle = "Proved by joining a network, not by scanning for them",
+    ),
+    HomeCheckEntry(
         route = "sensors",
         title = "Sensors that still work",
         subtitle = "Tilt and cover it — a dead sensor is still on the parts list",

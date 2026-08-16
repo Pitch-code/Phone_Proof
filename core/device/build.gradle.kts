@@ -27,6 +27,7 @@ kotlin {
 dependencies {
     api(project(":checks:emilock"))
     api(project(":checks:device"))
+    api(project(":checks:radios"))
     implementation(project(":core:diagnostics"))
     implementation(libs.androidx.core.ktx)
     // The storage speed test does blocking file IO, so it needs a dispatcher to get off the main thread.

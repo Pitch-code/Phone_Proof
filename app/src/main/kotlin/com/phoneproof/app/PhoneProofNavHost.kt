@@ -20,6 +20,7 @@ import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.buttons.VolumeButtonsRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.charging.ChargingRoute
+import com.phoneproof.feature.radios.RadiosRoute
 import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.ChecksScreen
@@ -71,6 +72,7 @@ internal object Routes {
     const val VOLUME_BUTTONS = "volume-buttons"
     const val VIBRATION = "vibration"
     const val CHARGING = "charging"
+    const val RADIOS = "radios"
     const val RUN = "run"
     const val VERDICT = "verdict"
     const val REPORT_DETAIL = "reports/{reportId}"
@@ -211,6 +213,13 @@ fun PhoneProofNavHost(
         composable(Routes.CHARGING) {
             ChargingRoute(
                 onResults = { runSession.record(Routes.CHARGING, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.RADIOS) {
+            RadiosRoute(
+                onResults = { runSession.record(Routes.RADIOS, it) },
                 modifier = Modifier.fillMaxSize(),
             )
         }

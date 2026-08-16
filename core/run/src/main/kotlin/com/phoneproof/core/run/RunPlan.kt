@@ -119,6 +119,17 @@ object RunPlan {
             typicalSeconds = 30,
             essential = false,
         ),
+        // Beside charging, and not essential for the same kind of reason: proving Wi-Fi needs a network to
+        // join, and a shop may not have one. A buyer in a dead spot must still be able to reach a clean
+        // verdict rather than be told the inspection is incomplete because of the room they are standing in.
+        RunStep(
+            id = "radios",
+            title = "Wi-Fi and Bluetooth",
+            why = "Joining a network proves the radio, and needs no location permission to do it",
+            effort = StepEffort.HANDS_ON,
+            typicalSeconds = 30,
+            essential = false,
+        ),
         RunStep(
             id = "sensors",
             title = "Sensors that still work",
