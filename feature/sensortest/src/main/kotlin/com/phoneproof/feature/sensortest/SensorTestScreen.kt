@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -64,40 +66,59 @@ fun SensorTestScreen(
     // some compositions and not others, which is not allowed and would crash on the phase change.
     val scrollState = rememberScrollState()
 
-    Column(
+    // Insets, padding and the title all live here rather than in the route, so that what the screenshot
+    // tests render is what the buyer sees. The first version left padding to the route and the rendered
+    // meters ran off the right-hand edge with their labels clipped — a layout bug that existed only in
+    // the review, which is the worst place for one to hide.
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
-            // Insets, padding and the title all live here rather than in the route, so that what the
-            // screenshot tests render is what the buyer sees. The first version left padding to the
-            // route and the rendered meters ran off the right-hand edge with their labels clipped —
-            // a layout bug that only existed in the review, which is the worst place for one to hide.
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .then(if (duringGesture) Modifier else Modifier.verticalScroll(scrollState))
-            .padding(horizontal = 20.dp),
-        verticalArrangement = if (duringGesture) {
-            Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
-        } else {
-            Arrangement.spacedBy(12.dp)
-        },
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        if (!duringGesture) {
-            Spacer(Modifier.height(10.dp))
-            Text(
-                text = "Sensors",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
-        }
+        // Centred when it fits, scrolling when it does not, rather than one or the other.
+        //
+        // Simply centring the gesture screens would have been enough at the default font size and would
+        // have clipped the meters off the bottom at a 200% accessibility scale, with no scroll to
+        // recover them. A minimum height of one viewport gets the centring for free while leaving the
+        // column scrollable, so a buyer with large text still reaches everything.
+        val viewport = maxHeight
 
-        when (state.phase) {
-            SensorPhase.READY -> Ready(state, onStart)
-            SensorPhase.MOTION -> Motion(state)
-            SensorPhase.COVER -> Cover(state)
-            SensorPhase.DONE -> Done(state, onRestart)
-        }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = if (duringGesture) viewport else 0.dp),
+                verticalArrangement = if (duringGesture) {
+                    Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+                } else {
+                    Arrangement.spacedBy(12.dp)
+                },
+            ) {
+                if (!duringGesture) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "Sensors",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = PhoneProofTheme.colors.textPrimary,
+                    )
+                }
 
-        if (!duringGesture) Spacer(Modifier.height(28.dp))
+                when (state.phase) {
+                    SensorPhase.READY -> Ready(state, onStart)
+                    SensorPhase.MOTION -> Motion(state)
+                    SensorPhase.COVER -> Cover(state)
+                    SensorPhase.DONE -> Done(state, onRestart)
+                }
+
+                if (!duringGesture) Spacer(Modifier.height(28.dp))
+            }
+        }
     }
 }
 
