@@ -58,8 +58,16 @@ Then, one thing at a time:
 Plus an in-app **diagnostics log** that captures errors and uncaught exceptions and copies in one
 tap — so a bug report is an exact log rather than a remembered symptom.
 
-Still to build: camera, microphone and speaker with waveform analysis, and photo capture during the
-manual walkthrough.
+- **Microphone and speaker** measures rather than asks: the microphone verdict is how far speech rose
+  above the room's own noise floor, and the speaker is checked by playing a 1 kHz tone and listening for
+  it on the microphone. Where a noisy shop makes the tone undetectable the app says so and asks, rather
+  than blaming the speaker.
+- **Cameras and flashlight** opens each camera and reads a few frames, which establishes that the sensor
+  is producing a live, varying picture — including the frozen-sensor case that looks healthy in any single
+  frame. It never reports a fault, because a finger over the lens and a dead sensor are indistinguishable
+  from inside an app.
+
+Still to build: photo capture during the manual walkthrough.
 
 ## Screens
 

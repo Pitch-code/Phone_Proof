@@ -17,12 +17,39 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!--
+      The camera, on the same terms: requested on the screen that opens it, with the reason first, and
+      never on launch.
+
+      Each camera is opened for about a second, a few frames are read into memory to measure whether the
+      sensor is imaging, and they are discarded. No photograph is taken and nothing is written to storage.
+
+      Not needed for the flashlight: CameraManager.setTorchMode requires no permission, so the torch test
+      asks for nothing. The obvious implementation — open the camera and set FLASH_MODE_TORCH — would have
+      dragged this permission into a test that does not need it.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!--
       Declared as not required, so the app still installs on a handset without one. A phone with no
       microphone is not a phone, but a tablet is a plausible device for a shop to run this on, and the
       microphone screen degrades to saying it cannot record rather than the app being uninstallable.
     -->
     <uses-feature
         android:name="android.hardware.microphone"
+        android:required="false" />
+
+    <!--
+      Both marked not required, which matters more than it looks. Declaring the CAMERA permission makes
+      Play infer android.hardware.camera as required by default, which would hide the app from every
+      device without one. This app is for inspecting a handset, and a shop may well run it on a cheap
+      tablet; the camera screen degrades to saying it found no cameras rather than the app being
+      uninstallable.
+    -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.camera.flash"
         android:required="false" />
 
     <queries>
