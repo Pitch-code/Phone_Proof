@@ -15,6 +15,7 @@ import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.feature.diagnostics.DiagnosticsRoute
 import com.phoneproof.feature.emilock.EmiLockRoute
+import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.HomeCheck
@@ -41,6 +42,7 @@ private object Routes {
     const val COMPARE = "compare"
     const val CLAIMS = "claims"
     const val IMEI = "imei"
+    const val AUDIO = "audio"
     const val REPORT_DETAIL = "reports/{reportId}"
 
     fun reportDetail(id: String): String = "reports/$id"
@@ -89,6 +91,11 @@ fun PhoneProofNavHost(
                         onClick = { navController.navigate(Routes.SCREEN_PATTERNS) },
                     ),
                     HomeCheck(
+                        title = "Microphone and speaker",
+                        subtitle = "Measured with a test tone, not just played back",
+                        onClick = { navController.navigate(Routes.AUDIO) },
+                    ),
+                    HomeCheck(
                         title = "Claimed against measured",
                         subtitle = "Is it the phone you were promised?",
                         onClick = { navController.navigate(Routes.CLAIMS) },
@@ -127,6 +134,10 @@ fun PhoneProofNavHost(
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        composable(Routes.AUDIO) {
+            AudioTestRoute(modifier = Modifier.fillMaxSize())
         }
 
         // No entitlement gate. This is a measurement of the handset in front of the buyer rather than
