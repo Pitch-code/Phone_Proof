@@ -54,17 +54,18 @@ fun ChecksScreen(
         )
         Text(
             // Answers the "why is this here as well?" question in the product rather than leaving the
-            // buyer to work it out. Both sentences are needed: the first says when to use this screen,
-            // the second says what it costs them compared with the run.
-            text = "For when you want one answer rather than the whole inspection — the IMEI on a " +
-                "phone you have already decided about, or the touch test again after wiping the " +
-                "screen.",
+            // buyer to work it out. Trimmed once already: the first version spent eight lines on the
+            // explanation before the first check appeared, which is a lot of reading to reach a list.
+            text = "For one answer rather than the whole inspection — the IMEI on a phone you have " +
+                "already decided on, or the touch test again after wiping the screen.",
             style = MaterialTheme.typography.bodyLarge,
             color = PhoneProofTheme.colors.textSecondary,
         )
         Text(
-            text = "Nothing here is added up. \"Test this phone\" on the home screen runs all of " +
-                "them in a sensible order and ends with a verdict you can argue with.",
+            // No quotation marks around the button name. Straight quotes in body copy read as unfinished
+            // template text, and this app cannot afford to look sloppy next to a verdict about money.
+            text = "Nothing here is added up. Test this phone on the home screen runs them all in " +
+                "order and ends with a verdict.",
             style = MaterialTheme.typography.bodyMedium,
             color = PhoneProofTheme.colors.textTertiary,
         )
