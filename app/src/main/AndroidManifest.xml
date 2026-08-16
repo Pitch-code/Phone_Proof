@@ -30,6 +30,32 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!--
+      The radio test. All three of these are install-time permissions: they are granted when the app is
+      installed, the buyer is never prompted, and Play does not treat any of them as sensitive.
+
+      ACCESS_WIFI_STATE reads whether Wi-Fi is switched on. ACCESS_NETWORK_STATE reads whether the live
+      network is Wi-Fi and whether traffic is actually passing, which is how the radio is proved: a phone
+      that has joined a network has already transmitted, received and negotiated an address.
+
+      Deliberately NOT requested: ACCESS_FINE_LOCATION. Scanning for nearby networks is the obvious way
+      to test a Wi-Fi radio and it costs a location permission, because Android treats a list of nearby
+      networks as a location — correctly. Association proves more and costs nothing, so there is no scan
+      anywhere in this app. Also not requested: BLUETOOTH_CONNECT and BLUETOOTH_SCAN, which would be
+      needed to pair or discover devices, and CHANGE_WIFI_STATE, which has been unable to toggle Wi-Fi
+      since Android 10 regardless. The buyer is sent to the system's own settings panel instead.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!--
+      The legacy Bluetooth permission, needed only to read whether the adapter is on, and only up to
+      API 30 — from API 31 that call requires no permission at all, so the declaration is capped rather
+      than left to look broader than it is on modern phones.
+    -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+
+    <!--
       Declared as not required, so the app still installs on a handset without one. A phone with no
       microphone is not a phone, but a tablet is a plausible device for a shop to run this on, and the
       microphone screen degrades to saying it cannot record rather than the app being uninstallable.
@@ -50,6 +76,20 @@
         android:required="false" />
     <uses-feature
         android:name="android.hardware.camera.flash"
+        android:required="false" />
+
+    <!--
+      The same trap as the camera above, and easy to miss. Declaring ACCESS_WIFI_STATE makes Play infer
+      android.hardware.wifi as required, and the legacy BLUETOOTH permission implies
+      android.hardware.bluetooth; either would quietly hide the app from devices without that radio.
+      Both are declared not required, and the radio screen reports honestly when the hardware is absent
+      instead of the app being uninstallable.
+    -->
+    <uses-feature
+        android:name="android.hardware.wifi"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
         android:required="false" />
 
     <queries>
