@@ -18,7 +18,11 @@ enum class AudioStage {
     /** Playing the tone and recording at the same time. */
     PLAYING_TONE,
 
-    /** The speaker measurement was inconclusive, so the buyer is being asked. */
+    /**
+     * The speaker measurement was inconclusive, so the buyer is being asked.
+     *
+     * No speaker verdict exists in this stage, deliberately. See [AudioTestUiState.speaker].
+     */
     ASKING,
 
     /** Both verdicts are in. */
@@ -38,6 +42,15 @@ data class AudioTestUiState(
     val stage: AudioStage = AudioStage.READY,
     val levels: List<Float> = emptyList(),
     val microphone: CheckResult? = null,
+    /**
+     * The speaker verdict, or null while there isn't one.
+     *
+     * Null throughout [AudioStage.ASKING], and that is the fix for something seen on a real phone: the
+     * provisional CAN'T TELL result used to be published *and* the question asked, so the screen showed a
+     * verdict badge above a question whose answer was about to replace it. A buyer reading "CAN'T TELL"
+     * has been given an answer; being asked for one in the next breath makes the app look confused about
+     * what it knows.
+     */
     val speaker: CheckResult? = null,
     val volume: MediaVolume = MediaVolume(0, 0),
     /** Set when the platform refused to record at all, which is not the phone's fault. */
@@ -51,7 +64,18 @@ data class AudioTestUiState(
      */
     val pendingToneRatio: Float = 0f,
     val pendingRoomFloor: Float = 0f,
+    /**
+     * Whether there is a recording of the buyer's voice to play back.
+     *
+     * The samples live in the ViewModel rather than in here: three seconds at 44.1 kHz is a quarter of a
+     * megabyte, and state objects get compared on every recomposition. What the screen needs is the
+     * boolean.
+     */
+    val canPlayBack: Boolean = false,
+    val isPlayingBack: Boolean = false,
 ) {
     val isBusy: Boolean
-        get() = stage == AudioStage.LISTENING || stage == AudioStage.PLAYING_TONE
+        get() = stage == AudioStage.LISTENING ||
+            stage == AudioStage.PLAYING_TONE ||
+            isPlayingBack
 }

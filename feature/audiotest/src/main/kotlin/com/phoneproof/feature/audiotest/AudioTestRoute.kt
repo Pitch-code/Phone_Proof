@@ -110,6 +110,8 @@ private fun Granted(onResults: (List<CheckResult>) -> Unit) {
         onStartMicrophone = viewModel::startMicrophoneTest,
         onStartSpeaker = viewModel::startSpeakerTest,
         onAnswerHeard = viewModel::answerHeard,
+        onDeclineToAnswer = viewModel::declineToAnswer,
+        onPlayBack = viewModel::playBack,
         onRestart = viewModel::restart,
         modifier = Modifier.fillMaxSize(),
     )
