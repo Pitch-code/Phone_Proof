@@ -51,8 +51,8 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
     ),
     HomeCheckEntry(
         route = "audio",
-        title = "Microphone and speaker",
-        subtitle = "Measured with a test tone, not just played back",
+        title = "Microphone, earpiece and speaker",
+        subtitle = "Three separate parts, measured with a test tone",
     ),
     HomeCheckEntry(
         route = "camera",

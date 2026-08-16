@@ -25,7 +25,16 @@ enum class AudioStage {
      */
     ASKING,
 
-    /** Both verdicts are in. */
+    /** The loudspeaker is settled; the earpiece has not been tested yet. */
+    SPEAKER_DONE,
+
+    /** Playing the tone into the earpiece and recording at the same time. */
+    PLAYING_EARPIECE,
+
+    /** The earpiece measurement was inconclusive, so the buyer is being asked. */
+    ASKING_EARPIECE,
+
+    /** All three verdicts are in. */
     FINISHED,
 }
 
@@ -52,6 +61,13 @@ data class AudioTestUiState(
      * what it knows.
      */
     val speaker: CheckResult? = null,
+    /**
+     * The earpiece verdict — the speaker held against your ear, which is a different part entirely.
+     *
+     * Null while [AudioStage.ASKING_EARPIECE], for the same reason [speaker] is: a provisional verdict on
+     * screen above the question that decides it makes the app look confused about what it knows.
+     */
+    val earpiece: CheckResult? = null,
     val volume: MediaVolume = MediaVolume(0, 0),
     /** Set when the platform refused to record at all, which is not the phone's fault. */
     val captureFailed: Boolean = false,
@@ -77,5 +93,6 @@ data class AudioTestUiState(
     val isBusy: Boolean
         get() = stage == AudioStage.LISTENING ||
             stage == AudioStage.PLAYING_TONE ||
+            stage == AudioStage.PLAYING_EARPIECE ||
             isPlayingBack
 }

@@ -53,8 +53,10 @@ object RunPlan {
         ),
         RunStep(
             id = "audio",
-            title = "Microphone and speaker",
-            why = "Measured with a test tone, so a dead mic cannot be talked over",
+            title = "Microphone, earpiece and speaker",
+            // Three parts, and the earpiece is the one worth naming: it is the only speaker on a phone
+            // that nothing in a shop exercises, so it is the one a buyer discovers on their first call.
+            why = "Three separate parts — including the earpiece, which nothing else in a shop tests",
             effort = StepEffort.HANDS_ON,
             needs = setOf(RunCondition.QUIET),
             typicalSeconds = 45,

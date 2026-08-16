@@ -7,6 +7,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.phoneproof.checks.media.AudioAnalysis
+import com.phoneproof.checks.media.EarpieceCheck
+import com.phoneproof.checks.media.EarpieceRouting
 import com.phoneproof.checks.media.HeardTone
 import com.phoneproof.checks.media.MicrophoneCheck
 import com.phoneproof.checks.media.SpeakerCheck
@@ -59,6 +61,9 @@ class AudioTestScreenshotTest {
                     onStartSpeaker = {},
                     onAnswerHeard = {},
                     onDeclineToAnswer = {},
+                    onStartEarpiece = {},
+                    onAnswerEarpieceHeard = {},
+                    onDeclineEarpieceAnswer = {},
                     onPlayBack = {},
                     onRestart = {},
                     modifier = Modifier.fillMaxSize(),
@@ -138,6 +143,9 @@ class AudioTestScreenshotTest {
                     onStartSpeaker = {},
                     onAnswerHeard = {},
                     onDeclineToAnswer = {},
+                    onStartEarpiece = {},
+                    onAnswerEarpieceHeard = {},
+                    onDeclineEarpieceAnswer = {},
                     onPlayBack = {},
                     onRestart = {},
                     modifier = Modifier.fillMaxSize(),
@@ -211,6 +219,108 @@ class AudioTestScreenshotTest {
             "6-capture-failed-dark",
             AudioTestUiState(captureFailed = true, volume = MediaVolume(current = 9, max = 15)),
             themeMode = ThemeMode.DARK,
+        )
+    }
+
+    // ------------------------------------------------------------------ the earpiece
+
+    @Test
+    fun the_earpiece_is_offered_as_a_separate_part() {
+        // Most buyers have never thought about the earpiece, so the offer has to explain what it is and
+        // why a working loudspeaker says nothing about it.
+        render(
+            "10-earpiece-offered",
+            AudioTestUiState(
+                stage = AudioStage.SPEAKER_DONE,
+                levels = spokenLevels(),
+                microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+                speaker = SpeakerCheck.evaluate(toneRatio = 0.6f, roomFloor = 0.01f),
+                volume = MediaVolume(current = 12, max = 15),
+                canPlayBack = true,
+            ),
+        )
+    }
+
+    @Test
+    fun holding_it_to_your_ear() {
+        render(
+            "11-earpiece-playing",
+            AudioTestUiState(
+                stage = AudioStage.PLAYING_EARPIECE,
+                microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+                speaker = SpeakerCheck.evaluate(toneRatio = 0.6f, roomFloor = 0.01f),
+                volume = MediaVolume(current = 12, max = 15),
+            ),
+        )
+    }
+
+    @Test
+    fun the_earpiece_question_explains_why_a_miss_means_little() {
+        // A different sentence from the loudspeaker's. On the loudspeaker a miss usually means the room was
+        // loud; on the earpiece a miss is the normal outcome even on perfect hardware, and the buyer must
+        // not read the question as a hint that something is wrong.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.LIGHT) {
+                AudioTestScreen(
+                    state = AudioTestUiState(
+                        stage = AudioStage.ASKING_EARPIECE,
+                        microphone = MicrophoneCheck.evaluate(
+                            AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60),
+                        ),
+                        speaker = SpeakerCheck.evaluate(toneRatio = 0.6f, roomFloor = 0.01f),
+                        volume = MediaVolume(current = 12, max = 15),
+                        pendingToneRatio = 0.02f,
+                        pendingRoomFloor = 0.01f,
+                    ),
+                    onStartMicrophone = {},
+                    onStartSpeaker = {},
+                    onAnswerHeard = {},
+                    onDeclineToAnswer = {},
+                    onStartEarpiece = {},
+                    onAnswerEarpieceHeard = {},
+                    onDeclineEarpieceAnswer = {},
+                    onPlayBack = {},
+                    onRestart = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onNode(isDialog()).captureRoboImage("$outputDir/audio-12-earpiece-question.png")
+    }
+
+    @Test
+    fun a_dead_earpiece_names_the_consequence_that_actually_matters() {
+        // Not "no sound" but "no private calls": every call on speakerphone, in public.
+        render(
+            "13-earpiece-dead",
+            AudioTestUiState(
+                stage = AudioStage.FINISHED,
+                microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+                speaker = SpeakerCheck.evaluate(toneRatio = 0.6f, roomFloor = 0.01f),
+                earpiece = EarpieceCheck.evaluate(
+                    routing = EarpieceRouting.CONFIRMED,
+                    toneRatio = 0.01f,
+                    roomFloor = 0.01f,
+                    heard = HeardTone.NO,
+                ),
+                volume = MediaVolume(current = 12, max = 15),
+            ),
+        )
+    }
+
+    @Test
+    fun a_phone_that_would_not_route_to_its_earpiece_says_so() {
+        // The honest dead end, and the one that protects the seller: nothing was tested, so nothing is
+        // claimed, and the buyer is told the only way left to check it.
+        render(
+            "14-earpiece-refused",
+            AudioTestUiState(
+                stage = AudioStage.FINISHED,
+                microphone = MicrophoneCheck.evaluate(AudioAnalysis(0.012f, 0.32f, 0.4f, false, 60)),
+                speaker = SpeakerCheck.evaluate(toneRatio = 0.6f, roomFloor = 0.01f),
+                earpiece = EarpieceCheck.evaluate(EarpieceRouting.REFUSED),
+                volume = MediaVolume(current = 12, max = 15),
+            ),
         )
     }
 }
