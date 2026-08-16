@@ -35,6 +35,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Software, storage, battery and screen — no waiting",
     ),
     HomeCheckEntry(
+        route = "storage-speed",
+        title = "Storage speed",
+        subtitle = "Recycled flash is full size and terrible quality",
+    ),
+    HomeCheckEntry(
         route = "lock",
         title = "Remote lock control",
         subtitle = "Can a lender brick this phone after you pay?",

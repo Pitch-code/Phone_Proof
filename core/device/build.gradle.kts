@@ -29,4 +29,6 @@ dependencies {
     api(project(":checks:device"))
     implementation(project(":core:diagnostics"))
     implementation(libs.androidx.core.ktx)
+    // The storage speed test does blocking file IO, so it needs a dispatcher to get off the main thread.
+    implementation(libs.kotlinx.coroutines.core)
 }

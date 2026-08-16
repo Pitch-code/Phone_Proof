@@ -23,6 +23,7 @@ class RunPlanRoutesTest {
     fun every_step_of_the_run_names_a_real_destination() {
         assertThat(RunPlan.stepIds).containsExactly(
             Routes.SCAN,
+            Routes.STORAGE_SPEED,
             Routes.TOUCH,
             Routes.MULTI_TOUCH,
             Routes.SCREEN_PATTERNS,
@@ -80,6 +81,7 @@ class HomeCatalogueRoutesTest {
     fun every_row_on_home_goes_somewhere_real() {
         val known = setOf(
             Routes.SCAN,
+            Routes.STORAGE_SPEED,
             Routes.LOCK,
             Routes.TOUCH,
             Routes.MULTI_TOUCH,
