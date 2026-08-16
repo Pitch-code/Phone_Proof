@@ -6,11 +6,14 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,8 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
@@ -78,17 +86,33 @@ fun CameraTestScreen(
             )
         }
 
-        state.testing?.let {
+        state.testing?.let { label ->
             Text(
-                text = "Testing the ${it.lowercase()}…",
+                text = "Testing the ${label.lowercase()}…",
                 style = MaterialTheme.typography.titleMedium,
                 color = PhoneProofTheme.colors.textPrimary,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
+            // The camera currently open, shown while it is open. This is what the request for a "small
+            // window with currently capturing" asked for.
+            CameraFrame(
+                image = state.frames[label],
+                rotation = state.rotationFor(label),
+                live = true,
+            )
         }
 
-        state.results.forEach { CheckResultCard(it) }
+        state.results.forEach { result ->
+            // Each picture directly above its own verdict, keyed on the label the card carries, so the
+            // front camera's frame can never end up sitting above the rear camera's result.
+            CameraFrame(
+                image = state.frames[result.title],
+                rotation = state.rotationFor(result.title),
+                live = false,
+            )
+            CheckResultCard(result)
+        }
         state.torch?.let { CheckResultCard(it) }
 
         when (state.stage) {
@@ -138,6 +162,56 @@ fun CameraTestScreen(
 
             CameraStage.TESTING -> Unit
         }
+    }
+}
+
+/**
+ * The frames the camera sent, as a picture.
+ *
+ * Not a viewfinder. This class deliberately never gives the camera a `SurfaceView`, because that would
+ * make the measurement depend on a composable being laid out, visible and correctly sized — three more
+ * ways for it to silently measure nothing. What is drawn here is **the same frames the verdict is computed
+ * from**, handed over after they were measured, so the picture is evidence rather than decoration: it is
+ * literally what the app looked at.
+ *
+ * Greyscale for the same reason. Only the luma plane is read and only brightness is judged, so rendering
+ * colour would show the buyer something the app never examined.
+ *
+ * Square and cropped, with the sensor's own rotation applied. A phone sensor is mounted landscape, so an
+ * unrotated frame appears on its side — and a sideways picture reads as a broken camera, which would be
+ * this app manufacturing the fault it exists to detect.
+ */
+@Composable
+private fun CameraFrame(image: ImageBitmap?, rotation: Int, live: Boolean) {
+    if (image == null) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Image(
+            bitmap = image,
+            contentDescription = if (live) {
+                "Live frames from the camera being tested"
+            } else {
+                "The last frame this camera sent"
+            },
+            contentScale = ContentScale.Crop,
+            // Low, deliberately: this is a 320x240 frame blown up, and smoothing it would imply a
+            // sharpness the app never measured.
+            filterQuality = FilterQuality.Low,
+            modifier = Modifier
+                .size(140.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(10.dp))
+                .graphicsLayer { rotationZ = rotation.toFloat() },
+        )
+        Text(
+            text = if (live) {
+                "What the sensor is sending now — brightness only"
+            } else {
+                "What the sensor sent. Brightness only, which is all this test judges."
+            },
+            style = MaterialTheme.typography.labelSmall,
+            color = PhoneProofTheme.colors.textTertiary,
+        )
     }
 }
 

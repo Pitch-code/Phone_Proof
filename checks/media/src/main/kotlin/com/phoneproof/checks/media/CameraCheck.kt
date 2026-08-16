@@ -32,6 +32,16 @@ data class CameraFrameStats(
     val meanLuma: Float,
     val lumaVariation: Float,
     val framesIdentical: Boolean,
+    /**
+     * The sensor's own resolution, or null when the phone will not say.
+     *
+     * Reported, never judged. See [specNote] for why a number lower than the box claims proves nothing.
+     */
+    val sensorMegapixels: Float? = null,
+    /** The largest still an app is actually allowed to request, which is often less than the above. */
+    val largestPhotoMegapixels: Float? = null,
+    /** Maximum zoom ratio the platform advertises, optical and digital together where it says. */
+    val maxZoom: Float? = null,
 )
 
 /**
@@ -66,6 +76,23 @@ object CameraCheck {
         "Another app holding the camera — a scanner, a video call — takes it exclusively.",
     )
 
+    /**
+     * What the camera says about itself, in a sentence that cannot be mistaken for an accusation.
+     *
+     * Megapixels are worth reporting and dangerous to judge. A phone advertised as 50 MP will often hand
+     * third-party apps far less, because full-resolution and pixel-binned modes are commonly reserved for
+     * the manufacturer's own camera app. **A lower number here is not evidence of a fake sensor**, and a
+     * buyer who took it to a seller as proof of fraud would be wrong and would deserve better from this
+     * app. So the number is shown with the reason it might disagree with the box, and no verdict is
+     * attached to it either way.
+     */
+    fun specNote(stats: CameraFrameStats): String? {
+        val sensor = stats.sensorMegapixels ?: return null
+        return "Reports a ${format(sensor)} MP sensor to apps. If the phone was advertised with a " +
+            "bigger number that is not proof of anything — full-resolution modes are usually kept for " +
+            "the phone's own camera app, and no other app can reach them."
+    }
+
     fun evaluate(stats: CameraFrameStats): CheckResult {
         val title = stats.facing.label
         val measurements = buildList {
@@ -74,6 +101,13 @@ object CameraCheck {
                 add(Measurement("Brightness", "${(stats.meanLuma * 100).toInt()}", "%"))
                 add(Measurement("Detail", "${(stats.lumaVariation * 100).toInt()}", "%"))
             }
+            // Reported whether or not the sensor imaged anything: a camera that will not open still has a
+            // resolution, and a buyer comparing the handset to its advert wants the number regardless.
+            stats.sensorMegapixels?.let { add(Measurement("Sensor", format(it), "MP")) }
+            stats.largestPhotoMegapixels?.let {
+                add(Measurement("Largest photo apps can take", format(it), "MP"))
+            }
+            stats.maxZoom?.let { add(Measurement("Maximum zoom", "${format(it)}×")) }
         }
 
         if (stats.framesReceived == 0) {
@@ -250,3 +284,6 @@ object TorchCheck {
         }
     }
 }
+
+/** One decimal, and Locale.ROOT so a build machine cannot change what the screenshots contain. */
+private fun format(value: Float): String = String.format(java.util.Locale.ROOT, "%.1f", value)
