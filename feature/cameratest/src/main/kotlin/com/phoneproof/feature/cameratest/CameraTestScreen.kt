@@ -6,11 +6,16 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -19,9 +24,15 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
@@ -78,17 +89,33 @@ fun CameraTestScreen(
             )
         }
 
-        state.testing?.let {
+        state.testing?.let { label ->
             Text(
-                text = "Testing the ${it.lowercase()}…",
+                text = "Testing the ${label.lowercase()}…",
                 style = MaterialTheme.typography.titleMedium,
                 color = PhoneProofTheme.colors.textPrimary,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
+            // The camera currently open, shown while it is open. This is what the request for a "small
+            // window with currently capturing" asked for.
+            CameraFrame(
+                image = state.frames[label],
+                rotation = state.rotationFor(label),
+                live = true,
+            )
         }
 
-        state.results.forEach { CheckResultCard(it) }
+        state.results.forEach { result ->
+            // Each picture directly above its own verdict, keyed on the label the card carries, so the
+            // front camera's frame can never end up sitting above the rear camera's result.
+            CameraFrame(
+                image = state.frames[result.title],
+                rotation = state.rotationFor(result.title),
+                live = false,
+            )
+            CheckResultCard(result)
+        }
         state.torch?.let { CheckResultCard(it) }
 
         when (state.stage) {
@@ -137,6 +164,76 @@ fun CameraTestScreen(
             ) { Text("Test again") }
 
             CameraStage.TESTING -> Unit
+        }
+    }
+}
+
+/**
+ * The frames the camera sent, as a picture.
+ *
+ * Not a viewfinder. This class deliberately never gives the camera a `SurfaceView`, because that would
+ * make the measurement depend on a composable being laid out, visible and correctly sized — three more
+ * ways for it to silently measure nothing. What is drawn here is **the same frames the verdict is computed
+ * from**, handed over after they were measured, so the picture is evidence rather than decoration: it is
+ * literally what the app looked at.
+ *
+ * Greyscale for the same reason. Only the luma plane is read and only brightness is judged, so rendering
+ * colour would show the buyer something the app never examined.
+ *
+ * Square and cropped, with the sensor's own rotation applied. A phone sensor is mounted landscape, so an
+ * unrotated frame appears on its side — and a sideways picture reads as a broken camera, which would be
+ * this app manufacturing the fault it exists to detect.
+ */
+@Composable
+private fun CameraFrame(image: ImageBitmap?, rotation: Int, live: Boolean) {
+    if (image == null) return
+
+    // The caption sits beside the picture rather than under it. Stacked, the first render left two thirds
+    // of every row empty and repeated an identical sentence under each of the two cameras, which is how an
+    // explanation starts reading as template text.
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // A fixed container with the rotation applied to the image inside it, not to the box. Rotating the
+        // box would rotate its rounded corners and its border along with the picture.
+        Box(
+            modifier = Modifier
+                .size(120.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(1.dp, PhoneProofTheme.colors.border, RoundedCornerShape(10.dp)),
+        ) {
+            Image(
+                bitmap = image,
+                contentDescription = if (live) {
+                    "Live frames from the camera being tested"
+                } else {
+                    "The last frame this camera sent"
+                },
+                contentScale = ContentScale.Crop,
+                // Low, deliberately: this is a 320x240 frame blown up, and smoothing it would imply a
+                // sharpness the app never measured.
+                filterQuality = FilterQuality.Low,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { rotationZ = rotation.toFloat() },
+            )
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = if (live) "Live from this camera" else "The frames this camera sent",
+                style = MaterialTheme.typography.titleSmall,
+                color = PhoneProofTheme.colors.textSecondary,
+            )
+            Text(
+                // Says why it is not in colour, so a greyscale picture is never read as a fault. The app
+                // only reads the brightness plane, so showing colour would be rendering something it never
+                // looked at.
+                text = "Grey because only brightness is measured, not colour.",
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
         }
     }
 }

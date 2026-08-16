@@ -8,6 +8,8 @@ import com.phoneproof.checks.media.HeardTone
 import com.phoneproof.checks.media.TorchCheck
 import com.phoneproof.core.media.CameraInfo
 import com.phoneproof.core.media.CameraProbe
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import com.phoneproof.core.model.CheckResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,8 +39,23 @@ data class CameraTestUiState(
     val torch: CheckResult? = null,
     /** Which camera is being tested right now, for the progress line. */
     val testing: String? = null,
+    /**
+     * The most recent frame from each camera, keyed by the label its card carries.
+     *
+     * Keyed on the label rather than the camera id because that is what the card is identified by on
+     * screen, and the two have to agree or a buyer sees the front camera's picture above the rear
+     * camera's verdict — which would be worse than showing no picture at all.
+     *
+     * One frame, not a history. Holding every frame from every camera would be several megabytes of
+     * bitmap for no benefit; what the screen needs is the latest.
+     */
+    val frames: Map<String, ImageBitmap> = emptyMap(),
 ) {
     val hasFlash: Boolean get() = cameras.any { it.hasFlash }
+
+    /** How far to turn a camera's frames so they are the right way up on screen. */
+    fun rotationFor(label: String): Int =
+        cameras.firstOrNull { it.facing.label == label }?.sensorOrientation ?: 0
 }
 
 /**
@@ -61,6 +78,9 @@ class CameraTestViewModel(
             stage = CameraStage.TESTING,
             results = emptyList(),
             torch = null,
+            // Cleared, so a re-run never shows the previous attempt's picture next to this attempt's
+            // verdict. That pairing is exactly how a buyer would end up trusting a stale frame.
+            frames = emptyMap(),
         )
 
         viewModelScope.launch {
@@ -70,7 +90,16 @@ class CameraTestViewModel(
                 // One at a time, not in parallel. Most phones cannot hold two cameras open at once, and
                 // the second would fail with ERROR_MAX_CAMERAS_IN_USE — reporting a working camera as
                 // unavailable because the app was in a hurry.
-                gathered += CameraCheck.evaluate(probe.probe(camera))
+                val label = camera.facing.label
+                val stats = probe.probe(camera) { frame ->
+                    // Arrives on the camera's own handler thread. MutableStateFlow is safe to write from
+                    // any thread, and the frames are wanted *while* the camera is open — that is the whole
+                    // point of showing them — so this deliberately does not wait for the probe to finish.
+                    _uiState.value = _uiState.value.copy(
+                        frames = _uiState.value.frames + (label to frame.asImageBitmap()),
+                    )
+                }
+                gathered += CameraCheck.evaluate(stats)
                 _uiState.value = _uiState.value.copy(results = gathered.toList())
             }
             _uiState.value = _uiState.value.copy(stage = CameraStage.CAMERAS_DONE, testing = null)

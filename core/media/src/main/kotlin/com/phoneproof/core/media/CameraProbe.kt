@@ -2,6 +2,7 @@ package com.phoneproof.core.media
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
@@ -10,6 +11,7 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CaptureRequest
 import android.media.ImageReader
 import android.os.Handler
+import android.os.Build
 import android.os.HandlerThread
 import com.phoneproof.checks.media.CameraFacing
 import com.phoneproof.checks.media.CameraFrameStats
@@ -24,6 +26,17 @@ data class CameraInfo(
     val id: String,
     val facing: CameraFacing,
     val hasFlash: Boolean,
+    val sensorMegapixels: Float? = null,
+    val largestPhotoMegapixels: Float? = null,
+    val maxZoom: Float? = null,
+    /**
+     * How far the sensor is rotated relative to the phone held upright, in degrees.
+     *
+     * Almost always 90 or 270: phone sensors are mounted landscape. Without applying it, a frame shown to
+     * the buyer appears on its side, which reads as a broken camera — this app inventing the exact fault it
+     * exists to find.
+     */
+    val sensorOrientation: Int = 0,
 )
 
 /**
@@ -70,6 +83,11 @@ class CameraProbe(private val context: Context) {
                     id = id,
                     facing = facing,
                     hasFlash = characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true,
+                    sensorMegapixels = sensorMegapixels(characteristics),
+                    largestPhotoMegapixels = largestPhotoMegapixels(characteristics),
+                    maxZoom = maxZoom(characteristics),
+                    sensorOrientation =
+                        characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: 0,
                 )
             }
         }.onFailure { Diagnostics.error(TAG, "could not list cameras", it) }.getOrDefault(emptyList())
@@ -83,7 +101,21 @@ class CameraProbe(private val context: Context) {
      * the camera had not been tested.
      */
     @SuppressLint("MissingPermission")
-    suspend fun probe(info: CameraInfo): CameraFrameStats {
+    suspend fun probe(
+        info: CameraInfo,
+        /**
+         * Called with each frame as it is measured, on a background thread.
+         *
+         * This is how the screen shows what the camera is sending without a viewfinder. The frames handed
+         * over here are **the same ones the verdict is computed from** — not a second stream opened for
+         * display — so the measurement still cannot be affected by whether a composable is laid out,
+         * visible or correctly sized, which was the whole reason this class avoids a `SurfaceView`.
+         *
+         * Greyscale, because plane 0 of YUV is all that is read and all that is judged. Showing colour
+         * here would mean rendering something the app never looked at.
+         */
+        onFrame: (Bitmap) -> Unit = {},
+    ): CameraFrameStats {
         val manager = manager ?: return empty(info)
         val thread = HandlerThread("camera-probe").apply { start() }
         val handler = Handler(thread.looper)
@@ -107,7 +139,7 @@ class CameraProbe(private val context: Context) {
                 set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
             }.build()
 
-            collectFrames(session, request, reader, handler, info)
+            collectFrames(session, request, reader, handler, info, onFrame)
         } catch (error: Exception) {
             // Deliberately broad. Camera2 throws CameraAccessException, IllegalStateException,
             // IllegalArgumentException and SecurityException depending on the failure and the OEM, and a
@@ -121,6 +153,51 @@ class CameraProbe(private val context: Context) {
             thread.quitSafely()
         }
     }
+
+    /**
+     * The sensor's pixel array, in megapixels.
+     *
+     * `SENSOR_INFO_PIXEL_ARRAY_SIZE` rather than the active array: the active array excludes pixels the
+     * sensor keeps for black-level calibration, which makes it a slightly odd number to compare against a
+     * marketing figure. Neither needs a permission — characteristics are public.
+     */
+    private fun sensorMegapixels(characteristics: CameraCharacteristics): Float? = runCatching {
+        characteristics.get(CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)?.let {
+            it.width.toLong() * it.height / 1_000_000f
+        }
+    }.getOrNull()
+
+    /**
+     * The largest still an app is allowed to ask for.
+     *
+     * Frequently smaller than the sensor, and that is normal rather than suspicious: manufacturers reserve
+     * full-resolution and pixel-binned modes for their own camera app. Shown next to the sensor figure so
+     * the gap is visible instead of being a discrepancy the buyer discovers elsewhere.
+     */
+    private fun largestPhotoMegapixels(characteristics: CameraCharacteristics): Float? = runCatching {
+        characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+            ?.getOutputSizes(ImageFormat.JPEG)
+            ?.maxByOrNull { it.width.toLong() * it.height }
+            ?.let { it.width.toLong() * it.height / 1_000_000f }
+    }.getOrNull()
+
+    /**
+     * Maximum zoom ratio.
+     *
+     * `CONTROL_ZOOM_RATIO_RANGE` arrived in API 30 and is the better answer, because it covers optical
+     * zoom as well — on a phone that switches to a telephoto lens it reports the whole range. Below that,
+     * `SCALER_AVAILABLE_MAX_DIGITAL_ZOOM` is all there is, and it is digital crop only.
+     *
+     * Reported, not tested. A zoom sweep cannot produce an honest verdict: digital zoom is *supposed* to
+     * lose detail, so blur at 10x proves nothing about the hardware.
+     */
+    private fun maxZoom(characteristics: CameraCharacteristics): Float? = runCatching {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            characteristics.get(CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE)?.upper
+        } else {
+            null
+        } ?: characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)
+    }.getOrNull()
 
     /**
      * Turns the torch on or off.
@@ -217,6 +294,7 @@ class CameraProbe(private val context: Context) {
         reader: ImageReader,
         handler: Handler,
         info: CameraInfo,
+        onFrame: (Bitmap) -> Unit,
     ): CameraFrameStats = suspendCancellableCoroutine { continuation ->
         val means = mutableListOf<Float>()
         val variations = mutableListOf<Float>()
@@ -247,6 +325,12 @@ class CameraProbe(private val context: Context) {
                 means += measured.mean
                 variations += measured.variation
                 fingerprints += measured.fingerprint
+
+                // Built from the bytes already in hand, after they have been measured. Failure here is
+                // swallowed on purpose: a picture is a courtesy to the buyer and the verdict does not
+                // depend on it, so a bitmap that cannot be allocated must not cost them the test.
+                runCatching { onFrame(toGreyscaleBitmap(bytes, rowStride, image.width, image.height)) }
+                    .onFailure { Diagnostics.warn(TAG, "could not build a preview frame", it) }
             } catch (error: Exception) {
                 Diagnostics.warn(TAG, "reading a frame failed", error)
             } finally {
@@ -270,6 +354,27 @@ class CameraProbe(private val context: Context) {
         continuation.invokeOnCancellation { runCatching { session.stopRepeating() } }
     }
 
+    /**
+     * The luma plane as a picture.
+     *
+     * `rowStride` is honoured rather than assumed equal to the width — it very often is not, and treating
+     * the buffer as tightly packed produces a diagonally sheared image, which a buyer would read as a
+     * broken camera. That would be this app inventing the exact fault it exists to detect.
+     */
+    private fun toGreyscaleBitmap(luma: ByteArray, rowStride: Int, width: Int, height: Int): Bitmap {
+        val pixels = IntArray(width * height)
+        for (y in 0 until height) {
+            val row = y * rowStride
+            val out = y * width
+            for (x in 0 until width) {
+                val index = row + x
+                val value = if (index < luma.size) luma[index].toInt() and 0xFF else 0
+                pixels[out + x] = 0xFF shl 24 or (value shl 16) or (value shl 8) or value
+            }
+        }
+        return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888)
+    }
+
     private fun summarise(
         info: CameraInfo,
         means: List<Float>,
@@ -279,6 +384,9 @@ class CameraProbe(private val context: Context) {
         if (means.isEmpty()) return empty(info)
         return CameraFrameStats(
             facing = info.facing,
+            sensorMegapixels = info.sensorMegapixels,
+            largestPhotoMegapixels = info.largestPhotoMegapixels,
+            maxZoom = info.maxZoom,
             framesReceived = means.size,
             meanLuma = means.average().toFloat(),
             // The most detailed frame, not the average. Auto-exposure and auto-focus settle over the first
@@ -289,12 +397,22 @@ class CameraProbe(private val context: Context) {
         )
     }
 
+    /**
+     * No frames, but still whatever the phone will say about the camera.
+     *
+     * The specs come from characteristics, which need neither a permission nor an open camera — so a
+     * camera that refuses to open still reports its resolution, and a buyer comparing the handset against
+     * its advert gets that number either way.
+     */
     private fun empty(info: CameraInfo) = CameraFrameStats(
         facing = info.facing,
         framesReceived = 0,
         meanLuma = 0f,
         lumaVariation = 0f,
         framesIdentical = false,
+        sensorMegapixels = info.sensorMegapixels,
+        largestPhotoMegapixels = info.largestPhotoMegapixels,
+        maxZoom = info.maxZoom,
     )
 
     private class LumaMeasurement(val mean: Float, val variation: Float, val fingerprint: Long)

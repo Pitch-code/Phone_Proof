@@ -1,10 +1,14 @@
 package com.phoneproof.feature.cameratest
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.google.common.truth.Truth.assertThat
 import com.phoneproof.checks.media.CameraCheck
 import com.phoneproof.checks.media.CameraFacing
 import com.phoneproof.checks.media.CameraFrameStats
@@ -39,9 +43,80 @@ class CameraTestScreenshotTest {
         System.getProperty("phoneproof.screenshotDir") ?: "build/screenshots"
 
     private val twoCameras = listOf(
-        CameraInfo(id = "0", facing = CameraFacing.BACK, hasFlash = true),
-        CameraInfo(id = "1", facing = CameraFacing.FRONT, hasFlash = false),
+        // Real-looking specs, and a 90 degree sensor mounting, which is what almost every phone has. The
+        // rotation is the part most likely to be wrong on hardware, so it has to be in the render.
+        CameraInfo(
+            id = "0",
+            facing = CameraFacing.BACK,
+            hasFlash = true,
+            sensorMegapixels = 50.3f,
+            largestPhotoMegapixels = 12.6f,
+            maxZoom = 10f,
+            sensorOrientation = 90,
+        ),
+        CameraInfo(
+            id = "1",
+            facing = CameraFacing.FRONT,
+            hasFlash = false,
+            sensorMegapixels = 8.0f,
+            largestPhotoMegapixels = 8.0f,
+            maxZoom = 4f,
+            sensorOrientation = 270,
+        ),
     )
+
+    private val backStats = CameraFrameStats(
+        facing = CameraFacing.BACK,
+        framesReceived = 8,
+        meanLuma = 0.42f,
+        lumaVariation = 0.21f,
+        framesIdentical = false,
+        sensorMegapixels = 50.3f,
+        largestPhotoMegapixels = 12.6f,
+        maxZoom = 10f,
+    )
+
+    private val frontStats = CameraFrameStats(
+        facing = CameraFacing.FRONT,
+        framesReceived = 8,
+        meanLuma = 0.38f,
+        lumaVariation = 0.17f,
+        framesIdentical = false,
+        sensorMegapixels = 8.0f,
+        largestPhotoMegapixels = 8.0f,
+        maxZoom = 4f,
+    )
+
+    /**
+     * A frame with a marker in a known place, so the render proves the rotation is right.
+     *
+     * The first version put a bright block flush into one corner. It rendered correctly and looked like a
+     * clipping bug — the block's own square edges read as a broken rounded corner — which made the review
+     * harder rather than easier. A test fixture that looks like a defect is worse than no fixture.
+     *
+     * So: a soft gradient, one vertical bar, and a bright disc inset in the upper-left quadrant. The disc
+     * never touches the clip, and where it ends up on screen says which way the frame was turned — upper
+     * left means no rotation, upper right means 90 degrees, and so on.
+     */
+    private fun sceneFrame(width: Int = 320, height: Int = 240): ImageBitmap {
+        val discX = width / 4
+        val discY = height / 4
+        val discRadius = height / 8
+
+        val pixels = IntArray(width * height) { index ->
+            val x = index % width
+            val y = index / width
+
+            val gradient = 45 + (y * 110 / height)
+            val bar = if (x in (width * 2 / 3)..(width * 2 / 3 + 8)) 165 else gradient
+            val dx = x - discX
+            val dy = y - discY
+            val value = if (dx * dx + dy * dy < discRadius * discRadius) 240 else bar
+
+            0xFF shl 24 or (value shl 16) or (value shl 8) or value
+        }
+        return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888).asImageBitmap()
+    }
 
     private fun render(name: String, state: CameraTestUiState, themeMode: ThemeMode = ThemeMode.LIGHT) {
         composeRule.setContent {
@@ -138,5 +213,71 @@ class CameraTestScreenshotTest {
             ),
             themeMode = ThemeMode.DARK,
         )
+    }
+
+    @Test
+    fun the_camera_being_tested_shows_what_it_is_sending() {
+        // The request was for a small window per camera showing what is being captured. This is the frame
+        // arriving while the rear camera is still open — the same data the verdict is computed from, which
+        // is why it is greyscale and why it is captioned as brightness only.
+        render(
+            "6-live-frame",
+            CameraTestUiState(
+                stage = CameraStage.TESTING,
+                cameras = twoCameras,
+                testing = CameraFacing.BACK.label,
+                frames = mapOf(CameraFacing.BACK.label to sceneFrame()),
+            ),
+        )
+    }
+
+    @Test
+    fun each_result_carries_its_own_camera_picture_and_specs() {
+        // Two pictures and two verdicts, paired. Getting this wrong would put the front camera's frame above
+        // the rear camera's result, which is worse than showing no picture at all.
+        render(
+            "7-frames-with-results",
+            CameraTestUiState(
+                stage = CameraStage.CAMERAS_DONE,
+                cameras = twoCameras,
+                results = listOf(
+                    CameraCheck.evaluate(backStats),
+                    CameraCheck.evaluate(frontStats),
+                ),
+                frames = mapOf(
+                    CameraFacing.BACK.label to sceneFrame(),
+                    CameraFacing.FRONT.label to sceneFrame(),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun a_camera_that_would_not_open_still_reports_its_resolution() {
+        // Characteristics need neither a permission nor an open camera, so the megapixel figure survives a
+        // camera that refuses to start — and that is exactly when a buyer comparing the phone to its advert
+        // still wants the number.
+        render(
+            "8-specs-without-frames",
+            CameraTestUiState(
+                stage = CameraStage.CAMERAS_DONE,
+                cameras = twoCameras,
+                results = listOf(
+                    CameraCheck.evaluate(
+                        backStats.copy(framesReceived = 0, meanLuma = 0f, lumaVariation = 0f),
+                    ),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun the_megapixel_note_never_accuses_the_seller() {
+        // A phone advertised at 50 MP handing apps 12.6 is normal, not fraud: full-resolution modes are kept
+        // for the manufacturer's own camera app. The note has to say so, because a buyer taking this to a
+        // seller as proof would be wrong.
+        assertThat(CameraCheck.specNote(backStats)).contains("not proof of anything")
+        assertThat(CameraCheck.specNote(backStats)).contains("50.3 MP")
+        assertThat(CameraCheck.specNote(frontStats.copy(sensorMegapixels = null))).isNull()
     }
 }
