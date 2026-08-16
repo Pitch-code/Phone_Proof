@@ -66,6 +66,7 @@ dependencies {
     implementation(project(":feature:audiotest"))
     implementation(project(":feature:buttons"))
     implementation(project(":feature:cameratest"))
+    implementation(project(":feature:charging"))
     implementation(project(":feature:sensortest"))
     implementation(project(":feature:vibration"))
     // Brings :core:run transitively, since RunState and RunSession are in feature:run's public API.
