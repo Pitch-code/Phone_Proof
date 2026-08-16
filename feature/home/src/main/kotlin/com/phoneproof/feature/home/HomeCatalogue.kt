@@ -65,6 +65,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Is each sensor producing a live picture?",
     ),
     HomeCheckEntry(
+        route = "volume-buttons",
+        title = "Volume buttons",
+        subtitle = "Dead keys, and jammed ones that boot the phone into recovery",
+    ),
+    HomeCheckEntry(
         route = "sensors",
         title = "Sensors that still work",
         subtitle = "Tilt and cover it — a dead sensor is still on the parts list",

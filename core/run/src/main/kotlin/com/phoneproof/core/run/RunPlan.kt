@@ -81,6 +81,15 @@ object RunPlan {
         // Straight after the camera because it is the other test done with the phone held up and turned
         // about, and because it asks for no permission at all — a good thing to reach while the buyer is
         // still saying yes to things.
+        // Grouped with the sensor test: both are hands-on, both need no permission, and both are things
+        // the buyer does to the outside of the phone rather than to the screen.
+        RunStep(
+            id = "volume-buttons",
+            title = "Volume buttons",
+            why = "A jammed volume key makes a phone boot into recovery on its own",
+            effort = StepEffort.HANDS_ON,
+            typicalSeconds = 20,
+        ),
         RunStep(
             id = "sensors",
             title = "Sensors that still work",
