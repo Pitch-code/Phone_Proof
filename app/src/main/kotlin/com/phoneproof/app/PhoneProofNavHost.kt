@@ -32,6 +32,7 @@ import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.run.RunRoute
 import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
+import com.phoneproof.feature.storagespeed.StorageSpeedRoute
 import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.vibration.VibrationRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
@@ -54,6 +55,7 @@ internal object Routes {
     const val MULTI_TOUCH = "multi-touch"
     const val LOCK = "lock"
     const val SCAN = "scan"
+    const val STORAGE_SPEED = "storage-speed"
     const val DIAGNOSTICS = "diagnostics"
     const val SETTINGS = "settings"
     const val REPORTS = "reports"
@@ -186,6 +188,13 @@ fun PhoneProofNavHost(
         composable(Routes.VOLUME_BUTTONS) {
             VolumeButtonsRoute(
                 onResults = { runSession.record(Routes.VOLUME_BUTTONS, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.STORAGE_SPEED) {
+            StorageSpeedRoute(
+                onResults = { runSession.record(Routes.STORAGE_SPEED, it) },
                 modifier = Modifier.fillMaxSize(),
             )
         }

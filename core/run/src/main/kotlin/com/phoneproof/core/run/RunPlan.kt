@@ -35,6 +35,16 @@ object RunPlan {
             effort = StepEffort.AUTOMATIC,
             typicalSeconds = 20,
         ),
+        // Straight after the scan, because it is the other step where the buyer only has to wait. Not folded
+        // into the scan itself: it writes 64 MB and takes several seconds, and "instant scan" has to stay
+        // instant.
+        RunStep(
+            id = "storage-speed",
+            title = "Storage speed",
+            why = "Slow flash is what makes a phone feel broken rather than old",
+            effort = StepEffort.AUTOMATIC,
+            typicalSeconds = 25,
+        ),
         RunStep(
             id = "touch",
             title = "Touch response",
