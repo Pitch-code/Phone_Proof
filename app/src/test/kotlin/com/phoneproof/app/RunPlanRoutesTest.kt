@@ -39,6 +39,7 @@ class RunPlanRoutesTest {
         // A step pointing at the checklist would be a loop the buyer cannot get out of.
         assertThat(RunPlan.stepIds).doesNotContain(Routes.RUN)
         assertThat(RunPlan.stepIds).doesNotContain(Routes.VERDICT)
+        assertThat(RunPlan.stepIds).doesNotContain(Routes.CHECKS)
     }
 
     @Test
