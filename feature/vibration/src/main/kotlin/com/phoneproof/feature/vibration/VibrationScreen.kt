@@ -58,11 +58,17 @@ fun VibrationScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(10.dp))
-        Text(
-            text = "Vibration",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        // The heading is dropped once results are on screen, because a single-check screen and its result
+        // card inevitably carry the same name — and "Vibration" above a card titled "Vibration" reads as a
+        // rendering mistake. The card has to keep the title, since it appears in saved reports where nothing
+        // else supplies the context; so it is the heading that goes.
+        if (state.stage != VibrationStage.DONE) {
+            Text(
+                text = "Vibration",
+                style = MaterialTheme.typography.titleLarge,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+        }
 
         when (state.stage) {
             VibrationStage.READY -> Ready(state, onStart)

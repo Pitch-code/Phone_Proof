@@ -66,11 +66,16 @@ fun MultiTouchScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(10.dp))
-        Text(
-            text = "Fingers at once",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        // Dropped once the result card is on screen: a single-check screen and its card carry the same name,
+        // and the heading repeated directly above it reads as a rendering mistake. The card keeps the title
+        // because saved reports have nothing else to supply the context.
+        if (state.stage != MultiTouchStage.DONE) {
+            Text(
+                text = "Fingers at once",
+                style = MaterialTheme.typography.titleLarge,
+                color = PhoneProofTheme.colors.textPrimary,
+            )
+        }
 
         if (state.stage == MultiTouchStage.DONE) {
             Finished(state = state, onRestart = onRestart)
