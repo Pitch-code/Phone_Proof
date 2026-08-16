@@ -130,7 +130,8 @@ fun RunVerdictScreen(
         if (notTested.isNotEmpty()) {
             SectionLabel("Not tested")
             Text(
-                text = "Nothing is known about these, one way or the other.",
+                text = "Nothing is known about these, one way or the other. Tap any of them to " +
+                    "do it now.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textSecondary,
             )
@@ -377,11 +378,10 @@ private fun NotTestedRow(step: RunStep, onClick: () -> Unit) {
                 color = PhoneProofTheme.colors.textPrimary,
             )
             Text(
-                text = if (step.essential) {
-                    "Tap to test it — this is one of the ones that matters"
-                } else {
-                    "Tap to test it"
-                },
+                // Short, because four of these stack up and the first version repeated "tap to test
+                // it — this is one of the ones that matters" down the whole screen, wrapping onto two
+                // lines each time. The invitation to tap now lives once, above the list.
+                text = if (step.essential) "Decides the verdict" else "Optional",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textTertiary,
             )

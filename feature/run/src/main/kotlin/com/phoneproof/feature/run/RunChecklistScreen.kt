@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.OutcomeBadge
 import com.phoneproof.core.designsystem.component.accent
+import com.phoneproof.core.designsystem.component.glyph
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.nounFor
@@ -429,11 +430,15 @@ private fun doneSubtitle(worstOutcome: CheckOutcome?): String = when (worstOutco
 
 @Composable
 private fun StatusMarker(position: Int, status: RunStepStatus, worstOutcome: CheckOutcome?) {
+    // The glyph follows the finding, not merely the fact that the step ran. The first render of this
+    // screen put a tick against every completed step, which produced a red tick beside a badge reading
+    // PROBLEM and an amber tick beside CHECK AGAIN — the marker congratulating the buyer for having
+    // discovered a fault.
     val (label, tint) = when {
         status == RunStepStatus.SKIPPED -> "–" to PhoneProofTheme.colors.textTertiary
         status == RunStepStatus.DONE && worstOutcome == null ->
             "✓" to PhoneProofTheme.colors.pass
-        status == RunStepStatus.DONE -> "✓" to worstOutcome!!.accent()
+        status == RunStepStatus.DONE -> worstOutcome!!.glyph() to worstOutcome.accent()
         else -> "$position" to PhoneProofTheme.colors.textTertiary
     }
     Box(
@@ -508,7 +513,10 @@ internal fun adviceFor(condition: RunCondition): String = when (condition) {
     RunCondition.DIM_LIGHT ->
         "Shade the screen with your hand for the colour pages. Dead pixels hide under a showroom " +
             "light."
+    // Deliberately does not name the touch test, though that is where it was first seen. This line is
+    // shown against whichever step declares the condition, and it appeared under "Dead pixels and
+    // burn-in" explaining a problem with a different test.
     RunCondition.NO_INTERRUPTIONS ->
-        "Turn on Do Not Disturb. A notification banner sits on top of the touch test and swallows " +
-            "the taps underneath it, which reads as a dead strip."
+        "Turn on Do Not Disturb. A notification banner covers part of the screen and takes the taps " +
+            "underneath it, which looks exactly like a fault in the phone."
 }
