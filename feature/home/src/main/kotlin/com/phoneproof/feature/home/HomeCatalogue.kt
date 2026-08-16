@@ -70,6 +70,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Dead keys, and jammed ones that boot the phone into recovery",
     ),
     HomeCheckEntry(
+        route = "vibration",
+        title = "Vibration",
+        subtitle = "Felt with the accelerometer, not guessed at",
+    ),
+    HomeCheckEntry(
         route = "sensors",
         title = "Sensors that still work",
         subtitle = "Tilt and cover it — a dead sensor is still on the parts list",
