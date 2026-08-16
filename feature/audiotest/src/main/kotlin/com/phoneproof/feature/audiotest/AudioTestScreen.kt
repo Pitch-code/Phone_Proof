@@ -213,8 +213,8 @@ private fun ToneQuestionDialog(
             )
             Text(
                 text = "The app played a 1 kHz tone and could not pick it out of the recording. That " +
-                    "happens in a noisy room and is not by itself a fault, so this one is your ear's " +
-                    "to decide.",
+                    "happens in a noisy room and is not by itself a fault, so this one is for your " +
+                    "ear to decide.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textSecondary,
             )
