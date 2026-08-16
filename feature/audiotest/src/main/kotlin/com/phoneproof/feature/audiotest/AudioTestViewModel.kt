@@ -7,6 +7,7 @@ import com.phoneproof.checks.media.MicrophoneCheck
 import com.phoneproof.checks.media.SpeakerCheck
 import com.phoneproof.checks.media.ToneDetector
 import com.phoneproof.checks.media.analyse
+import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.media.AudioProbe
 import com.phoneproof.core.model.CheckOutcome
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +81,14 @@ class AudioTestViewModel(
                 return@launch
             }
 
-            val ratio = ToneDetector.toneRatio(window, ToneDetector.TEST_TONE_HZ)
+            // bestToneRatio, not toneRatio: playback and capture clocks differ by a few hertz on a lot
+            // of handsets, and a single-bin search over three seconds misses a tone two hertz off.
+            val match = ToneDetector.bestToneRatio(window, ToneDetector.TEST_TONE_HZ)
+            val ratio = match.ratio
+            Diagnostics.info(
+                TAG,
+                "tone match: ${"%.3f".format(ratio)} at ${"%.1f".format(match.frequencyHz)} Hz",
+            )
             val analysis = analyse(window)
             val result = SpeakerCheck.evaluate(toneRatio = ratio, roomFloor = analysis.noiseFloor)
 
@@ -116,6 +124,8 @@ class AudioTestViewModel(
     }
 
     private companion object {
+        const val TAG = "AudioTest"
+
         /**
          * Three seconds to speak. Long enough to hold several syllables and their gaps, which is what the
          * floor-versus-signal measurement needs, and short enough that nobody abandons it.
