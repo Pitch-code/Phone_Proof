@@ -105,7 +105,10 @@ class RunSessionTest {
         session.record("scan", listOf(pass("hardware.storage")))
         session.skip("touch")
 
-        assertThat(session.state.value.nextStep!!.id).isEqualTo("screen-patterns")
+        // Reads the plan rather than naming a step, so inserting a new one does not make this assertion
+        // wrong — it is testing that "next" skips what is settled, not what the third step happens to be.
+        val expected = RunPlan.stepIds.first { it != "scan" && it != "touch" }
+        assertThat(session.state.value.nextStep!!.id).isEqualTo(expected)
     }
 
     @Test

@@ -34,6 +34,7 @@ import com.phoneproof.feature.scan.ScanRoute
 import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
+import com.phoneproof.feature.touchgrid.MultiTouchRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 
 /**
@@ -48,6 +49,7 @@ internal object Routes {
     const val HOME = "home"
     const val CHECKS = "checks"
     const val TOUCH = "touch"
+    const val MULTI_TOUCH = "multi-touch"
     const val LOCK = "lock"
     const val SCAN = "scan"
     const val DIAGNOSTICS = "diagnostics"
@@ -255,6 +257,13 @@ fun PhoneProofNavHost(
         composable(Routes.TOUCH) {
             TouchGridRoute(
                 onResults = { runSession.record(Routes.TOUCH, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.MULTI_TOUCH) {
+            MultiTouchRoute(
+                onResults = { runSession.record(Routes.MULTI_TOUCH, it) },
                 modifier = Modifier.fillMaxSize(),
             )
         }

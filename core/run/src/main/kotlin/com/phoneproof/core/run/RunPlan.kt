@@ -43,6 +43,16 @@ object RunPlan {
             needs = setOf(RunCondition.NO_INTERRUPTIONS),
             typicalSeconds = 60,
         ),
+        // Immediately after touch coverage, because it is the same glass and the same hand position — and
+        // because the two faults are complements: coverage finds dead areas, this finds dead capacity.
+        RunStep(
+            id = "multi-touch",
+            title = "Fingers at once",
+            why = "A screen can respond everywhere and still lose the fourth finger",
+            effort = StepEffort.HANDS_ON,
+            needs = setOf(RunCondition.NO_INTERRUPTIONS),
+            typicalSeconds = 30,
+        ),
         RunStep(
             id = "screen-patterns",
             title = "Dead pixels and burn-in",
