@@ -1,6 +1,7 @@
 package com.phoneproof.feature.claims
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,6 +25,8 @@ import com.phoneproof.core.model.CheckResult
 fun ClaimsRoute(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
 ) {
     val context = LocalContext.current
     val entitlement by remember(context) { SettingsRepository(context).entitlement }
@@ -54,6 +57,8 @@ fun ClaimsRoute(
     var ram by rememberSaveable { mutableStateOf("") }
     var model by rememberSaveable { mutableStateOf("") }
     var result by remember { mutableStateOf<CheckResult?>(null) }
+
+    LaunchedEffect(result) { result?.let { onResults(listOf(it)) } }
 
     ClaimsScreen(
         storage = storage,

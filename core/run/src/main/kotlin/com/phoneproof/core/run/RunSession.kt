@@ -78,17 +78,13 @@ class RunSession(
         }
     }
 
-    /** Undo a skip, for the buyer who changed their mind at the verdict screen. */
-    fun reopen(stepId: String) {
-        update(stepId) { current ->
-            current.copy(
-                statuses = current.statuses - stepId,
-                results = current.results - stepId,
-            )
-        }
-    }
-
-    /** Throw the run away, after saving it or on abandoning it. */
+    /**
+     * Throw the run away, after saving it or on abandoning it.
+     *
+     * There is deliberately no "un-skip" counterpart. Revisiting a skipped step and actually doing it
+     * records a result, which promotes it to done on its own — so a separate way to put a step back to
+     * pending would only ever be used to make the run look less complete than it is.
+     */
     fun reset() {
         _state.value = RunState()
     }

@@ -64,6 +64,8 @@ dependencies {
     implementation(project(":feature:imei"))
     implementation(project(":feature:audiotest"))
     implementation(project(":feature:cameratest"))
+    // Brings :core:run transitively, since RunState and RunSession are in feature:run's public API.
+    implementation(project(":feature:run"))
     implementation(project(":core:preferences"))
     implementation(project(":feature:diagnostics"))
 
@@ -78,4 +80,9 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // The app module's first unit tests. Plain JVM, no Robolectric: the only thing asserted here is
+    // that the guided run's step ids and the navigation graph's route names are the same strings.
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
 }

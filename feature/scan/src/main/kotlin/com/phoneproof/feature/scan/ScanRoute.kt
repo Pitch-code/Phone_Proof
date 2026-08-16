@@ -1,7 +1,6 @@
 package com.phoneproof.feature.scan
 
 import android.content.Context
-import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,46 +22,36 @@ import com.phoneproof.core.device.BatteryFactsReader
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
+import com.phoneproof.core.device.androidLabel
+import com.phoneproof.core.device.deviceLabel
 import com.phoneproof.core.designsystem.SCAN_ALLOWANCE_UNLOCK
 import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.designsystem.scanAllowanceUsedUpExplanation
 import com.phoneproof.core.designsystem.scanAllowanceUsedUpTitle
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.reports.ReportStore
 import com.phoneproof.core.reports.SavedReport
-import java.io.File
+import com.phoneproof.core.reports.reportStore
 
 private const val TAG = "ScanRoute"
-
-/**
- * Where saved reports live.
- *
- * Duplicated deliberately rather than depending on `feature:reports`: a feature module depending on
- * another feature module is how a module graph turns into a knot. The directory name is asserted
- * against the reports feature in a test so the two cannot drift apart silently.
- */
-internal fun reportStore(context: Context, retain: Int): ReportStore =
-    ReportStore(File(context.filesDir, "reports"), retain = retain)
-
-/** "realme RMX5110", or just the model when the manufacturer is already in it. */
-internal fun deviceLabel(): String {
-    val manufacturer = Build.MANUFACTURER.orEmpty().trim()
-    val model = Build.MODEL.orEmpty().trim()
-    return when {
-        model.isEmpty() -> manufacturer.ifEmpty { "Unknown phone" }
-        manufacturer.isEmpty() -> model
-        model.startsWith(manufacturer, ignoreCase = true) -> model
-        else -> "$manufacturer $model"
-    }
-}
 
 @Composable
 fun ScanRoute(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ScanViewModel = viewModel(),
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
+    /**
+     * Whether to write its own saved report.
+     *
+     * False during a guided run, where the run writes one report containing the scan's findings *and*
+     * everything else. Without this a single run would produce two reports — and on the free tier,
+     * which keeps two, one run would fill the entire history and evict the previous phone.
+     */
+    saveOwnReport: Boolean = true,
 ) {
     val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -109,13 +98,39 @@ fun ScanRoute(
     // the key, a buyer arriving with no scans left would still burn one before the block appeared.
     LaunchedEffect(outOfScans) { if (!outOfScans) startScan() }
 
+    LaunchedEffect(state.results, state.finished) {
+        if (state.finished) onResults(state.results)
+    }
+
+    val scanId = state.scanId
+
+    // The allowance is spent here, on its own, and deliberately not inside the save below.
+    //
+    // It used to sit at the end of the save block, which was fine while every scan wrote its own
+    // report. Once a guided run took over the writing, `saveOwnReport = false` would have returned
+    // early and skipped this too — so a buyer who only ever used the guided run would have had an
+    // unlimited free trial, and the paywall would have quietly stopped existing.
+    //
+    // Counted at the point results appeared, rather than when the scan started: a scan that read
+    // nothing must not cost a buyer one of their two.
+    LaunchedEffect(scanId, state.finished) {
+        if (scanId == null || !state.finished || state.results.isEmpty()) return@LaunchedEffect
+        if (!entitlement.hasUnlimitedScans) {
+            settings.recordScanUsed()
+            Diagnostics.info(
+                TAG,
+                "free scan recorded (${scansUsed + 1}/${Entitlement.FREE_SCAN_LIMIT})",
+            )
+        }
+    }
+
     // Saved without being asked. The moment a buyer wants a report is after they have handed the
     // phone back, and a "save this?" prompt is answered wrongly under pressure in front of a seller.
     //
     // Keyed on scanId, so this runs once per scan: the id is minted when the scan starts, and saving
     // the same id twice rewrites one file rather than duplicating the report.
-    val scanId = state.scanId
-    LaunchedEffect(scanId, state.finished, retain) {
+    LaunchedEffect(scanId, state.finished, retain, saveOwnReport) {
+        if (!saveOwnReport) return@LaunchedEffect
         if (scanId == null || !state.finished) return@LaunchedEffect
         val results = state.results
         if (results.isEmpty()) return@LaunchedEffect
@@ -125,23 +140,16 @@ fun ScanRoute(
             // "keep every report instead of only the last two" would be false: the save path is
             // where pruning happens, so a hardcoded free limit here silently deletes a paying
             // customer's history no matter what the Settings screen says they bought.
-            val pruned = reportStore(context, retain).save(
+            val pruned = reportStore(context.filesDir, retain).save(
                 SavedReport(
                     id = scanId,
                     createdAtEpochMs = System.currentTimeMillis(),
                     deviceLabel = deviceLabel(),
-                    androidLabel = "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})",
+                    androidLabel = androidLabel(),
                     results = results,
                 ),
             )
             Diagnostics.info(TAG, "saved report $scanId (${results.size} results, $pruned pruned)")
-
-            // Counted here, at the point a scan actually produced results, rather than when one
-            // starts. A scan that read nothing must not cost a buyer one of two chances.
-            if (!entitlement.hasUnlimitedScans) {
-                settings.recordScanUsed()
-                Diagnostics.info(TAG, "free scan recorded (${scansUsed + 1}/${Entitlement.FREE_SCAN_LIMIT})")
-            }
         }.onFailure {
             // A failed save must never take down the screen showing results the buyer is reading.
             Diagnostics.error(TAG, "could not save report $scanId", it)

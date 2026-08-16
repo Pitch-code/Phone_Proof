@@ -1,6 +1,7 @@
 package com.phoneproof.core.run
 
 import com.google.common.truth.Truth.assertThat
+import com.phoneproof.core.model.CheckOutcome
 import org.junit.Test
 
 class RunSessionTest {
@@ -85,18 +86,6 @@ class RunSessionTest {
         session.record("audio", listOf(pass("hardware.microphone")))
         assertThat(session.state.value.statusOf("audio")).isEqualTo(RunStepStatus.DONE)
         assertThat(session.state.value.skippedCount).isEqualTo(0)
-    }
-
-    @Test
-    fun reopening_forgets_both_the_status_and_the_findings() {
-        val session = RunSession()
-        session.start()
-        session.record("camera", listOf(fail("hardware.camera")))
-        session.reopen("camera")
-
-        val state = session.state.value
-        assertThat(state.statusOf("camera")).isEqualTo(RunStepStatus.PENDING)
-        assertThat(state.resultsOf("camera")).isEmpty()
     }
 
     @Test
@@ -185,5 +174,43 @@ class RunSessionTest {
         session.start()
 
         assertThat(session.state.value.startedAtEpochMs).isEqualTo(1_700_000_000_000L)
+    }
+}
+
+
+/** The badge the checklist puts against a finished step. */
+class RunStateOutcomeTest {
+
+    @Test
+    fun a_step_that_measured_nothing_has_no_badge() {
+        val state = runWith(done = listOf("guide"))
+
+        assertThat(state.worstOutcomeOf("guide")).isNull()
+        assertThat(state.worstOutcomeOf("audio")).isNull()
+    }
+
+    @Test
+    fun the_worst_finding_is_the_one_shown() {
+        val state = runWith(
+            results = mapOf(
+                "scan" to listOf(pass("a"), unknown("b"), caution("c"), fail("d")),
+            ),
+        )
+
+        assertThat(state.worstOutcomeOf("scan")).isEqualTo(CheckOutcome.FAIL)
+    }
+
+    @Test
+    fun could_not_tell_outranks_passed_so_a_gap_never_looks_clean() {
+        val state = runWith(results = mapOf("scan" to listOf(pass("a"), unknown("b"))))
+
+        assertThat(state.worstOutcomeOf("scan")).isEqualTo(CheckOutcome.UNKNOWN)
+    }
+
+    @Test
+    fun all_clear_shows_a_pass() {
+        val state = runWith(results = mapOf("scan" to listOf(pass("a"), pass("b"))))
+
+        assertThat(state.worstOutcomeOf("scan")).isEqualTo(CheckOutcome.PASS)
     }
 }

@@ -6,20 +6,26 @@ import android.content.ContextWrapper
 import android.view.WindowManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.model.CheckResult
 
 @Composable
 fun ScreenTestRoute(
     modifier: Modifier = Modifier,
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
     viewModel: ScreenTestViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val activity = LocalContext.current.findActivity()
+
+    LaunchedEffect(state.result) { state.result?.let { onResults(listOf(it)) } }
 
     // Full brightness and no screen timeout, for as long as this screen is on top.
     //

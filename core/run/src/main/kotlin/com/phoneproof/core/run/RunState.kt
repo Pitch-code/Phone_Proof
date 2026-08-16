@@ -1,5 +1,6 @@
 package com.phoneproof.core.run
 
+import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
 
 enum class RunStepStatus {
@@ -30,6 +31,26 @@ data class RunState(
     fun statusOf(id: String): RunStepStatus = statuses[id] ?: RunStepStatus.PENDING
 
     fun resultsOf(id: String): List<CheckResult> = results[id].orEmpty()
+
+    /**
+     * The most serious thing a finished step found, or null if it measured nothing.
+     *
+     * Lets the checklist show at a glance which steps found trouble, so a buyer scrolling back does
+     * not have to reopen five screens to remember where the problem was.
+     *
+     * UNKNOWN outranks PASS for the same reason it does in a saved report: a step that could not
+     * measure half of what it tried must not wear the same badge as one that came back clean.
+     */
+    fun worstOutcomeOf(id: String): CheckOutcome? {
+        val stepResults = resultsOf(id)
+        return when {
+            stepResults.isEmpty() -> null
+            stepResults.any { it.outcome == CheckOutcome.FAIL } -> CheckOutcome.FAIL
+            stepResults.any { it.outcome == CheckOutcome.CAUTION } -> CheckOutcome.CAUTION
+            stepResults.any { it.outcome == CheckOutcome.UNKNOWN } -> CheckOutcome.UNKNOWN
+            else -> CheckOutcome.PASS
+        }
+    }
 
     val doneCount: Int get() = steps.count { statusOf(it.id) == RunStepStatus.DONE }
 
