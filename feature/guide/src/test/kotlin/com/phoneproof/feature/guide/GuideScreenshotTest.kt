@@ -45,6 +45,9 @@ class GuideScreenshotTest {
                 GuideScreen(
                     steps = GuideSteps,
                     expandedId = null,
+                    // Static, so the render is deterministic. The diagrams animate on a real
+                    // device once a card is tapped.
+                    animate = false,
                     onToggle = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -60,6 +63,7 @@ class GuideScreenshotTest {
                 GuideScreen(
                     steps = GuideSteps,
                     expandedId = "guide.water",
+                    animate = false,
                     onToggle = {},
                     modifier = Modifier.fillMaxSize(),
                 )
@@ -177,8 +181,8 @@ class GuideScreenshotTest {
  * All eight diagrams at the one frame each of them holds, in whichever theme wraps it.
  *
  * This used to render three arbitrary points of each diagram's cycle, which was the right thing to
- * review while they animated. They no longer do, so those frames are now ones **no user will ever
- * see** — and the frame that does ship, `stillFrame`, was not among them. A review artifact showing
+ * review while they looped freely. Now they animate only while a card is open, and the frame that
+ * ships when motion is off — `stillFrame` — was not among those three. A review artifact showing
  * three wrong frames instead of the one real one is worse than none.
  *
  * Two columns rather than three, because with a third of the cells there is room to make them bigger,

@@ -61,12 +61,29 @@ Verdict reveal        spring(dampingRatio = 0.60f) — the one overshoot in the 
 Haptics               CONFIRM on pass, REJECT on fail
 ```
 
-### Rule: no looping animation, with exactly one documented exception
+### Rule: no looping animation, with exactly two documented exceptions
 
-> The guide diagrams were a **second** exception for a while, undocumented: `rememberInfiniteTransition`
-> looping every open card forever. The product owner ruled that the rule wins, so they hold still, each
-> at its own `GuideDiagram.stillFrame`. Do not reintroduce the loop — and if a diagram reads poorly,
-> change the frame it stops on rather than making it move.
+> **Exception 2: the guide diagrams**, and the reasoning matters more than the permission.
+>
+> This rule exists because a measurement cannot be taken next to an animating surface — the battery
+> check is the reason it is written down. **The guide screen takes no measurement at all.** So a looping
+> diagram there does not endanger anything the rule is protecting.
+>
+> It was an *undocumented* second exception for a while, then removed on the product owner's instruction,
+> then asked for again. Both of those were avoidable: the fault the first time was that it was never
+> declared here, and the fault the second time was presenting it as "rule versus feature" when the rule's
+> own rationale did not reach it.
+>
+> The constraints it does have to meet, which it does:
+>
+> - It runs **only while a card is open**. The transition is created inside `AnimatedVisibility`, so
+>   nothing animates on arrival and eight diagrams never move at once.
+> - It is **user-initiated**. Motion is a consequence of tapping a step.
+> - It **honours the system animation setting** (`ANIMATOR_DURATION_SCALE`), falling back to
+>   `GuideDiagram.stillFrame` — which is posed per diagram precisely so a static frame still teaches the
+>   action.
+>
+> Do not extend this to any screen that measures.
 
 
 This is not a style preference. The app measures battery discharge under a load it controls.

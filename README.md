@@ -48,7 +48,7 @@ Then, one thing at a time:
 - **Dead pixels and burn-in** drives the panel through plain colours at forced maximum brightness.
 - **Claimed against measured** puts what the seller said beside what the phone reports.
 - **Eight things only you can check** covers the faults no app can reach — a twisted frame, a
-  re-glued screen, the water sticker in the SIM slot — each with a diagram of the action.
+  re-glued screen, the water sticker in the SIM slot — each with a moving diagram of the action.
 - **IMEI and the stolen-phone register** validates the fifteen digits against their Luhn check digit,
   which catches a typo and catches a number that was never issued, then hands off to the government
   CEIR portal — the only place that knows whether a handset has been reported stolen. Android has not

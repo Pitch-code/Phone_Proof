@@ -3,19 +3,16 @@ package com.phoneproof.feature.guide
 import androidx.compose.runtime.Immutable
 
 /**
- * Which diagram illustrates a step, and the single frame of it that is drawn.
+ * Which diagram illustrates a step, and the frame it rests on when it is not moving.
  *
- * The diagrams used to loop. They no longer do — `Motion.kt` states that an infinite animation is a
- * bug in this codebase, because a perpetually animating surface is an uncontrolled load and the
- * battery check cannot take an honest reading next to one. These eight were a second, undocumented
- * exception to that rule, and the product owner has ruled that they hold still.
+ * The diagrams animate while a step is open, and hold [stillFrame] when they do not — which is the case
+ * whenever the system's animation setting is off, and in every screenshot.
  *
- * Which makes [stillFrame] load-bearing rather than a default. Each drawing is a function of progress
- * over one cycle, and most of them are **at rest at 0** — the frame is untwisted, the SIM tray is
- * closed, the finger has not touched the sensor. A single shared constant was fine when it was only
- * the fallback for "animations are switched off"; now that it is the *only* thing anyone sees, each
- * diagram needs the moment that actually shows its action, and that moment is not in the same place
- * for all eight.
+ * [stillFrame] stays load-bearing either way. Each drawing is a function of progress over one cycle, and
+ * most of them are **at rest at 0** — the frame is untwisted, the SIM tray is closed, the finger has not
+ * touched the sensor. A single shared constant of 0.25 was chosen only to dodge that, and it left two of
+ * the eight showing a half-finished action: the fingerprint hovering above the sensor, the account row a
+ * third struck out. Anyone who turns motion off gets the whole illustration, not a frozen accident.
  */
 enum class GuideDiagram(val stillFrame: Float) {
     /** Fully twisted, where the creak marks appear. */
