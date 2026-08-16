@@ -229,7 +229,16 @@ class SensorTestViewModel(private val probe: SensorProbe) : ViewModel() {
 
         /** Long enough to tilt a phone over and turn it back without being rushed. */
         const val MOTION_MILLIS = 8_000L
-        const val COVER_MILLIS = 6_000L
+        /**
+         * 25 seconds, up from six.
+         *
+         * Reported from a real phone: six seconds is not long enough to read the instruction, work out
+         * where the sensor is on an unfamiliar handset, and get a palm flat over it. And it costs nothing
+         * to be generous, because the phase still ends the moment both indicators light — the full 25
+         * seconds only elapses when something is actually wrong, which is exactly when all the evidence
+         * is wanted.
+         */
+        const val COVER_MILLIS = 25_000L
 
         /** No phase ends before this, however quickly a threshold is crossed. */
         const val MINIMUM_MILLIS = 1_500L

@@ -13,6 +13,7 @@ import com.phoneproof.checks.media.ToneDetector
 import com.phoneproof.checks.media.TonePlan
 import com.phoneproof.core.diagnostics.Diagnostics
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 /** What the media volume was set to, which decides whether a speaker test can mean anything. */
@@ -103,6 +104,57 @@ class AudioProbe(private val context: Context) {
                 runCatching { it.stop() }
                 it.release()
             }
+        }
+    }
+
+    /**
+     * Plays a recording back through the loudspeaker, and returns when it has finished.
+     *
+     * Asked for after a hardware test: a level meter and a verdict tell a buyer the microphone *works*,
+     * and hearing their own voice back tells them what it sounds like — muffled, crackly, distant. No
+     * measurement substitutes for that, and it costs nothing because the samples are already in hand.
+     *
+     * **Nothing is written to disk.** The samples came from a recording held in memory and go straight to
+     * an `AudioTrack`, which keeps the promise the permission screen makes to a stranger about their own
+     * phone. That promise is the reason this does not offer to save the clip.
+     */
+    suspend fun play(window: AudioWindow): Unit = withContext(Dispatchers.IO) {
+        val samples = window.samples
+        if (samples.isEmpty()) return@withContext
+
+        val track = runCatching {
+            AudioTrack.Builder()
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build(),
+                )
+                .setAudioFormat(
+                    AudioFormat.Builder()
+                        .setEncoding(ENCODING)
+                        .setSampleRate(window.sampleRate)
+                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .build(),
+                )
+                .setBufferSizeInBytes(samples.size * 2)
+                .setTransferMode(AudioTrack.MODE_STATIC)
+                .build()
+        }.onFailure { Diagnostics.error(TAG, "could not build a playback track", it) }.getOrNull()
+            ?: return@withContext
+
+        try {
+            track.write(samples, 0, samples.size)
+            track.play()
+            // MODE_STATIC gives no completion callback, so the wait is the clip's own length plus a
+            // margin. Overshooting by a little is harmless; cutting a buyer's own voice off early is the
+            // one outcome that would make them doubt the recording rather than the phone.
+            delay((window.durationSeconds * 1000).toLong() + PLAYBACK_TAIL_MILLIS)
+        } catch (error: IllegalStateException) {
+            Diagnostics.error(TAG, "playback failed", error)
+        } finally {
+            runCatching { track.stop() }
+            track.release()
         }
     }
 
@@ -215,5 +267,8 @@ class AudioProbe(private val context: Context) {
          * rather than easier.
          */
         const val TONE_AMPLITUDE = 0.7
+
+        /** Slack on the playback wait, so the tail of a word is never clipped. */
+        const val PLAYBACK_TAIL_MILLIS = 250L
     }
 }
