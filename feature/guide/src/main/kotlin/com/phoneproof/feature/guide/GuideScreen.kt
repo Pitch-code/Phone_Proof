@@ -1,6 +1,12 @@
 package com.phoneproof.feature.guide
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -41,6 +47,17 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 fun GuideScreen(
     steps: List<GuideStep>,
     expandedId: String?,
+    /**
+     * Whether an opened diagram moves.
+     *
+     * False when the system says animations are off. Respected rather than overridden: someone who has
+     * turned motion off system-wide has done so for motion sensitivity or because the phone is slow, and
+     * a looping diagram is exactly the content that setting exists to suppress. They still get the
+     * drawing, held at [GuideDiagram.stillFrame], which is posed per diagram to read on its own.
+     *
+     * Also false in every screenshot test, which is what keeps the renders deterministic.
+     */
+    animate: Boolean,
     onToggle: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -80,6 +97,7 @@ fun GuideScreen(
                     step = step,
                     number = steps.indexOf(step) + 1,
                     expanded = step.id == expandedId,
+                    animate = animate,
                     onToggle = { onToggle(step.id) },
                 )
             }
@@ -92,6 +110,7 @@ private fun StepCard(
     step: GuideStep,
     number: Int,
     expanded: Boolean,
+    animate: Boolean,
     onToggle: () -> Unit,
 ) {
     Column(
@@ -143,7 +162,7 @@ private fun StepCard(
 
         AnimatedVisibility(visible = expanded) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Diagram(diagram = step.diagram)
+                Diagram(diagram = step.diagram, animate = animate)
 
                 Label("Why it matters")
                 Body(step.whyItMatters)
@@ -184,13 +203,37 @@ private fun StepCard(
 }
 
 @Composable
-private fun Diagram(diagram: GuideDiagram) {
-    // One frame, held. There used to be a rememberInfiniteTransition here looping every open card
-    // for 2600ms forever, which was a second undocumented exception to the rule in Motion.kt that an
-    // infinite animation is a bug in this codebase. The rule wins: the frame each diagram stops on
-    // is GuideDiagram.stillFrame, chosen per diagram rather than shared, because a single constant
-    // left two of the eight showing a half-finished action.
-    val progress = diagram.stillFrame
+private fun Diagram(diagram: GuideDiagram, animate: Boolean) {
+    // Moving again, and only while this card is open.
+    //
+    // This composable sits inside AnimatedVisibility(visible = expanded), so the transition is created
+    // when the buyer taps a step and disposed when they close it. Nothing animates on arrival, nothing
+    // animates behind text nobody is reading, and eight diagrams never move at once — the motion is a
+    // consequence of a deliberate tap, which is the shape the product owner asked for.
+    //
+    // On the rule in Motion.kt: it bans looping animation because a measurement cannot be taken next to
+    // an animating surface, and the battery check is the reason. This screen takes no measurement at
+    // all. Documented as an exception in design-system.md rather than left implicit, which is what was
+    // actually wrong with it the first time round.
+    //
+    // stillFrame is still what the diagram holds when motion is switched off, and still what every
+    // screenshot renders, so the poses chosen per diagram remain load-bearing.
+    val progress = if (animate) {
+        val transition = rememberInfiniteTransition(label = "diagram")
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                // Slow on purpose: this demonstrates a physical movement, and a fast loop reads as a
+                // flicker rather than as an instruction.
+                animation = tween(durationMillis = 2600, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+            label = "progress",
+        ).value
+    } else {
+        diagram.stillFrame
+    }
 
     Column(
         modifier = Modifier
