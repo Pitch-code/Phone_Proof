@@ -8,11 +8,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -56,12 +59,22 @@ fun SensorTestScreen(
         modifier = modifier
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
-            // No horizontal padding: the route supplies it along with the window insets and the
-            // title, so adding it here again would inset the content twice.
-            .verticalScroll(rememberScrollState()),
+            // Insets, padding and the title all live here rather than in the route, so that what the
+            // screenshot tests render is what the buyer sees. The first version left padding to the
+            // route and the rendered meters ran off the right-hand edge with their labels clipped —
+            // a layout bug that only existed in the review, which is the worst place for one to hide.
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Spacer(Modifier.height(4.dp))
+        Spacer(Modifier.height(10.dp))
+
+        Text(
+            text = "Sensors",
+            style = MaterialTheme.typography.titleLarge,
+            color = PhoneProofTheme.colors.textPrimary,
+        )
 
         when (state.phase) {
             SensorPhase.READY -> Ready(state, onStart)

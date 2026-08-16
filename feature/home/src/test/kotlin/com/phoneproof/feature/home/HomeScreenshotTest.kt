@@ -26,19 +26,15 @@ class HomeScreenshotTest {
         System.getProperty("phoneproof.screenshotDir") ?: "build/screenshots"
 
     /**
-     * Every check the app actually offers, not a token two.
+     * Every check the app actually offers, taken from the list the navigation graph uses.
      *
-     * The old test passed two, which is why nobody noticed Home had outgrown its fixed layout: with
-     * two rows everything fitted, while the real app pushed Settings off the bottom of the screen.
-     * A screenshot test that renders less than the real screen cannot catch a screen that overflows.
+     * This was a hand-written copy, and the copy fell five entries behind the real screen — the
+     * microphone, the cameras and the IMEI were all missing from it while their PRs were reviewed
+     * against these renders. Reading [HomeCatalogue] means a check added to Home cannot be left out of
+     * the picture that is supposed to prove Home still fits.
      */
-    private fun realChecks(): List<HomeCheck> = listOf(
-        HomeCheck("Instant scan", "Software, storage, sensors and screen — no waiting") {},
-        HomeCheck("Remote lock control", "Can a lender brick this phone after you pay?") {},
-        HomeCheck("Touch response", "Find dead patches on the screen") {},
-        HomeCheck("Dead pixels and burn-in", "Plain colours that make screen faults obvious") {},
-        HomeCheck("Claimed against measured", "Is it the phone you were promised?") {},
-    )
+    private fun realChecks(): List<HomeCheck> =
+        HomeCatalogue.map { HomeCheck(it.title, it.subtitle) {} }
 
     private fun render(name: String) {
         composeRule.setContent {

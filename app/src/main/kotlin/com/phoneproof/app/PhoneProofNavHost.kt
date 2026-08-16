@@ -20,6 +20,7 @@ import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.claims.ClaimsRoute
 import com.phoneproof.feature.guide.GuideRoute
+import com.phoneproof.feature.home.HomeCatalogue
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.imei.ImeiRoute
@@ -100,56 +101,16 @@ fun PhoneProofNavHost(
     ) {
         composable(Routes.HOME) {
             HomeScreen(
-                checks = listOf(
+                // Built from HomeCatalogue rather than written out here, so the screenshot test can
+                // render the same list. It used to be spelled out in both places and the test's copy fell
+                // five entries behind without anything failing.
+                checks = HomeCatalogue.map { entry ->
                     HomeCheck(
-                        title = "Instant scan",
-                        subtitle = "Software, storage, sensors and screen — no waiting",
-                        onClick = { navController.navigate(Routes.SCAN) },
-                    ),
-                    HomeCheck(
-                        title = "Remote lock control",
-                        subtitle = "Can a lender brick this phone after you pay?",
-                        onClick = { navController.navigate(Routes.LOCK) },
-                    ),
-                    HomeCheck(
-                        title = "Touch response",
-                        subtitle = "Find dead patches on the screen",
-                        onClick = { navController.navigate(Routes.TOUCH) },
-                    ),
-                    HomeCheck(
-                        title = "Dead pixels and burn-in",
-                        subtitle = "Plain colours that make screen faults obvious",
-                        onClick = { navController.navigate(Routes.SCREEN_PATTERNS) },
-                    ),
-                    HomeCheck(
-                        title = "Microphone and speaker",
-                        subtitle = "Measured with a test tone, not just played back",
-                        onClick = { navController.navigate(Routes.AUDIO) },
-                    ),
-                    HomeCheck(
-                        title = "Cameras and flashlight",
-                        subtitle = "Is each sensor producing a live picture?",
-                        onClick = { navController.navigate(Routes.CAMERA) },
-                    ),
-                    HomeCheck(
-                        title = "Sensors that still work",
-                        subtitle = "Tilt and cover it — a dead sensor is still on the parts list",
-                        onClick = { navController.navigate(Routes.SENSORS) },
-                    ),
-                    HomeCheck(
-                        title = "Claimed against measured",
-                        subtitle = "Is it the phone you were promised?",
-                        onClick = { navController.navigate(Routes.CLAIMS) },
-                    ),
-                    // Listed with the checks even though the buyer types the number, because from
-                    // their side it is the same kind of task: find out something about this handset
-                    // before paying. The screen itself is candid that Android will not supply it.
-                    HomeCheck(
-                        title = "IMEI and the stolen-phone register",
-                        subtitle = "Check the number, then check it against CEIR",
-                        onClick = { navController.navigate(Routes.IMEI) },
-                    ),
-                ),
+                        title = entry.title,
+                        subtitle = entry.subtitle,
+                        onClick = { navController.navigate(entry.route) },
+                    )
+                },
                 onStartFullTest = { navController.navigate(Routes.RUN) },
                 // The guide is no longer one of the checks: it has its own heading on Home, because
                 // it is advice for the buyer's hands rather than something the phone measures.

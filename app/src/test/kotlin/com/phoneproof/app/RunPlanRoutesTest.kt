@@ -1,6 +1,7 @@
 package com.phoneproof.app
 
 import com.google.common.truth.Truth.assertThat
+import com.phoneproof.feature.home.HomeCatalogue
 import com.phoneproof.core.run.RunPlan
 import com.phoneproof.core.run.StepEffort
 import org.junit.Test
@@ -56,5 +57,58 @@ class RunPlanRoutesTest {
             .filter { it.effort == StepEffort.LOOK_YOURSELF }
             .map { it.id }
         assertThat(unmeasurable).containsExactly(Routes.GUIDE)
+    }
+}
+
+
+/**
+ * The same guard for Home's list of checks.
+ *
+ * [com.phoneproof.feature.home.HomeCatalogue] holds a route string per row so that the screenshot test
+ * and the navigation graph can read one list instead of two — the previous arrangement had them written
+ * out separately, and the test's copy silently fell five entries behind the real screen. Holding the
+ * route as an opaque string is what keeps `feature:home` free of navigation, and this is what makes that
+ * safe.
+ */
+class HomeCatalogueRoutesTest {
+
+    @Test
+    fun every_row_on_home_goes_somewhere_real() {
+        val known = setOf(
+            Routes.SCAN,
+            Routes.LOCK,
+            Routes.TOUCH,
+            Routes.SCREEN_PATTERNS,
+            Routes.AUDIO,
+            Routes.CAMERA,
+            Routes.SENSORS,
+            Routes.CLAIMS,
+            Routes.IMEI,
+        )
+
+        assertThat(HomeCatalogue.map { it.route }).containsExactlyElementsIn(known)
+    }
+
+    @Test
+    fun no_row_is_listed_twice() {
+        // Two rows sharing a route means one of them is a mistake, and on Home a duplicate reads as the
+        // app not knowing what it offers.
+        val routes = HomeCatalogue.map { it.route }
+        assertThat(routes).hasSize(routes.toSet().size)
+    }
+
+    @Test
+    fun the_instant_scan_is_offered_first() {
+        // It is the one that needs no instructions and returns in seconds, so it is the row a buyer who
+        // ignores the big button should meet first.
+        assertThat(HomeCatalogue.first().route).isEqualTo(Routes.SCAN)
+    }
+
+    @Test
+    fun every_row_says_what_it_is_for() {
+        HomeCatalogue.forEach {
+            assertThat(it.title).isNotEmpty()
+            assertThat(it.subtitle).isNotEmpty()
+        }
     }
 }
