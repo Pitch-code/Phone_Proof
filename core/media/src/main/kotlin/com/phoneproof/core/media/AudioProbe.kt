@@ -3,18 +3,28 @@ package com.phoneproof.core.media
 import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
 import android.media.AudioTrack
 import android.media.MediaRecorder
+import android.os.Build
 import com.phoneproof.checks.media.AudioWindow
+import com.phoneproof.checks.media.EarpieceRouting
 import com.phoneproof.checks.media.ToneDetector
 import com.phoneproof.checks.media.TonePlan
 import com.phoneproof.core.diagnostics.Diagnostics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+
+/** The earpiece attempt: where the sound went, and what was recorded while it played. */
+data class EarpieceCapture(
+    val routing: EarpieceRouting,
+    /** Null whenever [routing] is anything but confirmed — there is nothing worth analysing. */
+    val window: AudioWindow?,
+)
 
 /** What the media volume was set to, which decides whether a speaker test can mean anything. */
 data class MediaVolume(val current: Int, val max: Int) {
@@ -50,34 +60,217 @@ class AudioProbe(private val context: Context) {
             return@withContext null
         }
 
+        val recorder = openRecorder(rate) ?: return@withContext null
+        val tone = if (playTone) startTone(rate) else null
+
+        try {
+            capture(recorder, rate, seconds)
+        } finally {
+            runCatching { recorder.stop() }
+            recorder.release()
+            tone?.let {
+                runCatching { it.stop() }
+                it.release()
+            }
+        }
+    }
+
+    /**
+     * Plays a tone through the **earpiece** and records at the same time.
+     *
+     * The earpiece is a different part from the loudspeaker, and the hard problem is not playing the tone
+     * — it is knowing where the tone actually went. Android decides output routing on the app's behalf and
+     * is not obliged to explain itself, so asking for the earpiece and being given the loudspeaker is an
+     * ordinary outcome. If that happened silently, a buyer would confirm they heard a tone, the app would
+     * pass the earpiece, and a completely dead earpiece would sail through.
+     *
+     * So this reports [EarpieceRouting.CONFIRMED] only when the platform states, after playback has
+     * started, that the earpiece is the route it chose. Everything else is [EarpieceRouting.REFUSED], and
+     * the check above then refuses to draw any conclusion at all — including refusing to ask the buyer.
+     */
+    @SuppressLint("MissingPermission")
+    suspend fun recordThroughEarpiece(seconds: Float): EarpieceCapture =
+        withContext(Dispatchers.IO) {
+            val manager = context.getSystemService(AudioManager::class.java)
+                ?: return@withContext EarpieceCapture(EarpieceRouting.REFUSED, null)
+
+            val earpiece = runCatching {
+                manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
+                    .firstOrNull { it.type == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE }
+            }.getOrNull()
+
+            if (earpiece == null) {
+                // Genuinely has none — a tablet, or one of the few speakerphone-only handsets. Not a
+                // fault, and distinguished from a refusal so the report can say which it was.
+                Diagnostics.info(TAG, "no built-in earpiece on this device")
+                return@withContext EarpieceCapture(EarpieceRouting.ABSENT, null)
+            }
+
+            val rate = workingSampleRate() ?: return@withContext EarpieceCapture(
+                EarpieceRouting.REFUSED,
+                null,
+            )
+            val recorder = openRecorder(rate) ?: return@withContext EarpieceCapture(
+                EarpieceRouting.REFUSED,
+                null,
+            )
+
+            val previousMode = runCatching { manager.mode }.getOrDefault(AudioManager.MODE_NORMAL)
+            var forcedCommunication = false
+            var track: AudioTrack? = null
+
+            try {
+                track = buildEarpieceTrack(rate, earpiece)
+                    ?: return@withContext EarpieceCapture(EarpieceRouting.REFUSED, null)
+                track.play()
+
+                var routed = awaitEarpieceRouting(track)
+
+                // Second rung of the ladder, and only if the polite request was ignored. Some handsets
+                // only expose the earpiece while the device is in communication mode — which is a global
+                // setting that affects other apps, so it is not touched unless setPreferredDevice alone
+                // has already failed, and it is always put back in the finally below.
+                if (!routed) {
+                    forcedCommunication = forceCommunicationRouting(manager, earpiece)
+                    if (forcedCommunication) routed = awaitEarpieceRouting(track)
+                }
+
+                if (!routed) {
+                    Diagnostics.warn(
+                        TAG,
+                        "earpiece routing refused; platform chose ${track.routedDevice?.type}",
+                    )
+                    return@withContext EarpieceCapture(EarpieceRouting.REFUSED, null)
+                }
+
+                Diagnostics.info(TAG, "earpiece routing confirmed at $rate Hz")
+                EarpieceCapture(EarpieceRouting.CONFIRMED, capture(recorder, rate, seconds))
+            } catch (error: Exception) {
+                // Broad on purpose: routing APIs throw IllegalStateException, SecurityException and
+                // IllegalArgumentException depending on the OEM, and every one of them means the same
+                // thing to a buyer — this phone would not let the app test the earpiece.
+                Diagnostics.error(TAG, "earpiece test failed", error)
+                EarpieceCapture(EarpieceRouting.REFUSED, null)
+            } finally {
+                runCatching { recorder.stop() }
+                recorder.release()
+                track?.let {
+                    runCatching { it.stop() }
+                    it.release()
+                }
+                // Restoring this matters beyond good manners: leaving a phone in communication mode
+                // routes the *next* test's tone to the earpiece as well, so the loudspeaker check would
+                // quietly measure the wrong part.
+                if (forcedCommunication) releaseCommunicationRouting(manager, previousMode)
+            }
+        }
+
+    /**
+     * Waits for the platform to commit to a route, then reports whether it chose the earpiece.
+     *
+     * `routedDevice` is meaningless until playback has actually begun and is null for a short window after
+     * `play()`, so this polls rather than reading once. Reading it too early and treating null as a
+     * refusal would fail the test on a phone that was about to cooperate.
+     */
+    private suspend fun awaitEarpieceRouting(track: AudioTrack): Boolean {
+        repeat(ROUTING_POLLS) {
+            val type = runCatching { track.routedDevice?.type }.getOrNull()
+            if (type == AudioDeviceInfo.TYPE_BUILTIN_EARPIECE) return true
+            delay(ROUTING_POLL_MILLIS)
+        }
+        return false
+    }
+
+    private fun buildEarpieceTrack(rate: Int, earpiece: AudioDeviceInfo): AudioTrack? = runCatching {
+        val plan = TonePlan.of(rate, ToneDetector.TEST_TONE_HZ)
+        val buffer = plan.pcm16(TONE_AMPLITUDE)
+
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    // VOICE_COMMUNICATION, not MEDIA. This is the usage the platform associates with the
+                    // earpiece; asking for the earpiece with a MEDIA usage is the combination most likely
+                    // to be quietly overridden back to the loudspeaker.
+                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build(),
+            )
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(ENCODING)
+                    .setSampleRate(rate)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .build(),
+            )
+            .setBufferSizeInBytes(plan.samples * 2)
+            .setTransferMode(AudioTrack.MODE_STATIC)
+            .build()
+
+        track.write(buffer, 0, plan.samples)
+        track.setLoopPoints(0, plan.samples, -1)
+        // A request, not a command: the platform is free to ignore it, which is exactly why the result is
+        // verified afterwards rather than assumed.
+        track.setPreferredDevice(earpiece)
+        track
+    }.onFailure { Diagnostics.error(TAG, "could not build the earpiece tone", it) }.getOrNull()
+
+    private fun forceCommunicationRouting(
+        manager: AudioManager,
+        earpiece: AudioDeviceInfo,
+    ): Boolean = runCatching {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // The documented modern route. Returns false when the platform declines, which is information
+            // rather than an error.
+            manager.setCommunicationDevice(earpiece)
+        } else {
+            manager.mode = AudioManager.MODE_IN_COMMUNICATION
+            @Suppress("DEPRECATION")
+            manager.isSpeakerphoneOn = false
+            true
+        }
+    }.onFailure { Diagnostics.warn(TAG, "could not force communication routing", it) }
+        .getOrDefault(false)
+
+    private fun releaseCommunicationRouting(manager: AudioManager, previousMode: Int) {
+        runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                manager.clearCommunicationDevice()
+            }
+            manager.mode = previousMode
+        }.onFailure { Diagnostics.error(TAG, "could not restore audio routing", it) }
+    }
+
+    /** Opens the microphone, or returns null with the reason logged. */
+    @SuppressLint("MissingPermission")
+    private fun openRecorder(rate: Int): AudioRecord? {
         val minBuffer = AudioRecord.getMinBufferSize(rate, CHANNEL, ENCODING)
         if (minBuffer <= 0) {
             Diagnostics.error(TAG, "getMinBufferSize returned $minBuffer at $rate Hz")
-            return@withContext null
+            return null
         }
 
+        // The permission is guarded by PermissionGate before this screen renders, hence the suppression —
+        // but a system-level microphone toggle can still refuse at this point, which is why the result is
+        // checked rather than assumed.
         val recorder = runCatching {
-            // The permission is guarded by PermissionGate before this screen renders, hence the
-            // suppression — but a system-level microphone toggle can still refuse at this point, which is
-            // why the result is checked rather than assumed.
             AudioRecord(audioSource(), rate, CHANNEL, ENCODING, minBuffer * 4)
         }.getOrNull()
 
         if (recorder == null || recorder.state != AudioRecord.STATE_INITIALIZED) {
             Diagnostics.error(TAG, "AudioRecord would not initialise at $rate Hz")
             recorder?.release()
-            return@withContext null
+            return null
         }
+        return recorder
+    }
 
-        val tone = if (playTone) startTone(rate) else null
-
-        try {
-            recorder.startRecording()
-            if (recorder.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
-                Diagnostics.error(TAG, "AudioRecord did not enter the recording state")
-                return@withContext null
-            }
-
+    /** Reads [seconds] of audio from an already-open recorder. */
+    private fun capture(recorder: AudioRecord, rate: Int, seconds: Float): AudioWindow? = try {
+        recorder.startRecording()
+        if (recorder.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
+            Diagnostics.error(TAG, "AudioRecord did not enter the recording state")
+            null
+        } else {
             val wanted = (rate * seconds).toInt()
             val samples = ShortArray(wanted)
             var filled = 0
@@ -91,20 +284,15 @@ class AudioProbe(private val context: Context) {
                 }
                 filled += read
             }
-
-            if (filled == 0) return@withContext null
-            AudioWindow(rate, if (filled == wanted) samples else samples.copyOf(filled))
-        } catch (error: IllegalStateException) {
-            Diagnostics.error(TAG, "recording failed", error)
-            null
-        } finally {
-            runCatching { recorder.stop() }
-            recorder.release()
-            tone?.let {
-                runCatching { it.stop() }
-                it.release()
+            if (filled == 0) {
+                null
+            } else {
+                AudioWindow(rate, if (filled == wanted) samples else samples.copyOf(filled))
             }
         }
+    } catch (error: IllegalStateException) {
+        Diagnostics.error(TAG, "recording failed", error)
+        null
     }
 
     /**
@@ -270,5 +458,9 @@ class AudioProbe(private val context: Context) {
 
         /** Slack on the playback wait, so the tail of a word is never clipped. */
         const val PLAYBACK_TAIL_MILLIS = 250L
+
+        /** Up to a second of polling for the platform to commit to an output route. */
+        const val ROUTING_POLLS = 10
+        const val ROUTING_POLL_MILLIS = 100L
     }
 }

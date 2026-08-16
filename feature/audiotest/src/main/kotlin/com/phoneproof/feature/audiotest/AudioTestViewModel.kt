@@ -3,6 +3,8 @@ package com.phoneproof.feature.audiotest
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.phoneproof.checks.media.AudioWindow
+import com.phoneproof.checks.media.EarpieceCheck
+import com.phoneproof.checks.media.EarpieceRouting
 import com.phoneproof.checks.media.HeardTone
 import com.phoneproof.checks.media.MicrophoneCheck
 import com.phoneproof.checks.media.SpeakerCheck
@@ -109,7 +111,7 @@ class AudioTestViewModel(
             // question instead of presenting a shrug as a result.
             val settled = result.outcome != CheckOutcome.UNKNOWN
             _uiState.value = _uiState.value.copy(
-                stage = if (settled) AudioStage.FINISHED else AudioStage.ASKING,
+                stage = if (settled) AudioStage.SPEAKER_DONE else AudioStage.ASKING,
                 levels = window.frameLevels(),
                 // Only published when it is final. Reported from a real phone: the provisional CAN'T TELL
                 // appeared as a verdict card while the question sat underneath it, so the app gave an
@@ -133,7 +135,7 @@ class AudioTestViewModel(
     fun declineToAnswer() {
         val state = _uiState.value
         _uiState.value = state.copy(
-            stage = AudioStage.FINISHED,
+            stage = AudioStage.SPEAKER_DONE,
             speaker = SpeakerCheck.evaluate(
                 toneRatio = state.pendingToneRatio,
                 roomFloor = state.pendingRoomFloor,
@@ -153,10 +155,89 @@ class AudioTestViewModel(
         }
     }
 
-    fun answerHeard(heard: Boolean) {
+    /**
+     * Tests the earpiece.
+     *
+     * Runs last of the three, and that ordering is deliberate rather than incidental. Reaching the earpiece
+     * can require putting the phone into communication mode, which is a global setting that changes where
+     * *any* tone goes — so if it ran before the loudspeaker test and the restore failed, the loudspeaker
+     * check would quietly measure the earpiece and report it as the loudspeaker.
+     */
+    fun startEarpieceTest() {
+        _uiState.value = _uiState.value.copy(
+            stage = AudioStage.PLAYING_EARPIECE,
+            levels = emptyList(),
+            earpiece = null,
+            captureFailed = false,
+        )
+
+        viewModelScope.launch {
+            val capture = probe.recordThroughEarpiece(seconds = TONE_SECONDS)
+            val window = capture.window
+
+            // No confirmed routing means no measurement and no question. Whatever came out of the phone
+            // may have come out of the loudspeaker, and a buyer's "yes" about that would pass a dead
+            // earpiece.
+            if (capture.routing != EarpieceRouting.CONFIRMED || window == null) {
+                _uiState.value = _uiState.value.copy(
+                    stage = AudioStage.FINISHED,
+                    earpiece = EarpieceCheck.evaluate(capture.routing),
+                )
+                return@launch
+            }
+
+            val match = ToneDetector.bestToneRatio(window, ToneDetector.TEST_TONE_HZ)
+            val analysis = analyse(window)
+            Diagnostics.info(
+                TAG,
+                "earpiece tone: ${"%.3f".format(match.ratio)} at ${"%.1f".format(match.frequencyHz)} Hz",
+            )
+
+            val result = EarpieceCheck.evaluate(
+                routing = EarpieceRouting.CONFIRMED,
+                toneRatio = match.ratio,
+                roomFloor = analysis.noiseFloor,
+            )
+            val settled = result.outcome != CheckOutcome.UNKNOWN
+            _uiState.value = _uiState.value.copy(
+                stage = if (settled) AudioStage.FINISHED else AudioStage.ASKING_EARPIECE,
+                levels = window.frameLevels(),
+                earpiece = if (settled) result else null,
+                pendingToneRatio = match.ratio,
+                pendingRoomFloor = analysis.noiseFloor,
+            )
+        }
+    }
+
+    fun answerEarpieceHeard(heard: Boolean) {
         val state = _uiState.value
         _uiState.value = state.copy(
             stage = AudioStage.FINISHED,
+            earpiece = EarpieceCheck.evaluate(
+                routing = EarpieceRouting.CONFIRMED,
+                toneRatio = state.pendingToneRatio,
+                roomFloor = state.pendingRoomFloor,
+                heard = if (heard) HeardTone.YES else HeardTone.NO,
+            ),
+        )
+    }
+
+    fun declineEarpieceAnswer() {
+        val state = _uiState.value
+        _uiState.value = state.copy(
+            stage = AudioStage.FINISHED,
+            earpiece = EarpieceCheck.evaluate(
+                routing = EarpieceRouting.CONFIRMED,
+                toneRatio = state.pendingToneRatio,
+                roomFloor = state.pendingRoomFloor,
+            ),
+        )
+    }
+
+    fun answerHeard(heard: Boolean) {
+        val state = _uiState.value
+        _uiState.value = state.copy(
+            stage = AudioStage.SPEAKER_DONE,
             speaker = SpeakerCheck.evaluate(
                 toneRatio = state.pendingToneRatio,
                 roomFloor = state.pendingRoomFloor,

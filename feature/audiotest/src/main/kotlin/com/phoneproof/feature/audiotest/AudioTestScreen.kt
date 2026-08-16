@@ -50,6 +50,9 @@ fun AudioTestScreen(
     onStartSpeaker: () -> Unit,
     onAnswerHeard: (Boolean) -> Unit,
     onDeclineToAnswer: () -> Unit,
+    onStartEarpiece: () -> Unit,
+    onAnswerEarpieceHeard: (Boolean) -> Unit,
+    onDeclineEarpieceAnswer: () -> Unit,
     onPlayBack: () -> Unit,
     onRestart: () -> Unit,
     modifier: Modifier = Modifier,
@@ -96,11 +99,24 @@ fun AudioTestScreen(
                 text = "Playing a tone. Keep your hand off the speaker grille and stay quiet.",
             )
 
-            AudioStage.ASKING, AudioStage.MICROPHONE_DONE, AudioStage.FINISHED -> Unit
+            AudioStage.PLAYING_EARPIECE -> Instruction(
+                text = "Hold the phone to your ear now, as if you were on a call.",
+            )
+
+            // The question itself is a dialog — see below. This is what is left behind it.
+            AudioStage.ASKING,
+            AudioStage.ASKING_EARPIECE,
+            -> Instruction(text = "Waiting for your answer about the tone.")
+
+            AudioStage.MICROPHONE_DONE,
+            AudioStage.SPEAKER_DONE,
+            AudioStage.FINISHED,
+            -> Unit
         }
 
         state.microphone?.let { CheckResultCard(it) }
         state.speaker?.let { CheckResultCard(it) }
+        state.earpiece?.let { CheckResultCard(it) }
 
         // The volume warning sits above the speaker button, not after the result. A buyer who is about to
         // test a speaker at zero volume needs to know before the test, not once it has failed.
@@ -151,8 +167,19 @@ fun AudioTestScreen(
                 }
             }
 
-            // The question itself is a dialog now — see below. This is what is left behind it.
-            AudioStage.ASKING -> Instruction(text = "Waiting for your answer about the tone.")
+
+            AudioStage.SPEAKER_DONE -> {
+                Primary(text = "Now test the earpiece", onClick = onStartEarpiece)
+                Text(
+                    // Says why this is a separate test, because most buyers have never thought about it
+                    // and the whole value of the check is in that sentence.
+                    text = "The earpiece is the small speaker you hold against your ear. It is a " +
+                        "different part from the loudspeaker, and a phone can have a perfect " +
+                        "loudspeaker and a dead earpiece — you would only find out on your first call.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = PhoneProofTheme.colors.textSecondary,
+                )
+            }
 
             AudioStage.FINISHED -> OutlinedButton(
                 onClick = onRestart,
@@ -160,7 +187,7 @@ fun AudioTestScreen(
                 shape = RoundedCornerShape(12.dp),
             ) { Text("Test again") }
 
-            AudioStage.LISTENING, AudioStage.PLAYING_TONE -> Unit
+            AudioStage.LISTENING, AudioStage.PLAYING_TONE, AudioStage.PLAYING_EARPIECE -> Unit
         }
 
         if (state.stage == AudioStage.FINISHED) {
@@ -177,6 +204,22 @@ fun AudioTestScreen(
         ToneQuestionDialog(
             onAnswerHeard = onAnswerHeard,
             onDecline = onDeclineToAnswer,
+            explanation = "The app played a 1 kHz tone and could not pick it out of the recording. " +
+                "That happens in a noisy room and is not by itself a fault, so this one is for your " +
+                "ear to decide.",
+        )
+    }
+
+    if (state.stage == AudioStage.ASKING_EARPIECE) {
+        ToneQuestionDialog(
+            onAnswerHeard = onAnswerEarpieceHeard,
+            onDecline = onDeclineEarpieceAnswer,
+            // A different sentence, because the reason for asking is different. On the loudspeaker a miss
+            // usually means the room was loud; on the earpiece a miss is the normal outcome even on
+            // perfect hardware, and the buyer should not read it as a hint that something is wrong.
+            explanation = "The phone confirmed the tone went to the earpiece. The app could not hear " +
+                "it, which for an earpiece means very little — it is built to be audible to one ear " +
+                "pressed against it, not to a microphone at the other end of the phone.",
         )
     }
 }
@@ -196,6 +239,7 @@ fun AudioTestScreen(
 private fun ToneQuestionDialog(
     onAnswerHeard: (Boolean) -> Unit,
     onDecline: () -> Unit,
+    explanation: String,
 ) {
     Dialog(onDismissRequest = onDecline) {
         Column(
@@ -212,9 +256,7 @@ private fun ToneQuestionDialog(
                 color = PhoneProofTheme.colors.textPrimary,
             )
             Text(
-                text = "The app played a 1 kHz tone and could not pick it out of the recording. That " +
-                    "happens in a noisy room and is not by itself a fault, so this one is for your " +
-                    "ear to decide.",
+                text = explanation,
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.textSecondary,
             )
