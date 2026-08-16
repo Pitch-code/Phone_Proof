@@ -45,6 +45,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Find dead patches on the screen",
     ),
     HomeCheckEntry(
+        route = "multi-touch",
+        title = "Fingers at once",
+        subtitle = "How many fingers the screen can really follow",
+    ),
+    HomeCheckEntry(
         route = "screen-patterns",
         title = "Dead pixels and burn-in",
         subtitle = "Plain colours that make screen faults obvious",

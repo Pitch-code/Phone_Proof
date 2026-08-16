@@ -24,6 +24,7 @@ class RunPlanRoutesTest {
         assertThat(RunPlan.stepIds).containsExactly(
             Routes.SCAN,
             Routes.TOUCH,
+            Routes.MULTI_TOUCH,
             Routes.SCREEN_PATTERNS,
             Routes.AUDIO,
             Routes.CAMERA,
@@ -79,6 +80,7 @@ class HomeCatalogueRoutesTest {
             Routes.SCAN,
             Routes.LOCK,
             Routes.TOUCH,
+            Routes.MULTI_TOUCH,
             Routes.SCREEN_PATTERNS,
             Routes.AUDIO,
             Routes.CAMERA,
