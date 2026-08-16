@@ -88,39 +88,34 @@ class CameraTestScreenshotTest {
     )
 
     /**
-     * A frame that looks like something rather than like a test pattern.
+     * A frame with a marker in a known place, so the render proves the rotation is right.
      *
-     * A flat grey square would render fine and prove nothing: the things worth reviewing are whether the
-     * crop, the rotation and the greyscale caption read correctly against a picture with structure in it.
-     * So this is a lit gradient with a hard edge and a bright corner — roughly a shop ceiling.
+     * The first version put a bright block flush into one corner. It rendered correctly and looked like a
+     * clipping bug — the block's own square edges read as a broken rounded corner — which made the review
+     * harder rather than easier. A test fixture that looks like a defect is worse than no fixture.
+     *
+     * So: a soft gradient, one vertical bar, and a bright disc inset in the upper-left quadrant. The disc
+     * never touches the clip, and where it ends up on screen says which way the frame was turned — upper
+     * left means no rotation, upper right means 90 degrees, and so on.
      */
     private fun sceneFrame(width: Int = 320, height: Int = 240): ImageBitmap {
+        val discX = width / 4
+        val discY = height / 4
+        val discRadius = height / 8
+
         val pixels = IntArray(width * height) { index ->
             val x = index % width
             val y = index / width
-            val gradient = 40 + (y * 120 / height)
-            val edge = if (x in (width / 3)..(width / 3 + 6)) 210 else gradient
-            val corner = if (x > width - 60 && y < 50) 235 else edge
-            val value = corner.coerceIn(0, 255)
+
+            val gradient = 45 + (y * 110 / height)
+            val bar = if (x in (width * 2 / 3)..(width * 2 / 3 + 8)) 165 else gradient
+            val dx = x - discX
+            val dy = y - discY
+            val value = if (dx * dx + dy * dy < discRadius * discRadius) 240 else bar
+
             0xFF shl 24 or (value shl 16) or (value shl 8) or value
         }
         return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888).asImageBitmap()
-    }
-
-    private fun render(name: String, state: CameraTestUiState, themeMode: ThemeMode = ThemeMode.LIGHT) {
-        composeRule.setContent {
-            PhoneProofTheme(themeMode = themeMode) {
-                CameraTestScreen(
-                    state = state,
-                    onTestCameras = {},
-                    onLightTorch = {},
-                    onAnswerLit = {},
-                    onRestart = {},
-                    modifier = Modifier.fillMaxSize(),
-                )
-            }
-        }
-        composeRule.onRoot().captureRoboImage("$outputDir/camera-$name.png")
     }
 
     @Test
