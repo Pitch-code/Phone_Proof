@@ -143,7 +143,16 @@ object StorageSpeedCheck {
                 add(Measurement("Read speed", format(trace.readMbPerSecond), "MB/s"))
                 add(Measurement("Typical chunk", format(trace.medianChunkMbPerSecond), "MB/s"))
                 add(Measurement("Slowest chunk", format(trace.slowestChunkMbPerSecond), "MB/s"))
-                add(Measurement("Written and verified", "${trace.bytesWritten / (1024 * 1024)}", "MB"))
+                add(Measurement("Written", "${trace.bytesWritten / (1024 * 1024)}", "MB"))
+                // The read-back gets its own line rather than being folded into the label above. The first
+                // version said "Written and verified: 64 MB" on the very card whose headline was that the
+                // bytes came back different — a measurement contradicting the verdict it sits under.
+                add(
+                    Measurement(
+                        "Read back",
+                        if (trace.readBackMatched) "every byte matched" else "DID NOT MATCH",
+                    ),
+                )
             }
             add(Measurement("Free space", "${trace.freeBytes / (1024 * 1024 * 1024)}", "GB"))
         }

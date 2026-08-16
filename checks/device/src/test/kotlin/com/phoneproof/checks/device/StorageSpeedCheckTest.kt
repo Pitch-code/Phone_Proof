@@ -157,6 +157,19 @@ class StorageSpeedCheckTest {
     }
 
     @Test
+    fun the_read_back_line_never_contradicts_the_verdict_above_it() {
+        // It did once. "Written and verified: 64 MB" appeared on the card whose headline was that the bytes
+        // came back different, because the label folded the verification into the byte count.
+        val corrupt = StorageSpeedCheck.evaluate(measured(chunkMillis = 40L, matched = false))
+        assertThat(corrupt.measurements.first { it.label == "Read back" }.value)
+            .isEqualTo("DID NOT MATCH")
+
+        val clean = StorageSpeedCheck.evaluate(measured(chunkMillis = 40L))
+        assertThat(clean.measurements.first { it.label == "Read back" }.value)
+            .isEqualTo("every byte matched")
+    }
+
+    @Test
     fun corruption_invalidates_the_rest_of_the_report_and_says_so() {
         // Worth stating explicitly: if the storage returns the wrong data, every other measurement in the
         // app was read through the same broken chip.
