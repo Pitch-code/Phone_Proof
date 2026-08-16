@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.media.CameraProbe
+import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.permissions.PermissionGate
 
 /**
@@ -34,7 +36,11 @@ import com.phoneproof.core.permissions.PermissionGate
  * characteristics are public — so the count is not what is gated; opening them is.
  */
 @Composable
-fun CameraTestRoute(modifier: Modifier = Modifier) {
+fun CameraTestRoute(
+    modifier: Modifier = Modifier,
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -63,17 +69,22 @@ fun CameraTestRoute(modifier: Modifier = Modifier) {
                 "stored, and nothing is sent anywhere. Refusing is fine — every other check still " +
                 "works, and a refused permission is never reported as a fault in the phone.",
         ) {
-            Granted()
+            Granted(onResults = onResults)
         }
     }
 }
 
 @Composable
-private fun Granted() {
+private fun Granted(onResults: (List<CheckResult>) -> Unit) {
     val context = LocalContext.current
     val probe = remember(context) { CameraProbe(context) }
     val viewModel: CameraTestViewModel = viewModel { CameraTestViewModel(probe) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    // One result per lens plus the torch, so this step contributes several rows to the report.
+    LaunchedEffect(state.results, state.torch) {
+        onResults(state.results + listOfNotNull(state.torch))
+    }
 
     CameraTestScreen(
         state = state,

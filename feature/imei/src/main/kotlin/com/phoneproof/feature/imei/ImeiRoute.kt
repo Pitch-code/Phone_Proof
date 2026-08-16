@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -13,7 +14,9 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import com.phoneproof.checks.imei.Imei
+import com.phoneproof.checks.imei.ImeiCheck
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.model.CheckResult
 
 /**
  * Stateful entry point.
@@ -29,11 +32,23 @@ import com.phoneproof.core.diagnostics.Diagnostics
  * person typing in it.
  */
 @Composable
-fun ImeiRoute(modifier: Modifier = Modifier) {
+fun ImeiRoute(
+    modifier: Modifier = Modifier,
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
+) {
     val context = LocalContext.current
     val clipboard = LocalClipboardManager.current
 
     var typed by rememberSaveable { mutableStateOf("") }
+
+    // Only once all fifteen digits are in. The check is happy to judge a partial number — the screen
+    // shows it doing so as the buyer types — but a run must not record "IMEI: too short" as its finding
+    // for the step and tick it off while the buyer is still on the sixth digit.
+    LaunchedEffect(typed) {
+        val imei = Imei.of(typed)
+        if (imei.isComplete) onResults(listOf(ImeiCheck.evaluate(imei)))
+    }
 
     ImeiScreen(
         typed = typed,

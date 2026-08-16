@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.phoneproof.core.reports.Comparison
 import com.phoneproof.core.reports.SavedReport
+import com.phoneproof.core.reports.reportStore
 import com.phoneproof.core.reports.compareReports
 
 /**
@@ -22,7 +23,7 @@ import com.phoneproof.core.reports.compareReports
 @Composable
 fun CompareRoute(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val store = remember(context) { reportStore(context) }
+    val store = remember(context) { reportStore(context.filesDir) }
 
     var pickedId by rememberSaveable { mutableStateOf<String?>(null) }
 

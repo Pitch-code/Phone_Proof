@@ -3,6 +3,7 @@ package com.phoneproof.feature.touchgrid
 import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
@@ -11,6 +12,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.model.CheckResult
 
 /**
  * Stateful entry point. Kept separate from [TouchGridScreen] so the screen itself stays a pure
@@ -19,9 +21,19 @@ import com.phoneproof.core.diagnostics.Diagnostics
 @Composable
 fun TouchGridRoute(
     modifier: Modifier = Modifier,
+    /**
+     * Hands the verdict to whoever asked for the test.
+     *
+     * Defaulted to a no-op so this screen has no idea whether it is being run on its own from Home or
+     * as one step of a guided run — the navigation layer decides that. Keeping the feature ignorant is
+     * what stops eight feature modules growing a dependency on the run.
+     */
+    onResults: (List<CheckResult>) -> Unit = {},
     viewModel: TouchGridViewModel = viewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(state.result) { state.result?.let { onResults(listOf(it)) } }
 
     HideSystemBarsWhileTesting()
 

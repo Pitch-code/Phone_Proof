@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.media.AudioProbe
+import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.permissions.PermissionGate
 
 /**
@@ -38,7 +40,11 @@ import com.phoneproof.core.permissions.PermissionGate
  * reason visible.
  */
 @Composable
-fun AudioTestRoute(modifier: Modifier = Modifier) {
+fun AudioTestRoute(
+    modifier: Modifier = Modifier,
+    /** No-op by default, so this screen never learns whether it is part of a guided run. */
+    onResults: (List<CheckResult>) -> Unit = {},
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -69,13 +75,13 @@ fun AudioTestRoute(modifier: Modifier = Modifier) {
                 "Refusing is fine — every other check still works, and a refused permission is never " +
                 "reported as a fault in the phone.",
         ) {
-            Granted()
+            Granted(onResults = onResults)
         }
     }
 }
 
 @Composable
-private fun Granted() {
+private fun Granted(onResults: (List<CheckResult>) -> Unit) {
     val context = LocalContext.current
     val probe = remember(context) { AudioProbe(context) }
     val viewModel: AudioTestViewModel = viewModel { AudioTestViewModel(probe) }
@@ -91,6 +97,12 @@ private fun Granted() {
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Two results from one screen, emitted together. The list is empty until the first measurement
+    // lands, and an empty emission is ignored by the run rather than ticking the step off early.
+    LaunchedEffect(state.microphone, state.speaker) {
+        onResults(listOfNotNull(state.microphone, state.speaker))
     }
 
     AudioTestScreen(

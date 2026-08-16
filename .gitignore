@@ -19,3 +19,7 @@ keystore.properties
 **/build/outputs/roborazzi/
 screenshots/diff/
 screenshots/compare/
+
+# Scratch space for CI artefacts pulled down for review: logs, screenshot zips.
+# Committed once by an over-broad "git add -A"; kept out from here on.
+.ci/

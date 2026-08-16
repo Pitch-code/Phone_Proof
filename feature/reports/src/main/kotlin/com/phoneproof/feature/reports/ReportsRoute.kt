@@ -22,6 +22,7 @@ import com.phoneproof.core.reports.ReportStore
 import com.phoneproof.core.reports.SavedReport
 import com.phoneproof.core.reports.ShopBranding
 import com.phoneproof.core.reports.asPlainText
+import com.phoneproof.core.reports.reportStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +34,7 @@ fun ReportsRoute(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val store = remember(context) { reportStore(context) }
+    val store = remember(context) { reportStore(context.filesDir) }
     // Note: reading only. Pruning happens on save, in ScanRoute, where the entitlement is applied.
 
     val settings = remember(context) { SettingsRepository(context) }
@@ -69,7 +70,7 @@ fun ReportDetailRoute(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val store = remember(context) { reportStore(context) }
+    val store = remember(context) { reportStore(context.filesDir) }
     val settings = remember(context) { SettingsRepository(context) }
     val scope = rememberCoroutineScope()
 
