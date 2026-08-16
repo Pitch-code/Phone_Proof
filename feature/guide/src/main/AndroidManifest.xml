@@ -11,6 +11,10 @@
           FileUriExposedException. FileProvider hands out a content:// URI whose grant is scoped to one
           file and lasts for one intent.
 
+          Declared as a WalkthroughFileProvider subclass rather than as androidx.core.content.FileProvider
+          directly, because feature:reports already declares one of those for sharing a report PDF and two
+          providers with the same class name fail the manifest merge. See WalkthroughFileProvider.
+
           Why the camera app rather than an in-app viewfinder: this is a buyer photographing a water
           sticker inside a SIM slot, in a shop, one-handed. The camera app has tap-to-focus, a flash
           toggle, zoom and macro — all of which matter for that shot and none of which this app should
@@ -18,7 +22,7 @@
           never opens the camera itself.
         -->
         <provider
-            android:name="androidx.core.content.FileProvider"
+            android:name="com.phoneproof.feature.guide.WalkthroughFileProvider"
             android:authorities="${applicationId}.walkthroughphotos"
             android:exported="false"
             android:grantUriPermissions="true">
