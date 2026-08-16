@@ -118,6 +118,22 @@ class CameraTestScreenshotTest {
         return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888).asImageBitmap()
     }
 
+    private fun render(name: String, state: CameraTestUiState, themeMode: ThemeMode = ThemeMode.LIGHT) {
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = themeMode) {
+                CameraTestScreen(
+                    state = state,
+                    onTestCameras = {},
+                    onLightTorch = {},
+                    onAnswerLit = {},
+                    onRestart = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/camera-$name.png")
+    }
+
     @Test
     fun before_testing_anything() {
         // Has to say what it found and what to point the phone at. "Not a blank wall" is the instruction
