@@ -187,7 +187,14 @@ fun AudioTestScreen(
                 shape = RoundedCornerShape(12.dp),
             ) { Text("Test again") }
 
-            AudioStage.LISTENING, AudioStage.PLAYING_TONE, AudioStage.PLAYING_EARPIECE -> Unit
+            // Nothing here for these: a dialog is carrying the question, and a recording in progress has
+            // no action for the buyer beyond holding still.
+            AudioStage.ASKING,
+            AudioStage.ASKING_EARPIECE,
+            AudioStage.LISTENING,
+            AudioStage.PLAYING_TONE,
+            AudioStage.PLAYING_EARPIECE,
+            -> Unit
         }
 
         if (state.stage == AudioStage.FINISHED) {
