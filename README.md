@@ -48,7 +48,8 @@ Then, one thing at a time:
 - **Dead pixels and burn-in** drives the panel through plain colours at forced maximum brightness.
 - **Claimed against measured** puts what the seller said beside what the phone reports.
 - **Eight things only you can check** covers the faults no app can reach — a twisted frame, a
-  re-glued screen, the water sticker in the SIM slot — each with a moving diagram of the action.
+  re-glued screen, the water sticker in the SIM slot — each with a moving diagram of the action, and a
+  photograph the buyer can take as evidence and keep.
 - **IMEI and the stolen-phone register** validates the fifteen digits against their Luhn check digit,
   which catches a typo and catches a number that was never issued, then hands off to the government
   CEIR portal — the only place that knows whether a handset has been reported stolen. Android has not
@@ -66,8 +67,6 @@ tap — so a bug report is an exact log rather than a remembered symptom.
   is producing a live, varying picture — including the frozen-sensor case that looks healthy in any single
   frame. It never reports a fault, because a finger over the lens and a dead sensor are indistinguishable
   from inside an app.
-
-Still to build: photo capture during the manual walkthrough.
 
 ## Screens
 

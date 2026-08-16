@@ -46,9 +46,12 @@ tasks.withType<Test>().configureEach {
 
 dependencies {
     implementation(project(":core:designsystem"))
+    implementation(project(":core:diagnostics"))
     implementation(project(":core:preferences"))
 
     implementation(libs.androidx.core.ktx)
+    // Photo capture launches the phone's own camera app through the activity-result API.
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     implementation(platform(libs.androidx.compose.bom))

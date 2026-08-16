@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Scoped to one directory inside app-internal storage, not to files-path root and certainly not to
+  external storage. The provider can hand out a URI for a walkthrough photograph and for nothing else in
+  the app's data — a saved report, a shop logo, the diagnostics log and the preferences store are all
+  outside this path and stay unreachable.
+-->
+<paths>
+    <files-path
+        name="walkthrough"
+        path="walkthrough/" />
+</paths>
