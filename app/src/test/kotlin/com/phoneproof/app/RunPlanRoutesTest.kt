@@ -26,6 +26,7 @@ class RunPlanRoutesTest {
             Routes.SCREEN_PATTERNS,
             Routes.AUDIO,
             Routes.CAMERA,
+            Routes.SENSORS,
             Routes.CLAIMS,
             Routes.IMEI,
             Routes.GUIDE,

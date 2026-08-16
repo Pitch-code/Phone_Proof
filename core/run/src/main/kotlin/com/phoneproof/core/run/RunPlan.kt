@@ -66,6 +66,16 @@ object RunPlan {
             effort = StepEffort.HANDS_ON,
             typicalSeconds = 40,
         ),
+        // Straight after the camera because it is the other test done with the phone held up and turned
+        // about, and because it asks for no permission at all — a good thing to reach while the buyer is
+        // still saying yes to things.
+        RunStep(
+            id = "sensors",
+            title = "Sensors that still work",
+            why = "Tilt and cover the phone: a dead sensor is still on the parts list",
+            effort = StepEffort.HANDS_ON,
+            typicalSeconds = 35,
+        ),
         // The three below are not essential, and that is a decision rather than an oversight.
         //
         // Claims and the walkthrough sit behind the paywall. If either counted towards a clean

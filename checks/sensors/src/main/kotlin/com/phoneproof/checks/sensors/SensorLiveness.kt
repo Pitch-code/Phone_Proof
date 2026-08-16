@@ -84,18 +84,6 @@ object SensorLiveness {
     private const val SILENT_MAGNITUDE = 0.5
 
     /**
-     * Tilting a phone from flat to upright moves a whole 9.8 m/s² from one axis to another, so asking
-     * for 4.0 is asking for less than half of the gesture the screen requests.
-     */
-    private const val MOVED_AXIS_SPAN = 4.0
-
-    /**
-     * 0.35 rad/s is about 20°/s. A deliberate wrist turn is several times faster, so a real gyroscope
-     * clears this comfortably while sensor noise on a still phone never approaches it.
-     */
-    private const val ROTATED_PEAK = 0.35
-
-    /**
      * Earth's magnetic field runs 25–65 µT depending on latitude. Widened at both ends because a phone
      * contains its own magnets — the speaker, the vibration motor — and because a used-phone shop is
      * full of metal shelving.
@@ -110,21 +98,6 @@ object SensorLiveness {
      * drop is hundreds of lux; in a dim back room the room itself is 15 lux, an absolute threshold
      * could never be met, and the ratio is what carries the test.
      */
-    private const val LIGHT_ABSOLUTE_DROP = 20.0
-    private const val LIGHT_DROP_RATIO = 2.0
-
-    /**
-     * A stricter bar, used only when the light sensor is asked to testify against the proximity sensor.
-     *
-     * Being *alive* only requires that the light sensor noticed something change. Being *evidence that
-     * a palm was there* requires more than that, because a shop with fluorescent tubes and people
-     * walking past will double a low lux reading on its own — and on the loose rule that flicker would
-     * have been enough to call a perfectly good proximity sensor dead. A palm does not make the reading
-     * vary, it makes it dark.
-     */
-    private const val COVERED_LUX = 8.0
-    private const val COVERED_DROP = 15.0
-
     fun analyse(traces: List<SensorTrace>, present: Set<SensorKind>): List<SensorFinding> {
         val byKind = traces.associateBy { it.kind }
         val stats = SensorKind.entries.associateWith { kind ->
@@ -138,30 +111,18 @@ object SensorLiveness {
         val accelerometer = stats.getValue(SensorKind.ACCELEROMETER)
         val accelerometerTrustworthy = accelerometer.count > 0 &&
             accelerometer.magnitudeMean in GRAVITY_MIN..GRAVITY_MAX
-        val moved = accelerometerTrustworthy && accelerometer.largestAxisSpan >= MOVED_AXIS_SPAN
+        val moved = accelerometerTrustworthy && SensorGesture.tilted(accelerometer)
 
         // And the gyroscope vouches for the accelerometer, which is what makes the pair symmetric. A
         // latched accelerometer and a phone nobody picked up look identical from the accelerometer's
         // own readings, so without this the app would either miss the fault or invent it. The
         // gyroscope saying the handset turned is the thing that tells those two apart.
-        val rotated = stats.getValue(SensorKind.GYROSCOPE).magnitudeMax >= ROTATED_PEAK
+        val rotated = SensorGesture.turned(stats.getValue(SensorKind.GYROSCOPE))
 
-        val proximityMoved = stats.getValue(SensorKind.PROXIMITY).let {
-            it.count > 0 && it.largestAxisSpan > 0.0
-        }
         val light = stats.getValue(SensorKind.LIGHT)
-
-        // Two rules rather than one, because a shop can be either. Near a window the absolute drop is
-        // hundreds of lux; in a dim back room the room itself is 15 lux, no absolute threshold could
-        // ever be met, and the ratio is the whole test.
-        val lightResponded = light.count > 0 && (
-            light.magnitudeMax - light.magnitudeMin >= LIGHT_ABSOLUTE_DROP ||
-                light.magnitudeMax >= light.magnitudeMin.coerceAtLeast(0.5) * LIGHT_DROP_RATIO
-            )
-
-        val lightWentDark = light.count > 0 &&
-            light.magnitudeMin <= COVERED_LUX &&
-            light.magnitudeMax >= light.magnitudeMin + COVERED_DROP
+        val proximityMoved = SensorGesture.proximityResponded(stats.getValue(SensorKind.PROXIMITY))
+        val lightResponded = SensorGesture.lightResponded(light)
+        val lightWentDark = SensorGesture.lightWentDark(light)
 
         return present.sortedBy { it.ordinal }.map { kind ->
             val s = stats.getValue(kind)
@@ -205,7 +166,7 @@ object SensorLiveness {
         // Wrong gravity is conclusive whether or not the phone was tilted, so it is decided before the
         // movement question is asked at all.
         s.magnitudeMean !in GRAVITY_MIN..GRAVITY_MAX -> SensorState.IMPLAUSIBLE
-        s.largestAxisSpan >= MOVED_AXIS_SPAN -> SensorState.ALIVE
+        SensorGesture.tilted(s) -> SensorState.ALIVE
         // Below here the readings did not move. Only the gyroscope can say whether the phone did.
         !rotated -> SensorState.NOT_EXERCISED
         s.distinctValues <= 1 -> SensorState.STUCK
@@ -213,7 +174,7 @@ object SensorLiveness {
     }
 
     private fun gyroscopeState(s: TraceStats, moved: Boolean): SensorState = when {
-        s.magnitudeMax >= ROTATED_PEAK -> SensorState.ALIVE
+        SensorGesture.turned(s) -> SensorState.ALIVE
         !moved -> SensorState.NOT_EXERCISED
         s.distinctValues <= 1 -> SensorState.STUCK
         else -> SensorState.DEAD

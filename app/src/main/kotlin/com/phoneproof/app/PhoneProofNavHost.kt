@@ -29,6 +29,7 @@ import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.run.RunRoute
 import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
+import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
@@ -56,6 +57,7 @@ internal object Routes {
     const val IMEI = "imei"
     const val AUDIO = "audio"
     const val CAMERA = "camera"
+    const val SENSORS = "sensors"
     const val RUN = "run"
     const val VERDICT = "verdict"
     const val REPORT_DETAIL = "reports/{reportId}"
@@ -130,6 +132,11 @@ fun PhoneProofNavHost(
                         onClick = { navController.navigate(Routes.CAMERA) },
                     ),
                     HomeCheck(
+                        title = "Sensors that still work",
+                        subtitle = "Tilt and cover it — a dead sensor is still on the parts list",
+                        onClick = { navController.navigate(Routes.SENSORS) },
+                    ),
+                    HomeCheck(
                         title = "Claimed against measured",
                         subtitle = "Is it the phone you were promised?",
                         onClick = { navController.navigate(Routes.CLAIMS) },
@@ -179,6 +186,15 @@ fun PhoneProofNavHost(
         composable(Routes.CAMERA) {
             CameraTestRoute(
                 onResults = { runSession.record(Routes.CAMERA, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        // No entitlement gate and no permission gate: it measures the handset in front of the buyer,
+        // and Android asks for nothing to read these sensors below 200 Hz.
+        composable(Routes.SENSORS) {
+            SensorTestRoute(
+                onResults = { runSession.record(Routes.SENSORS, it) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
