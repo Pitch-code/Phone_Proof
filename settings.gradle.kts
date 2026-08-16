@@ -35,6 +35,7 @@ include(":core:model")
 include(":core:diagnostics")
 include(":checks:buttons")
 include(":checks:touch")
+include(":checks:vibration")
 include(":checks:emilock")
 include(":checks:device")
 // Pure Kotlin even by the standards of this list: Android will not hand an app the IMEI at all, so
