@@ -30,6 +30,19 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!--
+      The vibration test. An install-time permission: granted on install, never prompted for, and not
+      treated as sensitive by Play.
+
+      This was missing until a real phone caught it, and the way it failed is worth recording. Reading
+      the motor's capabilities needs no permission, so hasVibrator() and hasAmplitudeControl() both
+      answered normally; only vibrate() threw SecurityException. The app reported "the phone would not
+      let the app run the motor. Check Do Not Disturb is off" — blaming a working handset for a line
+      missing from this file. VibrationDriver now separates a refused permission from a declined
+      request precisely so that class of mistake cannot be made silently again.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
       The radio test. All three of these are install-time permissions: they are granted when the app is
       installed, the buyer is never prompted, and Play does not treat any of them as sensitive.
 

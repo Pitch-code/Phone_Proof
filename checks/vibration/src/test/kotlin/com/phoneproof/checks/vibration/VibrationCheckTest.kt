@@ -172,13 +172,73 @@ class VibrationCheckTest {
     }
 
     @Test
-    fun every_outcome_tells_the_buyer_what_to_do_next() {
-        listOf(
-            VibrationTrace(VibrationAttempt.NO_MOTOR),
-            VibrationTrace(VibrationAttempt.REFUSED),
-            VibrationTrace(VibrationAttempt.NO_ACCELEROMETER),
-            measured(resting = 1.5, active = 6.0),
-            measured(resting = 0.05, active = 0.06),
-        ).forEach { assertThat(VibrationCheck.evaluate(it).action).isNotEmpty() }
+    fun every_outcome_that_is_not_a_clean_pass_tells_the_buyer_what_to_do_next() {
+        // Driven off the enum rather than a hand-written list, because such a list went stale once before
+        // and a new attempt with no action would have slipped through unnoticed.
+        //
+        // A PASS is deliberately exempt: there is nothing for the buyer to do about working hardware, and
+        // inventing an instruction for it would be noise.
+        val traces = VibrationAttempt.entries.map { attempt ->
+            if (attempt == VibrationAttempt.MEASURED) {
+                measured(resting = 0.05, active = 0.06)
+            } else {
+                VibrationTrace(attempt)
+            }
+        } + measured(resting = 1.5, active = 6.0) + measured(resting = 0.05, active = 6.0)
+
+        traces.forEach { trace ->
+            val result = VibrationCheck.evaluate(trace)
+            if (result.outcome != CheckOutcome.PASS) {
+                assertThat(result.action).isNotEmpty()
+            }
+        }
+    }
+
+    // ------------------------------------------------------ the app's own bugs are not the phone's fault
+
+    @Test
+    fun a_missing_permission_is_reported_as_the_apps_fault_and_not_the_phones() {
+        // This test exists because of a real bug. android.permission.VIBRATE was missing from the manifest,
+        // so vibrate() threw SecurityException, the driver flattened it to false, and a working realme was
+        // told "the phone would not let the app run the motor. Check Do Not Disturb is off". The app blamed
+        // a stranger's handset for its own missing manifest line.
+        val result = VibrationCheck.evaluate(VibrationTrace(VibrationAttempt.NOT_PERMITTED))
+
+        assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
+        assertThat(result.headline).contains("fault in this app")
+        assertThat(result.headline).contains("not in the phone")
+    }
+
+    @Test
+    fun the_app_fault_message_never_sends_the_buyer_hunting_through_their_settings() {
+        // The distinction that makes NOT_PERMITTED worth having as a separate state at all. Naming Do Not
+        // Disturb here would imply the phone is misconfigured, which is the accusation being avoided.
+        val result = VibrationCheck.evaluate(VibrationTrace(VibrationAttempt.NOT_PERMITTED))
+
+        assertThat(result.action).doesNotContain("Do Not Disturb")
+        assertThat(result.action).contains("nothing here counts against the phone")
+    }
+
+    @Test
+    fun neither_kind_of_failure_ever_produces_a_verdict_against_the_motor() {
+        // Both are silences. Only a real measurement may reach PASS or CAUTION.
+        for (attempt in listOf(VibrationAttempt.REFUSED, VibrationAttempt.NOT_PERMITTED)) {
+            val result = VibrationCheck.evaluate(VibrationTrace(attempt))
+
+            assertThat(result.outcome).isEqualTo(CheckOutcome.UNKNOWN)
+            assertThat(result.measurements.map { it.label })
+                .doesNotContain("Movement while buzzing")
+        }
+    }
+
+    @Test
+    fun a_declined_request_still_mentions_do_not_disturb_because_that_one_may_be_the_phone() {
+        // The counterpart to the test above: when the platform declines for its own reasons, Do Not Disturb
+        // is a genuinely useful thing to point at. The two messages must not be merged back together.
+        val declined = VibrationCheck.evaluate(VibrationTrace(VibrationAttempt.REFUSED))
+        val appFault = VibrationCheck.evaluate(VibrationTrace(VibrationAttempt.NOT_PERMITTED))
+
+        assertThat(declined.action).contains("Do Not Disturb")
+        assertThat(declined.headline).isNotEqualTo(appFault.headline)
     }
 }

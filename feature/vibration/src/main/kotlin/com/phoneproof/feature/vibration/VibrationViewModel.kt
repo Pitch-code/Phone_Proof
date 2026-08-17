@@ -9,6 +9,7 @@ import com.phoneproof.checks.vibration.VibrationAttempt
 import com.phoneproof.checks.vibration.VibrationCheck
 import com.phoneproof.checks.vibration.VibrationTrace
 import com.phoneproof.checks.vibration.meanJerk
+import com.phoneproof.core.device.BuzzResult
 import com.phoneproof.core.device.VibrationDriver
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.model.CheckResult
@@ -111,11 +112,16 @@ class VibrationViewModel(
 
             _uiState.update { it.copy(stage = VibrationStage.BUZZING, restingJerk = resting) }
 
-            val accepted = driver.buzz(BUZZ_MILLIS)
-            if (!accepted) {
+            // The two failures are kept apart deliberately: one is this app's bug and one may be the
+            // phone's. Flattening them is what once had a working handset told to check Do Not Disturb.
+            val started = driver.buzz(BUZZ_MILLIS)
+            if (started != BuzzResult.ACCEPTED) {
                 publish(
                     VibrationTrace(
-                        attempt = VibrationAttempt.REFUSED,
+                        attempt = when (started) {
+                            BuzzResult.NOT_PERMITTED -> VibrationAttempt.NOT_PERMITTED
+                            else -> VibrationAttempt.REFUSED
+                        },
                         restingJerk = resting,
                         hasAmplitudeControl = driver.hasAmplitudeControl(),
                     ),
