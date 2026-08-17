@@ -96,6 +96,24 @@ class VibrationScreenshotTest {
     }
 
     @Test
+    fun movement_too_small_to_call_either_way() {
+        // The new middle band, and the state that should have been shown to the real phone that got told
+        // its motor needed replacing. It admits it could not tell instead of guessing at a fault.
+        render(
+            "vibration-12-inconclusive",
+            done(
+                VibrationTrace(
+                    attempt = VibrationAttempt.MEASURED,
+                    restingJerk = 0.01,
+                    activeJerk = 0.015,
+                    requestedMillis = 700L,
+                    hasAmplitudeControl = true,
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun a_phone_that_was_never_still_enough_to_judge() {
         render(
             "vibration-7-too-restless",

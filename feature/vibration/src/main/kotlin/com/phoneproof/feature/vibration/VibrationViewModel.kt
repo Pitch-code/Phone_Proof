@@ -8,13 +8,14 @@ import com.phoneproof.checks.sensors.SensorReading
 import com.phoneproof.checks.vibration.VibrationAttempt
 import com.phoneproof.checks.vibration.VibrationCheck
 import com.phoneproof.checks.vibration.VibrationTrace
-import com.phoneproof.checks.vibration.meanJerk
+import com.phoneproof.checks.vibration.jerkPercentile
 import com.phoneproof.core.device.BuzzResult
 import com.phoneproof.core.device.VibrationDriver
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.model.CheckResult
 import com.phoneproof.core.sensors.SensorEventUpdate
 import com.phoneproof.core.sensors.SensorProbe
+import com.phoneproof.core.sensors.SensorRate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,7 +109,7 @@ class VibrationViewModel(
         }
 
         job = viewModelScope.launch {
-            val resting = meanJerk(record(RESTING_MILLIS))
+            val resting = jerkPercentile(record(RESTING_MILLIS))
 
             _uiState.update { it.copy(stage = VibrationStage.BUZZING, restingJerk = resting) }
 
@@ -129,10 +130,11 @@ class VibrationViewModel(
                 return@launch
             }
 
-            // The window is longer than the buzz so the whole of it is inside the recording. A window that
-            // ended with the motor would risk clipping the start or the end, and the average would then be
-            // diluted by however much silence was caught instead.
-            val active = meanJerk(record(BUZZ_MILLIS + BUZZ_MARGIN_MILLIS))
+            // The window is the buzz and nothing after it. It used to run 300 ms longer so the whole
+            // buzz was certainly inside it, which meant nearly a third of the samples were of a still
+            // phone — and being a mean, that pulled the figure down by about as much. A percentile does
+            // not need the padding: a few quiet samples at either edge no longer decide anything.
+            val active = jerkPercentile(record(BUZZ_MILLIS))
 
             Diagnostics.info(TAG, "resting=$resting active=$active")
             publish(
@@ -167,7 +169,9 @@ class VibrationViewModel(
                         readings += update.reading
                         // A short trailing window rather than everything so far, so the live number reacts
                         // to what the buyer is doing now instead of being anchored by the first second.
-                        _uiState.update { it.copy(liveJerk = meanJerk(readings.takeLast(LIVE_WINDOW))) }
+                        _uiState.update {
+                            it.copy(liveJerk = jerkPercentile(readings.takeLast(LIVE_WINDOW)))
+                        }
                     }
                 }
                 .collect()
@@ -194,9 +198,14 @@ class VibrationViewModel(
 
         /** A buzz a person plainly feels, and well over a hundred accelerometer samples of it. */
         const val BUZZ_MILLIS = 700L
-        const val BUZZ_MARGIN_MILLIS = 300L
 
         /** Samples behind the live figure: about a fifth of a second at 50 Hz. */
-        const val LIVE_WINDOW = 10
+        /**
+         * Samples behind the live figure.
+         *
+         * Raised with the sampling rate: at four times the samples per second, ten of them covered a
+         * quarter of the time they used to and the live number became twitchy.
+         */
+        const val LIVE_WINDOW = 40
     }
 }
