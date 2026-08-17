@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.ChargingCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ConditionPrompt
 import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
@@ -70,6 +71,20 @@ fun ChargingScreen(
 
         Spacer(Modifier.height(24.dp))
     }
+
+    // The instruction, made unmissable, and nothing else.
+    //
+    // No action of its own: the give-up button lives in the page above, always visible, so this card does
+    // not need to duplicate it and cannot hide it. Bottom-aligned for the same reason — the page's own
+    // controls stay where the buyer can see them.
+    //
+    // This is the one test the app cannot start on its own, so the screen can sit here indefinitely, and on
+    // a real phone the instruction was easy to miss even though it is the headline.
+    ConditionPrompt(
+        visible = state.stage == ChargingStage.WAITING && !state.plugged,
+        headline = "Please connect the charger",
+        detail = "The test starts on its own the moment you do, and this closes by itself.",
+    )
 }
 
 @Composable
@@ -92,6 +107,12 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
 
     LiveState(state)
 
+    // The way out stays here, in the page, and the prompt below carries no action of its own.
+    //
+    // It was briefly moved into the prompt to avoid two identical buttons. That was wrong: the prompt is
+    // hidden while a charger is attached, and WAITING with a charger attached is a real state — the moment
+    // between the sample arriving and the test starting. Moving the button left that instant with no visible
+    // exit at all. One button that is always present beats one that is usually present.
     OutlinedButton(
         onClick = onGiveUp,
         modifier = Modifier.fillMaxWidth().height(48.dp),
