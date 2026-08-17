@@ -20,7 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.StorageSpeedCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -181,13 +181,7 @@ private fun Done(state: StorageSpeedUiState, onRestart: () -> Unit) {
     // person about to conclude the capacity was checked.
     CapacityNote()
 
-    OutlinedButton(
-        onClick = onRestart,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Test again")
-    }
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }
 
 @Composable

@@ -55,6 +55,9 @@ dependencies {
     api(project(":core:model"))
 
     implementation(libs.androidx.core.ktx)
+    // ResultActions reaches the activity's own back dispatcher, so the Back button on a result screen
+    // and the system back gesture are literally the same call and cannot drift apart.
+    implementation(libs.androidx.activity.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.foundation)
