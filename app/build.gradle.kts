@@ -79,6 +79,13 @@ kotlin {
     jvmToolchain(17)
 }
 
+tasks.withType<Test>().configureEach {
+    // HardcodedStringsTest walks the source of every feature module, so it needs to know where the repo
+    // starts. Passed in rather than guessed from a relative path, which breaks the moment a test is run
+    // from a different working directory.
+    systemProperty("phoneproof.repoRoot", rootProject.projectDir.absolutePath)
+}
+
 dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
