@@ -204,7 +204,7 @@ private fun Cover(state: SensorTestUiState) {
         Indicator(label = "Proximity sensor felt your hand", satisfied = state.proximityFelt)
     }
     if (state.hasLight) {
-        Indicator(label = "Light sensor went dark", satisfied = state.lightWentDark)
+        Indicator(label = "Light sensor reacted to your hand", satisfied = state.lightReacted)
     }
 }
 
