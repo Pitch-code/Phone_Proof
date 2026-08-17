@@ -138,7 +138,7 @@ class VibrationScreenshotTest {
         // Rendered so the wording gets looked at. A real phone once saw the old version of this state and
         // was told to check its Do Not Disturb setting for a permission missing from the app's manifest.
         render(
-            "vibration-10-app-fault",
+            "vibration-11-app-fault",
             done(VibrationTrace(VibrationAttempt.NOT_PERMITTED, hasAmplitudeControl = true)),
         )
     }
