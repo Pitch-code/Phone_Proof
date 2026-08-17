@@ -99,6 +99,7 @@ fun SettingsScreen(
                     plan = plan,
                     owned = state.ownedPlan == plan,
                     purchasable = state.isPurchasable(plan),
+                    onSale = state.isOnSale(plan),
                     price = state.priceOf(plan),
                     pending = state.isPending(plan),
                     onClick = { onChoosePlan(plan) },
@@ -272,6 +273,8 @@ private fun PlanCard(
     plan: PremiumPlan,
     owned: Boolean,
     purchasable: Boolean,
+    /** Whether this tier is offered at all — see the status label below. */
+    onSale: Boolean,
     /** Play's own figure where it is known; the built-in constant until Play answers. */
     price: String,
     /** A payment started and not yet settled — routine with UPI. */
@@ -347,6 +350,10 @@ private fun PlanCard(
                 // Said before "unavailable", because to someone who has just paid by UPI the two look
                 // nothing alike: one is the app waiting, the other is the app refusing.
                 pending -> "Waiting for your payment to clear"
+                // Separated from "unavailable" after looking at the render: with billing working, the
+                // Shop card said "Unavailable", which is not what is happening. It is not on sale, which
+                // is a decision — and one worth stating plainly rather than leaving someone tapping.
+                !onSale -> "Not on sale yet"
                 !purchasable -> "Unavailable"
                 else -> "Choose ${plan.title}"
             },
@@ -354,6 +361,8 @@ private fun PlanCard(
             color = when {
                 owned -> PhoneProofTheme.colors.pass
                 pending -> PhoneProofTheme.colors.caution
+                // Not an action and not a fault, so neither accent nor amber.
+                !onSale -> PhoneProofTheme.colors.textTertiary
                 else -> accent
             },
         )

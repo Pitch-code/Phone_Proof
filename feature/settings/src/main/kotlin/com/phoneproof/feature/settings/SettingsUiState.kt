@@ -104,5 +104,14 @@ data class SettingsUiState(
 
     /** Only products actually on sale can be bought, and only when Play answered. */
     fun isPurchasable(plan: PremiumPlan): Boolean =
-        billingAvailable && plan.productId in BillingProducts.onSale && ownedPlan != plan
+        billingAvailable && isOnSale(plan) && ownedPlan != plan
+
+    /**
+     * Whether this tier is offered at all.
+     *
+     * Distinct from [isPurchasable] because the two mean different things to a reader. "Unavailable" is
+     * about the app not being able to take payments; a tier that is deliberately not sold yet is a
+     * decision, and saying "unavailable" for it invites someone to keep tapping and wondering.
+     */
+    fun isOnSale(plan: PremiumPlan): Boolean = plan.productId in BillingProducts.onSale
 }
