@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.rememberAnimationsEnabled
 
 /**
  * Cameras first, then the torch.
@@ -246,9 +247,11 @@ private fun Primary(text: String, onClick: () -> Unit, pulse: Boolean = false) {
     // wrong tool at any speed. A slow fade between two colours draws the eye just as well and never goes
     // dark, at the same 0.7 Hz already used for the trial counter on Home, which is the only other looping
     // animation in this codebase.
+    // ...and it stops entirely if the phone's owner has switched animation off, which is a setting people
+    // switch on for vestibular and photosensitivity reasons. The button keeps its accent colour.
     val phase by rememberInfiniteTransition(label = "torchPulse").animateFloat(
         initialValue = 0f,
-        targetValue = if (pulse) 1f else 0f,
+        targetValue = if (pulse && rememberAnimationsEnabled()) 1f else 0f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,

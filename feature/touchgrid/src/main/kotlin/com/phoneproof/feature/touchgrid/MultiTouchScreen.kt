@@ -177,7 +177,7 @@ private fun ColumnScope.Counting(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PhoneProofTheme.colors.accent,
-                contentColor = PhoneProofTheme.colors.textPrimary,
+                contentColor = PhoneProofTheme.colors.onAccent,
             ),
         ) {
             Text("See the result", style = MaterialTheme.typography.titleMedium)

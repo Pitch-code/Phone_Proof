@@ -128,7 +128,7 @@ private fun Ready(state: VibrationUiState, onStart: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = PhoneProofTheme.colors.accent,
-            contentColor = PhoneProofTheme.colors.textPrimary,
+            contentColor = PhoneProofTheme.colors.onAccent,
         ),
     ) {
         Text(

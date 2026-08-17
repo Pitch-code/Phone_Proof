@@ -419,7 +419,7 @@ private fun PrimaryButton(text: String, onClick: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = PhoneProofTheme.colors.accent,
-            contentColor = PhoneProofTheme.colors.textPrimary,
+            contentColor = PhoneProofTheme.colors.onAccent,
         ),
     ) {
         Text(text = text, style = MaterialTheme.typography.titleMedium)

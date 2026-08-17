@@ -129,7 +129,7 @@ fun DiagnosticsScreen(
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PhoneProofTheme.colors.accent,
-                    contentColor = PhoneProofTheme.colors.textPrimary,
+                    contentColor = PhoneProofTheme.colors.onAccent,
                 ),
             ) {
                 Text("Copy log")

@@ -63,8 +63,7 @@ import com.phoneproof.core.designsystem.theme.rememberAnimationsEnabled
  *  - **It stops when it has done its job.** The pulse is there to be noticed; once tapped it never
  *    animates again, so it cannot become permanent decoration.
  *
- * It also honours the system "remove animations" setting, which the two looping animations added before
- * this one do not yet — see the note in `design-system.md`.
+ * It also honours the system "remove animations" setting, as every looping animation in this app now does.
  */
 @Composable
 fun ResultActions(

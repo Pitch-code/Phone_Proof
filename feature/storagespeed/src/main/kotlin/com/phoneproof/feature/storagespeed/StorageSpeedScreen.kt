@@ -110,7 +110,7 @@ private fun Ready(state: StorageSpeedUiState, onStart: () -> Unit) {
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = PhoneProofTheme.colors.accent,
-            contentColor = PhoneProofTheme.colors.textPrimary,
+            contentColor = PhoneProofTheme.colors.onAccent,
         ),
     ) {
         Text("Start", style = MaterialTheme.typography.titleMedium)

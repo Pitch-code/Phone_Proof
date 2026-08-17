@@ -116,19 +116,19 @@ exists to prevent, so the list is now kept here in full and a new loop is not do
 
 | Where | Rate | Cannot run during a measurement because | Honours "remove animations" |
 |---|---|---|---|
-| `CheckResultCard` FAIL border | 0.7 Hz | `emphasise = false` is mandatory wherever measuring | no — see below |
+| `CheckResultCard` FAIL border | 0.7 Hz | `emphasise = false` is mandatory wherever measuring | yes |
 | Guide diagrams | slow tween | the guide measures nothing at all | yes |
-| Home free-trial line | 0.7 Hz | Home measures nothing | no — see below |
-| Camera torch button | 0.7 Hz | the torch test takes no timed measurement | no — see below |
+| Home free-trial line | 0.7 Hz | Home measures nothing | yes |
+| Camera torch button | 0.7 Hz | the torch test takes no timed measurement | yes |
 | `ResultActions` retest button | 0.7 Hz | it is only ever shown on a *finished* result | yes |
 
-**Every looping animation must honour `ANIMATOR_DURATION_SCALE`.** Someone who has switched animation
-off has usually done it for vestibular or photosensitivity reasons, and an app that ignores that is
-not accessible. `rememberAnimationsEnabled()` in `core/designsystem` is the shared check — it was
-private inside the guide until `ResultActions` needed it.
+**Every looping animation must honour `ANIMATOR_DURATION_SCALE`**, and all five now do. Someone who
+has switched animation off has usually done it for vestibular or photosensitivity reasons, and an app
+that ignores that is not accessible. `rememberAnimationsEnabled()` in `core/designsystem` is the single
+shared check — it lived privately inside the guide until `ResultActions` needed it, and the guide now
+calls the shared one so there is only one copy of that settings read.
 
-Three of the five above predate that helper and do not call it yet. That is a known accessibility gap,
-not a decision, and it should be closed the next time any of those three screens is touched.
+A sixth entry in this table needs all four columns answered before it is written, not after.
 
 #### The retest button, which is the fifth exception
 

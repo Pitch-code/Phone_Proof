@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.rememberAnimationsEnabled
 
 /**
  * Home.
@@ -132,7 +133,7 @@ fun HomeScreen(
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PhoneProofTheme.colors.accent,
-                contentColor = PhoneProofTheme.colors.textPrimary,
+                contentColor = PhoneProofTheme.colors.onAccent,
             ),
         ) {
             Text(text = "Test this phone", style = MaterialTheme.typography.titleLarge)
@@ -147,15 +148,22 @@ fun HomeScreen(
             // here is the worst place in the product to put one. A slow fade between two colours
             // draws the eye without ever going dark, at the same 0.7 Hz already used for a FAIL card,
             // which is the only other looping animation in this codebase.
-            val pulse by rememberInfiniteTransition(label = "trialPulse").animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "trialPulseValue",
-            )
+            // Honours the system "remove animations" setting: at rest the line is simply its own colour,
+            // which is still a size up from the label it used to be and perfectly readable.
+            val pulse = if (rememberAnimationsEnabled()) {
+                val value by rememberInfiniteTransition(label = "trialPulse").animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(durationMillis = 1400, easing = FastOutSlowInEasing),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                    label = "trialPulseValue",
+                )
+                value
+            } else {
+                0f
+            }
             val restColour = if (freeScansLeft == 0) {
                 PhoneProofTheme.colors.caution
             } else {

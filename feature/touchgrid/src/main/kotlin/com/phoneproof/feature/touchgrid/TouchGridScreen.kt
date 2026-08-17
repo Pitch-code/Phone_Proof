@@ -225,7 +225,7 @@ private fun TestingLayout(
                     modifier = Modifier.height(48.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = PhoneProofTheme.colors.accent,
-                        contentColor = PhoneProofTheme.colors.textPrimary,
+                        contentColor = PhoneProofTheme.colors.onAccent,
                     ),
                 ) {
                     Text("See the result")

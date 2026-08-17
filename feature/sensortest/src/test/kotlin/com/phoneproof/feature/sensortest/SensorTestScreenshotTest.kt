@@ -196,6 +196,28 @@ class SensorTestScreenshotTest {
     }
 
     @Test
+    fun the_bottom_of_a_finished_test_where_the_way_out_lives() {
+        // The render this screen was missing. Every other check had its finished state captured with the
+        // retest row in frame; this one scrolled only as far as the last result, so when Back was added
+        // beside Test again across twelve screens, this was the one place it went unlooked at.
+        render(
+            "sensors-12-finished-actions",
+            SensorTestUiState(
+                phase = SensorPhase.DONE,
+                available = everything,
+                results = resultsFor(
+                    accelerometerTilted(),
+                    gyroscopeTurning(),
+                    magnetometerNormal(),
+                    proximityCovered(),
+                    lightCovered(),
+                ),
+            ),
+            scrollTo = "Test again",
+        )
+    }
+
+    @Test
     fun the_tilt_meter_in_light_mode() {
         render(
             "sensors-11-tilting-light",
