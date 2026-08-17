@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      The charging test.
+
+      Names are charging_<where>_<purpose>. The module prefix keeps them unique: every module owns its own
+      strings.xml and they are all merged into one namespace at build time.
+    -->
+
+    <string name="charging_title">Charging</string>
+
+    <!-- The prompt that appears while nothing is plugged in, and takes itself away when a cable goes in. -->
+    <string name="charging_prompt_headline">Please connect the charger</string>
+    <string name="charging_prompt_detail">The test starts on its own the moment you do, and this closes by itself.</string>
+
+    <!-- Waiting. -->
+    <string name="charging_waiting_headline">Plug a charger in. The test starts on its own the moment you do.</string>
+    <!--
+      The reason to bother, and it is not the speed. A buyer who thinks this is a benchmark will skip it,
+      and this is the one check they cannot repeat after paying.
+    -->
+    <string name="charging_waiting_why">The point of this is not really the speed. A loose charging socket is one of the commonest faults on a used phone: it charges fine while you watch it and gives up overnight. The app watches for twenty seconds and counts the times it lets go.</string>
+    <string name="charging_waiting_give_up">There is no charger here</string>
+    <string name="charging_waiting_skip_note">Skipping is fine — the report will say charging was not tested rather than pretending otherwise. It is worth coming back for, though.</string>
+
+    <!--
+      Measuring. %1$d is the seconds remaining — positional even though there is only one, because a
+      translator moving it to the front of the sentence should not have to think about it.
+    -->
+    <string name="charging_measuring_headline">Charging — watching for %1$d more seconds</string>
+    <string name="charging_measuring_hold_still">Leave the phone and the cable alone. Moving either one looks identical to a loose socket, and this is counting how many times charging stops.</string>
+
+    <!--
+      A count, so plurals rather than an if. English needs two forms and puts the boundary at one; several
+      of the languages this app is aimed at do neither, and "time"/"times" chosen by an if in Kotlin
+      cannot be fixed by a translator.
+    -->
+    <plurals name="charging_dropouts_live">
+        <item quantity="one">Charging has already stopped and restarted %1$d time</item>
+        <item quantity="other">Charging has already stopped and restarted %1$d times</item>
+    </plurals>
+
+    <!-- The live readout. -->
+    <string name="charging_live_charger">Charger</string>
+    <string name="charging_live_connected">connected</string>
+    <string name="charging_live_not_connected">not connected</string>
+    <string name="charging_live_battery">Battery</string>
+    <!-- %1$d is the percentage. The sign stays with the number so a language that writes it first can. -->
+    <string name="charging_live_battery_value">%1$d%%</string>
+    <string name="charging_live_power">Power now</string>
+    <!-- %1$s is an already-formatted number, so its decimal separator follows the phone's locale. -->
+    <string name="charging_live_power_value">%1$s W</string>
+
+    <string name="charging_about_speed_label">ABOUT THE SPEED</string>
+    <string name="charging_retest">Test again</string>
+
+</resources>

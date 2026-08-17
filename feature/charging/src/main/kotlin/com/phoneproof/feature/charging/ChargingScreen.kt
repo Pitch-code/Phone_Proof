@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.ChargingCheck
@@ -57,7 +59,7 @@ fun ChargingScreen(
     ) {
         Spacer(Modifier.height(10.dp))
         if (state.stage != ChargingStage.DONE) {
-            ScreenTitle("Charging")
+            ScreenTitle(stringResource(R.string.charging_title))
         }
 
         when (state.stage) {
@@ -79,15 +81,15 @@ fun ChargingScreen(
     // a real phone the instruction was easy to miss even though it is the headline.
     ConditionPrompt(
         visible = state.stage == ChargingStage.WAITING && !state.plugged,
-        headline = "Please connect the charger",
-        detail = "The test starts on its own the moment you do, and this closes by itself.",
+        headline = stringResource(R.string.charging_prompt_headline),
+        detail = stringResource(R.string.charging_prompt_detail),
     )
 }
 
 @Composable
 private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
     Text(
-        text = "Plug a charger in. The test starts on its own the moment you do.",
+        text = stringResource(R.string.charging_waiting_headline),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.SemiBold,
         color = PhoneProofTheme.colors.textPrimary,
@@ -95,9 +97,7 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
     Text(
         // The reason to bother, and it is not the speed. Said here because a buyer who thinks this is a
         // benchmark will skip it, and this is the one check they cannot repeat after paying.
-        text = "The point of this is not really the speed. A loose charging socket is one of the " +
-            "commonest faults on a used phone: it charges fine while you watch it and gives up " +
-            "overnight. The app watches for twenty seconds and counts the times it lets go.",
+        text = stringResource(R.string.charging_waiting_why),
         style = MaterialTheme.typography.bodyMedium,
         color = PhoneProofTheme.colors.textSecondary,
     )
@@ -115,11 +115,10 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
         modifier = Modifier.fillMaxWidth().height(48.dp),
         shape = RoundedCornerShape(12.dp),
     ) {
-        Text("There is no charger here")
+        Text(stringResource(R.string.charging_waiting_give_up))
     }
     Text(
-        text = "Skipping is fine — the report will say charging was not tested rather than pretending " +
-            "otherwise. It is worth coming back for, though.",
+        text = stringResource(R.string.charging_waiting_skip_note),
         style = MaterialTheme.typography.labelSmall,
         color = PhoneProofTheme.colors.textTertiary,
     )
@@ -128,7 +127,7 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
 @Composable
 private fun Measuring(state: ChargingUiState) {
     Text(
-        text = "Charging — watching for ${state.secondsLeft} more seconds",
+        text = stringResource(R.string.charging_measuring_headline, state.secondsLeft),
         style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.SemiBold,
         color = PhoneProofTheme.colors.accent,
@@ -136,8 +135,7 @@ private fun Measuring(state: ChargingUiState) {
     Text(
         // The one instruction that decides whether the result means anything: moving the phone pulls the
         // cable and looks exactly like a loose socket.
-        text = "Leave the phone and the cable alone. Moving either one looks identical to a loose " +
-            "socket, and this is counting how many times charging stops.",
+        text = stringResource(R.string.charging_measuring_hold_still),
         style = MaterialTheme.typography.bodyMedium,
         color = PhoneProofTheme.colors.textSecondary,
     )
@@ -146,8 +144,13 @@ private fun Measuring(state: ChargingUiState) {
 
     if (state.dropouts > 0) {
         Text(
-            text = "Charging has already stopped and restarted ${state.dropouts} time" +
-                if (state.dropouts == 1) "" else "s",
+            // pluralStringResource, not an if: English needs two forms and puts the boundary at one,
+            // and several of the languages this app is aimed at do neither.
+            text = pluralStringResource(
+                R.plurals.charging_dropouts_live,
+                state.dropouts,
+                state.dropouts,
+            ),
             style = MaterialTheme.typography.titleSmall,
             color = PhoneProofTheme.colors.caution,
         )
@@ -176,13 +179,25 @@ private fun LiveState(state: ChargingUiState) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         LiveRow(
-            label = "Charger",
-            value = if (state.plugged) "connected" else "not connected",
+            label = stringResource(R.string.charging_live_charger),
+            value = if (state.plugged) {
+                stringResource(R.string.charging_live_connected)
+            } else {
+                stringResource(R.string.charging_live_not_connected)
+            },
             highlight = state.plugged,
         )
-        LiveRow(label = "Battery", value = "${state.percent}%")
+        LiveRow(
+            label = stringResource(R.string.charging_live_battery),
+            value = stringResource(R.string.charging_live_battery_value, state.percent),
+        )
         state.watts?.let {
-            LiveRow(label = "Power now", value = "%.1f W".format(it))
+            LiveRow(
+                label = stringResource(R.string.charging_live_power),
+                // The number is formatted first and passed as text, so its decimal separator follows the
+                // phone's locale rather than being baked in as a full stop.
+                value = stringResource(R.string.charging_live_power_value, "%.1f".format(it)),
+            )
         }
     }
 }
@@ -224,7 +239,7 @@ private fun Done(state: ChargingUiState, onRestart: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
-            text = "ABOUT THE SPEED",
+            text = stringResource(R.string.charging_about_speed_label),
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofTheme.colors.textTertiary,
         )
@@ -237,5 +252,5 @@ private fun Done(state: ChargingUiState, onRestart: () -> Unit) {
         )
     }
 
-    ResultActions(retestLabel = "Test again", onRetest = onRestart)
+    ResultActions(retestLabel = stringResource(R.string.charging_retest), onRetest = onRestart)
 }
