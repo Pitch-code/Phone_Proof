@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import org.robolectric.shadows.ShadowSettings
+import org.robolectric.RuntimeEnvironment
 
 /**
  * The gate in front of every looping animation in the app.
@@ -26,6 +26,20 @@ class AnimationsEnabledTest {
 
     @get:Rule
     val composeRule = createComposeRule()
+
+    /**
+     * Writes the real setting rather than reaching for a shadow helper.
+     *
+     * Robolectric's ShadowSettings does not expose this scale in the version pinned here, and writing the
+     * documented key is the better test regardless: it exercises exactly the read path the app uses.
+     */
+    private fun setAnimatorScale(value: Float) {
+        Settings.Global.putFloat(
+            RuntimeEnvironment.getApplication().contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            value,
+        )
+    }
 
     private fun readInComposition(): Boolean {
         var seen by mutableStateOf<Boolean?>(null)
@@ -42,14 +56,14 @@ class AnimationsEnabledTest {
     @Test
     fun a_scale_of_zero_means_the_owner_has_switched_animation_off() {
         // What Android's "remove animations" accessibility switch actually writes.
-        ShadowSettings.setAnimatorDurationScale(0f)
+        setAnimatorScale(0f)
 
         assertThat(readInComposition()).isFalse()
     }
 
     @Test
     fun a_normal_scale_leaves_animation_on() {
-        ShadowSettings.setAnimatorDurationScale(1f)
+        setAnimatorScale(1f)
 
         assertThat(readInComposition()).isTrue()
     }
@@ -58,7 +72,7 @@ class AnimationsEnabledTest {
     fun a_slowed_down_scale_still_counts_as_on() {
         // Developers and some users set 0.5x or 2x rather than off. Only zero means "no motion", so
         // anything above it must not be read as a request for stillness.
-        ShadowSettings.setAnimatorDurationScale(2f)
+        setAnimatorScale(2f)
 
         assertThat(readInComposition()).isTrue()
     }
