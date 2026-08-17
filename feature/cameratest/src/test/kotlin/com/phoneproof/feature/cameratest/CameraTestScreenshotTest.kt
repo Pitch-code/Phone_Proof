@@ -2,14 +2,19 @@ package com.phoneproof.feature.cameratest
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -145,13 +150,23 @@ class CameraTestScreenshotTest {
         composeRule.setContent {
             PhoneProofTheme(themeMode = themeMode) {
                 Column(
+                    // Copied from CameraTestRoute deliberately, down to the padding on all four sides,
+                    // the 12dp arrangement and the heading. Anything omitted here is a difference between
+                    // what gets reviewed and what gets shipped.
                     modifier = Modifier
                         .fillMaxSize()
                         .background(PhoneProofTheme.colors.background)
                         .windowInsetsPadding(WindowInsets.safeDrawing)
                         .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Cameras and flashlight",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = PhoneProofTheme.colors.textPrimary,
+                    )
                     CameraTestScreen(
                         state = state,
                         onTestCameras = {},
