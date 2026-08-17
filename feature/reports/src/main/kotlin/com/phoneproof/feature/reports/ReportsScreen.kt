@@ -22,6 +22,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.OutcomeBadge
@@ -54,7 +56,7 @@ fun ReportsScreen(
             .padding(horizontal = 20.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        ScreenTitle("Saved reports")
+        ScreenTitle(stringResource(R.string.reports_title))
         // Suppressed while there is nothing to retain. Announcing "this version keeps your last 2"
         // to someone with zero reports explains a limit they have not met and reads as an upsell on
         // an empty screen.
@@ -79,13 +81,13 @@ fun ReportsScreen(
             ) {
                 Spacer(Modifier.height(48.dp))
                 Text(
-                    text = "No reports yet.",
+                    text = stringResource(R.string.reports_empty_headline),
                     style = MaterialTheme.typography.titleMedium,
                     color = PhoneProofTheme.colors.textSecondary,
                 )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    text = "Test a phone and the report is kept here automatically.",
+                    text = stringResource(R.string.reports_empty_detail),
                     style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.textTertiary,
                     textAlign = TextAlign.Center,
@@ -115,7 +117,7 @@ fun ReportsScreen(
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "Compare two phones",
+                                text = stringResource(R.string.reports_compare_row),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = PhoneProofTheme.colors.accent,
                             )
@@ -153,17 +155,20 @@ fun ReportsScreen(
     }
 }
 
+// @Composable so both can reach a resource. They are only ever called from composition, so this
+// costs nothing and keeps the wording out of Kotlin.
+@Composable
 private fun retentionLine(state: ReportsUiState): String = when {
-    state.unlimited -> "Every report is kept on this device."
+    state.unlimited -> stringResource(R.string.reports_retention_unlimited)
     // States the limit up front rather than letting the oldest report disappear unexplained.
-    else -> "This version keeps your last ${state.retained}. Premium keeps every one."
+    else -> stringResource(R.string.reports_retention_limited, state.retained)
 }
 
-private fun damagedLine(count: Int): String = if (count == 1) {
-    "1 saved report is damaged and could not be opened."
-} else {
-    "$count saved reports are damaged and could not be opened."
-}
+// pluralStringResource rather than an if: this was the last `if (n == 1)` left in the codebase, and
+// English putting its plural boundary at one is not a rule the target languages share.
+@Composable
+private fun damagedLine(count: Int): String =
+    pluralStringResource(R.plurals.reports_damaged, count, count)
 
 @Composable
 private fun ReportRow(

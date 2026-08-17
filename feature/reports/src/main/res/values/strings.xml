@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Saved reports, and the side-by-side comparison. Names are reports_<where>_<purpose>. -->
+
+    <string name="reports_title">Saved reports</string>
+    <string name="reports_empty_headline">No reports yet.</string>
+    <string name="reports_empty_detail">Test a phone and the report is kept here automatically.</string>
+    <string name="reports_compare_row">Compare two phones</string>
+
+    <string name="reports_retention_unlimited">Every report is kept on this device.</string>
+    <!-- %1$d is how many are kept. States the limit up front rather than letting the oldest vanish. -->
+    <string name="reports_retention_limited">This version keeps your last %1$d. Premium keeps every one.</string>
+
+    <!--
+      A count, so plurals rather than an if. This was the last `if (n == 1)` in the codebase.
+    -->
+    <plurals name="reports_damaged">
+        <item quantity="one">%1$d saved report is damaged and could not be opened.</item>
+        <item quantity="other">%1$d saved reports are damaged and could not be opened.</item>
+    </plurals>
+
+    <!-- One report, read back. -->
+    <string name="report_detail_gone">This report is no longer saved.</string>
+    <!-- %1$s is the Android version, %2$s the date. Positional so either can lead. -->
+    <string name="report_detail_subtitle">%1$s · %2$s</string>
+    <string name="report_detail_share">Share as text</string>
+    <string name="report_detail_export_pdf">Save or print as PDF</string>
+    <string name="report_detail_export_locked">PDF export is a Premium extra</string>
+
+    <!-- Comparison. -->
+    <string name="compare_title">Compare two phones</string>
+    <!--
+      The honest empty state, and the second plural. %1$d is how many reports exist; comparison needs
+      two, and a buyer who has taken one is not doing anything wrong.
+    -->
+    <plurals name="compare_need_second">
+        <item quantity="one">Test a second phone and you can compare them here. You have %1$d saved report.</item>
+        <item quantity="other">Test a second phone and you can compare them here. You have %1$d saved reports.</item>
+    </plurals>
+    <string name="compare_pick_second">Pick the second phone to compare against your most recent report.</string>
+
+    <string name="compare_section_differ">Where they differ</string>
+    <string name="compare_section_same">The same on both</string>
+
+    <string name="compare_verdict_identical">These two came out the same on every check they share.</string>
+    <!-- %1$s is the phone that won. -->
+    <string name="compare_verdict_better">%1$s came out better, and worse on nothing.</string>
+    <!--
+      Deliberately refuses to pick. Which faults matter is the buyer's call, and the app does not know
+      whether they care more about a battery or a screen.
+    -->
+    <string name="compare_verdict_mixed">Each is better in places. Read the differences below and decide which faults you can live with.</string>
+
+    <!--
+      "Not tested" rather than a blank or a dash: a gap in a comparison table reads as a pass to anyone
+      skimming, and this phone simply was not checked for it.
+    -->
+    <string name="compare_not_tested">Not tested</string>
+
+    <!--
+      The short outcome words used in the comparison table, where a full badge will not fit.
+      Kept deliberately terse; the full wording lives on the result card.
+    -->
+    <string name="outcome_short_pass">Fine</string>
+    <string name="outcome_short_caution">Check it</string>
+    <string name="outcome_short_fail">Problem</string>
+    <string name="outcome_short_unknown">Can\'t tell</string>
+
+    <!--
+      The tick beside whichever phone did better on a row. The glyph itself is not translatable, but what
+      it means is: bold text and a tick are both invisible to a screen reader, so the description is what
+      actually conveys "this side won this row".
+
+      No leading space in here. AAPT trims whitespace at the edges of a string resource, so a space
+      written here silently disappears - and spacing is the layout's job anyway, not something to encode
+      in a string a translator will retype.
+    -->
+    <string name="compare_better_tick" translatable="false">\u2713</string>
+    <string name="compare_better_description">better</string>
+
+</resources>

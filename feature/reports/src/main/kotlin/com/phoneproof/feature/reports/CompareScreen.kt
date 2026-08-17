@@ -23,6 +23,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,7 +62,7 @@ fun CompareScreen(
             .padding(horizontal = 16.dp),
     ) {
         Spacer(Modifier.height(14.dp))
-        ScreenTitle("Compare two phones")
+        ScreenTitle(stringResource(R.string.compare_title))
 
         if (comparison == null) {
             Spacer(Modifier.height(6.dp))
@@ -66,14 +70,17 @@ fun CompareScreen(
                 // The honest empty state. Comparison needs two reports, and a buyer who has taken
                 // one is not doing anything wrong.
                 Text(
-                    text = "Test a second phone and you can compare them here. You have " +
-                        "${candidates.size} saved report${if (candidates.size == 1) "" else "s"}.",
+                    text = pluralStringResource(
+                        R.plurals.compare_need_second,
+                        candidates.size,
+                        candidates.size,
+                    ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.textTertiary,
                 )
             } else {
                 Text(
-                    text = "Pick the second phone to compare against your most recent report.",
+                    text = stringResource(R.string.compare_pick_second),
                     style = MaterialTheme.typography.bodyMedium,
                     color = PhoneProofTheme.colors.textTertiary,
                 )
@@ -125,11 +132,11 @@ fun CompareScreen(
             val same = comparison.rows - differing.toSet()
 
             if (differing.isNotEmpty()) {
-                item { SectionLabel("Where they differ") }
+                item { SectionLabel(stringResource(R.string.compare_section_differ)) }
                 items(differing, key = { "d-${it.checkId}" }) { CompareRow(it) }
             }
             if (same.isNotEmpty()) {
-                item { SectionLabel("The same on both") }
+                item { SectionLabel(stringResource(R.string.compare_section_same)) }
                 items(same, key = { "s-${it.checkId}" }) { CompareRow(it) }
             }
         }
@@ -154,15 +161,14 @@ private fun Verdict(comparison: Comparison) {
     val better = comparison.clearlyBetter
     val text = when {
         comparison.differingRows.isEmpty() ->
-            "These two came out the same on every check they share."
+            stringResource(R.string.compare_verdict_identical)
         better == ComparisonSide.LEFT ->
-            "${comparison.left.deviceLabel} came out better, and worse on nothing."
+            stringResource(R.string.compare_verdict_better, comparison.left.deviceLabel)
         better == ComparisonSide.RIGHT ->
-            "${comparison.right.deviceLabel} came out better, and worse on nothing."
+            stringResource(R.string.compare_verdict_better, comparison.right.deviceLabel)
         // Deliberately refuses to pick. Which faults matter is the buyer's call, and the app does
         // not know whether they care more about a battery or a screen.
-        else -> "Each is better in places. Read the differences below and decide which faults you " +
-            "can live with."
+        else -> stringResource(R.string.compare_verdict_mixed)
     }
     Text(
         text = text,
@@ -216,8 +222,11 @@ private fun OutcomeCell(
 ) {
     // "Not tested" rather than a blank or a dash. A gap in a comparison table reads as a pass to
     // anyone skimming, and this phone simply was not checked for it.
-    val label = outcome?.shortLabel ?: "Not tested"
+    val label = outcome?.shortLabel() ?: stringResource(R.string.compare_not_tested)
     val colour = outcome?.accent() ?: PhoneProofTheme.colors.textTertiary
+
+    // Read here rather than inside the semantics lambda, which is not a composable scope.
+    val betterDescription = stringResource(R.string.compare_better_description)
 
     Row(
         modifier = modifier.padding(end = 4.dp),
@@ -231,19 +240,26 @@ private fun OutcomeCell(
         )
         if (isBetter) {
             Text(
-                text = " ✓",
+                text = stringResource(R.string.compare_better_tick),
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.pass,
                 fontWeight = FontWeight.Bold,
+                // The tick and the bold weight are both invisible to a screen reader, so the only thing
+                // marking the winning side would have been lost. This says it in words instead.
+                modifier = Modifier
+                    // The gap the string used to carry as a leading space, put where it belongs.
+                    .padding(start = 4.dp)
+                    .semantics { contentDescription = betterDescription },
             )
         }
     }
 }
 
-private val CheckOutcome.shortLabel: String
-    get() = when (this) {
-        CheckOutcome.PASS -> "Fine"
-        CheckOutcome.CAUTION -> "Check it"
-        CheckOutcome.FAIL -> "Problem"
-        CheckOutcome.UNKNOWN -> "Can't tell"
-    }
+// A function rather than a property, because reading a resource needs composition.
+@Composable
+private fun CheckOutcome.shortLabel(): String = when (this) {
+    CheckOutcome.PASS -> stringResource(R.string.outcome_short_pass)
+    CheckOutcome.CAUTION -> stringResource(R.string.outcome_short_caution)
+    CheckOutcome.FAIL -> stringResource(R.string.outcome_short_fail)
+    CheckOutcome.UNKNOWN -> stringResource(R.string.outcome_short_unknown)
+}

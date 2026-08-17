@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ScreenTitle
@@ -61,7 +62,7 @@ fun ReportDetailScreen(
             // the back stack, so it has to say something rather than render an empty page.
             Spacer(Modifier.height(48.dp))
             Text(
-                text = "This report is no longer saved.",
+                text = stringResource(R.string.report_detail_gone),
                 style = MaterialTheme.typography.titleMedium,
                 color = PhoneProofTheme.colors.textSecondary,
             )
@@ -71,7 +72,7 @@ fun ReportDetailScreen(
         Spacer(Modifier.height(14.dp))
         ScreenTitle(report.deviceLabel)
         Text(
-            text = "${report.androidLabel} · $dateLabel",
+            text = stringResource(R.string.report_detail_subtitle, report.androidLabel, dateLabel),
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofTheme.colors.textTertiary,
         )
@@ -103,7 +104,7 @@ fun ReportDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text("Share as text")
+                Text(stringResource(R.string.report_detail_share))
             }
             OutlinedButton(
                 onClick = onExportPdf,
@@ -111,7 +112,13 @@ fun ReportDetailScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
             ) {
-                Text(if (canExportPdf) "Save or print as PDF" else "PDF export is a Premium extra")
+                Text(
+                    if (canExportPdf) {
+                        stringResource(R.string.report_detail_export_pdf)
+                    } else {
+                        stringResource(R.string.report_detail_export_locked)
+                    },
+                )
             }
         }
     }

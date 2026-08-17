@@ -37,7 +37,6 @@ class HardcodedStringsTest {
         "home",
         "imei",
         "radios",
-        "reports",
         "run",
         "scan",
         "screentest",
@@ -127,7 +126,7 @@ class HardcodedStringsTest {
     fun the_allowlist_only_ever_gets_shorter() {
         // The number is written down so shortening it is a deliberate act with a diff, and lengthening it
         // is impossible to do by accident. Update it in the same commit that converts a module.
-        assertThat(notYetConverted).hasSize(19)
+        assertThat(notYetConverted).hasSize(18)
     }
 
     @Test
