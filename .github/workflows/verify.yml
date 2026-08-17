@@ -42,6 +42,18 @@ jobs:
       - name: Compile everything
         run: ./gradlew assembleDebug --stacktrace
 
+      - name: Compile the release variant, shrinker and all
+        # The variant that goes to Play, which until now had never been built here at all.
+        #
+        # Two things depend on this. R8 and resource shrinking only run on release, so a rule that breaks
+        # them was previously invisible; and the debug-only tier switcher has a do-nothing twin in
+        # feature/settings/src/release that the debug build never compiles. Without this step that twin
+        # could rot, and the first person to find out would be whoever tried to publish.
+        #
+        # Unsigned on purpose: no release keystore enters this repo, and assembling is enough to prove the
+        # thing compiles and shrinks.
+        run: ./gradlew assembleRelease --stacktrace
+
       - name: Unit tests
         run: ./gradlew test --stacktrace
 

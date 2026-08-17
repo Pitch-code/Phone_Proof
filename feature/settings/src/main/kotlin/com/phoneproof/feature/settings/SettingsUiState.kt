@@ -76,15 +76,6 @@ data class SettingsUiState(
     val shopName: String? = null,
     val shopContact: String? = null,
     val shopLogoPath: String? = null,
-    /**
-     * Whether to offer the tier switcher.
-     *
-     * True only in a debug build. Play Billing cannot complete a purchase in a sideloaded APK, so
-     * without this the paid features could not be exercised at all before release — they would ship
-     * having never been run. It is passed in from the app module rather than read here, so a release
-     * build physically cannot show it.
-     */
-    val showTestingControls: Boolean = false,
     /** Scans left on the free trial, or null when unlimited. Shown on the free-trial card. */
     val freeScansLeft: Int? = null,
     val ownedPlan: PremiumPlan? = null,
