@@ -222,6 +222,22 @@ fun HomeScreen(
             onClick = onOpenReports,
         )
 
+        // Settings, reachable from here as well as from the gear above, and the duplication is the point.
+        //
+        // The gear was added so nobody had to scroll past the whole page to change the theme. Removing
+        // this row at the same time was not asked for and was a mistake: a small unlabelled icon in a
+        // corner is discoverable if you already know what a gear means, and invisible if you do not.
+        // A named row at the end of the page is where a list of things is expected to finish, and it can
+        // afford to say what is inside. Two routes to one screen costs nothing and loses nobody.
+        SectionLabel("This app")
+        NavigationRow(
+            title = "Settings",
+            // Names only what is actually in there today. Language belongs in this list the moment the
+            // language picker exists and not one commit before it.
+            subtitle = "Appearance, your shop's name on reports, and plans",
+            onClick = onOpenSettings,
+        )
+
         Spacer(Modifier.height(28.dp))
     }
 }
