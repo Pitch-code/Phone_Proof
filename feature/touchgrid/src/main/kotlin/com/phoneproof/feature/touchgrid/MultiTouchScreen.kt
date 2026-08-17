@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ConditionPrompt
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.nounFor
 
@@ -85,6 +86,19 @@ fun MultiTouchScreen(
 
         Spacer(Modifier.height(20.dp))
     }
+
+    // Appears the moment the count can only be a pass, and goes when the fingers do.
+    //
+    // A buyer with five fingers splayed on the glass is not reading the screen, and until now nothing told
+    // them the test had already got what it needed — so they held on, or lifted early and wondered. This is
+    // deliberately not a Dialog: a dialog would cancel the gesture, every finger would report as lifted, and
+    // the prompt would destroy the reading it exists to announce. See ConditionPrompt.
+    ConditionPrompt(
+        visible = state.stage == MultiTouchStage.COUNTING && state.reachedTarget && state.current > 0,
+        headline = "You can lift your fingers now",
+        detail = "The screen followed ${state.best} at once, which is everything this phone claims. " +
+            "This closes by itself when you let go.",
+    )
 
     if (state.stage == MultiTouchStage.ASKING) {
         FingersQuestion(

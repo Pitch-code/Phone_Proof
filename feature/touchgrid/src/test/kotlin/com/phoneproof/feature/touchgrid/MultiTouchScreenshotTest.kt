@@ -68,6 +68,9 @@ class MultiTouchScreenshotTest {
     fun the_target_reached_says_so_before_the_buyer_lets_go() {
         // Green while the fingers are still on the glass. A buyer who has to lift off and read a verdict to
         // find out whether it worked has to do the whole thing again if it did not.
+        //
+        // This state also carries the "you can lift your fingers now" prompt, since it is the exact
+        // condition that shows it: at target, with fingers still down.
         render(
             "multitouch-3-target-reached",
             MultiTouchUiState(

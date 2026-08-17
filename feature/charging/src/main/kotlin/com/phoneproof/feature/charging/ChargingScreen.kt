@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.ChargingCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ConditionPrompt
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -69,6 +70,23 @@ fun ChargingScreen(
 
         Spacer(Modifier.height(24.dp))
     }
+
+    // Centred, unusually, and it carries the escape route with it.
+    //
+    // This is the one test the app cannot start, so the screen can sit in WAITING indefinitely — and on a
+    // real phone the instruction was easy to miss. Centring it hides the paragraph behind it, so the reason
+    // to bother is repeated here in one line, and "there is no charger here" is inside the card: a prompt
+    // that might never clear on its own must never be the only thing on screen without a way past it.
+    ConditionPrompt(
+        visible = state.stage == ChargingStage.WAITING && !state.plugged,
+        headline = "Please connect the charger",
+        detail = "The test starts on its own the moment you do, and this closes by itself. It is worth " +
+            "doing: a loose socket charges fine while you watch and gives up overnight, and that is " +
+            "what the next twenty seconds are counting.",
+        alignment = Alignment.Center,
+        action = "There is no charger here",
+        onAction = onGiveUp,
+    )
 }
 
 @Composable

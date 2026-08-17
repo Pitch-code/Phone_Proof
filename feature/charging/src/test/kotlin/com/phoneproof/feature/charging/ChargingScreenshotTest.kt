@@ -65,6 +65,9 @@ class ChargingScreenshotTest {
     fun waiting_for_a_cable_that_may_not_exist() {
         // The state no other check in this app has. It explains why the test is worth bothering with — the
         // loose socket, not the speed — because a buyer who thinks this is a benchmark will skip it.
+        //
+        // Nothing is plugged in here, so this render also covers the "please connect the charger" prompt
+        // and the escape route inside it.
         render(
             "charging-1-waiting",
             ChargingUiState(live = sample(plug = PlugType.NONE, charging = false, milliamps = null)),
