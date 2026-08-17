@@ -71,24 +71,18 @@ fun ChargingScreen(
         Spacer(Modifier.height(24.dp))
     }
 
-    // Centred, unusually, and it carries the escape route with it.
+    // The instruction, made unmissable, and nothing else.
     //
-    // This is the one test the app cannot start, so the screen can sit in WAITING indefinitely — and on a
-    // real phone the instruction was easy to miss. Centring it hides the paragraph behind it, so the reason
-    // to bother is repeated here in one line, and "there is no charger here" is inside the card: a prompt
-    // that might never clear on its own must never be the only thing on screen without a way past it.
+    // No action of its own: the give-up button lives in the page above, always visible, so this card does
+    // not need to duplicate it and cannot hide it. Bottom-aligned for the same reason — the page's own
+    // controls stay where the buyer can see them.
+    //
+    // This is the one test the app cannot start on its own, so the screen can sit here indefinitely, and on
+    // a real phone the instruction was easy to miss even though it is the headline.
     ConditionPrompt(
         visible = state.stage == ChargingStage.WAITING && !state.plugged,
         headline = "Please connect the charger",
-        // Short, because the paragraph behind explains why the test matters and this only has to say what
-        // happens next. Skipping is mentioned here rather than left as a separate line, so the buyer can
-        // see the consequence of the button before pressing it.
-        detail = "The test starts on its own the moment you do, and this closes by itself. If you have " +
-            "no cable, skipping is fine — the report will say charging was not tested rather than " +
-            "pretending otherwise.",
-        alignment = Alignment.Center,
-        action = "There is no charger here",
-        onAction = onGiveUp,
+        detail = "The test starts on its own the moment you do, and this closes by itself.",
     )
 }
 
@@ -112,12 +106,25 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
 
     LiveState(state)
 
-    // The way out used to live here, and it now lives in the prompt instead.
+    // The way out stays here, in the page, and the prompt below carries no action of its own.
     //
-    // While this screen is waiting, the prompt is always showing — WAITING means nothing is plugged in by
-    // definition — so a button here would be a second, identical "there is no charger here" sitting
-    // underneath the card. Touches pass through the prompt, so it would have been a live button the buyer
-    // could not see. One of the two had to go, and the visible one is the one worth keeping.
+    // It was briefly moved into the prompt to avoid two identical buttons. That was wrong: the prompt is
+    // hidden while a charger is attached, and WAITING with a charger attached is a real state — the moment
+    // between the sample arriving and the test starting. Moving the button left that instant with no visible
+    // exit at all. One button that is always present beats one that is usually present.
+    OutlinedButton(
+        onClick = onGiveUp,
+        modifier = Modifier.fillMaxWidth().height(48.dp),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Text("There is no charger here")
+    }
+    Text(
+        text = "Skipping is fine — the report will say charging was not tested rather than pretending " +
+            "otherwise. It is worth coming back for, though.",
+        style = MaterialTheme.typography.labelSmall,
+        color = PhoneProofTheme.colors.textTertiary,
+    )
 }
 
 @Composable
