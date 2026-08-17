@@ -26,12 +26,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.component.accent
+import com.phoneproof.core.designsystem.component.decorative
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.reports.Comparison
 import com.phoneproof.core.reports.ComparisonRow
 import com.phoneproof.core.reports.ComparisonSide
-import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.reports.SavedReport
 
 /**
@@ -56,11 +58,7 @@ fun CompareScreen(
             .padding(horizontal = 16.dp),
     ) {
         Spacer(Modifier.height(14.dp))
-        Text(
-            text = "Compare two phones",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("Compare two phones")
 
         if (comparison == null) {
             Spacer(Modifier.height(6.dp))
@@ -98,6 +96,8 @@ fun CompareScreen(
                             )
                             Text(
                                 text = "›",
+                                // A glyph, not information. The row's own text says where it goes.
+                                modifier = Modifier.decorative(),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = PhoneProofTheme.colors.textTertiary,
                             )

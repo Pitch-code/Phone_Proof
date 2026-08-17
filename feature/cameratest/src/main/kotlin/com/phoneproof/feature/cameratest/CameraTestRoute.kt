@@ -24,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.media.CameraProbe
 import com.phoneproof.core.model.CheckResult
@@ -51,11 +52,7 @@ fun CameraTestRoute(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(6.dp))
-        Text(
-            text = "Cameras and flashlight",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("Cameras and flashlight")
 
         PermissionGate(
             permission = Manifest.permission.CAMERA,

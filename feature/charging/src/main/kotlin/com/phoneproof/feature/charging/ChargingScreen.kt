@@ -28,6 +28,7 @@ import com.phoneproof.checks.device.ChargingCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ConditionPrompt
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -56,11 +57,7 @@ fun ChargingScreen(
     ) {
         Spacer(Modifier.height(10.dp))
         if (state.stage != ChargingStage.DONE) {
-            Text(
-                text = "Charging",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle("Charging")
         }
 
         when (state.stage) {

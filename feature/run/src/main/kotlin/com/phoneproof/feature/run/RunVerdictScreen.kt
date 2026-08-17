@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.accent
+import com.phoneproof.core.designsystem.component.decorative
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.plural
@@ -388,6 +389,8 @@ private fun NotTestedRow(step: RunStep, onClick: () -> Unit) {
         }
         Text(
             text = "›",
+            // A glyph, not information. The row's own text says where it goes.
+            modifier = Modifier.decorative(),
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textTertiary,
         )

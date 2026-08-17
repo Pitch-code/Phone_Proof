@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.vibration.VibrationCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -63,11 +64,7 @@ fun VibrationScreen(
         // rendering mistake. The card has to keep the title, since it appears in saved reports where nothing
         // else supplies the context; so it is the heading that goes.
         if (state.stage != VibrationStage.DONE) {
-            Text(
-                text = "Vibration",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle("Vibration")
         }
 
         when (state.stage) {

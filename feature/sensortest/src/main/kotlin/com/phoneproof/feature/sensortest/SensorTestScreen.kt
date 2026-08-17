@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.sensors.SensorKind
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.plural
@@ -103,11 +104,7 @@ fun SensorTestScreen(
             ) {
                 if (!duringGesture) {
                     Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = "Sensors",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = PhoneProofTheme.colors.textPrimary,
-                    )
+                    ScreenTitle("Sensors")
                 }
 
                 when (state.phase) {

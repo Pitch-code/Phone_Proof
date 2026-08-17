@@ -1,5 +1,6 @@
 package com.phoneproof.feature.reports
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.reports.SavedReport
 import com.phoneproof.core.reports.summaryLine
@@ -68,11 +69,7 @@ fun ReportDetailScreen(
         }
 
         Spacer(Modifier.height(14.dp))
-        Text(
-            text = report.deviceLabel,
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle(report.deviceLabel)
         Text(
             text = "${report.androidLabel} · $dateLabel",
             style = MaterialTheme.typography.labelSmall,

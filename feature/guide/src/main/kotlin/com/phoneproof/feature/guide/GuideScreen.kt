@@ -1,13 +1,13 @@
 package com.phoneproof.feature.guide
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,20 +31,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
+import com.phoneproof.core.designsystem.component.ScreenTitle
+import com.phoneproof.core.designsystem.component.decorative
+import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
  * The checks the app cannot do.
@@ -89,11 +93,7 @@ fun GuideScreen(
     ) {
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Spacer(Modifier.height(14.dp))
-            Text(
-                text = MANUAL_CHECKS_TITLE,
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle(MANUAL_CHECKS_TITLE)
             Spacer(Modifier.height(4.dp))
             Text(
                 text = "No app can test any of these. They need your hands, your eyes and a " +
@@ -155,6 +155,10 @@ private fun StepCard(
                 RoundedCornerShape(14.dp),
             )
             .clickable(onClick = onToggle)
+            // The plus and minus glyph below is the only thing that said whether this card was open, and
+            // a screen reader announcing "plus" does not convey that. State belongs on the control that
+            // changes it, so TalkBack reads the card's own name followed by expanded or collapsed.
+            .semantics { stateDescription = if (expanded) "Expanded" else "Collapsed" }
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -185,6 +189,8 @@ private fun StepCard(
                 text = if (expanded) "−" else "+",
                 style = MaterialTheme.typography.titleLarge,
                 color = PhoneProofTheme.colors.textTertiary,
+                // Says nothing a screen reader can use; the card's stateDescription carries it instead.
+                modifier = Modifier.decorative(),
             )
         }
 
