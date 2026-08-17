@@ -1,12 +1,26 @@
 package com.phoneproof.feature.cameratest
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.google.common.truth.Truth.assertThat
 import com.phoneproof.checks.media.CameraCheck
@@ -118,17 +132,50 @@ class CameraTestScreenshotTest {
         return Bitmap.createBitmap(pixels, width, height, Bitmap.Config.ARGB_8888).asImageBitmap()
     }
 
+    /**
+     * Renders the screen the way the app actually composes it, which it did not used to.
+     *
+     * `CameraTestScreen` is a bare `Column(fillMaxWidth())`: the scrolling and the window insets live in
+     * `CameraTestRoute`, one level up. This test called the screen directly, so every camera render was
+     * missing both — a shape the app never draws. In a tall portrait viewport that made no visible
+     * difference, which is exactly why it went unnoticed; rendered in landscape it showed the heading
+     * clipped off the top of the screen with no way to reach it, and that turned out to be an artefact of
+     * this helper rather than a fault in the app.
+     *
+     * A render that flatters the screen is worse than no render, because the whole point of committing
+     * these is to review what a buyer will see. So the container is reproduced here, and any future
+     * clipping this shows will be real.
+     */
     private fun render(name: String, state: CameraTestUiState, themeMode: ThemeMode = ThemeMode.LIGHT) {
         composeRule.setContent {
             PhoneProofTheme(themeMode = themeMode) {
-                CameraTestScreen(
-                    state = state,
-                    onTestCameras = {},
-                    onLightTorch = {},
-                    onAnswerLit = {},
-                    onRestart = {},
-                    modifier = Modifier.fillMaxSize(),
-                )
+                Column(
+                    // Copied from CameraTestRoute deliberately, down to the padding on all four sides,
+                    // the 12dp arrangement and the heading. Anything omitted here is a difference between
+                    // what gets reviewed and what gets shipped.
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(PhoneProofTheme.colors.background)
+                        .windowInsetsPadding(WindowInsets.safeDrawing)
+                        .verticalScroll(rememberScrollState())
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Cameras and flashlight",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = PhoneProofTheme.colors.textPrimary,
+                    )
+                    CameraTestScreen(
+                        state = state,
+                        onTestCameras = {},
+                        onLightTorch = {},
+                        onAnswerLit = {},
+                        onRestart = {},
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/camera-$name.png")
@@ -139,6 +186,14 @@ class CameraTestScreenshotTest {
         // Has to say what it found and what to point the phone at. "Not a blank wall" is the instruction
         // that stops a working camera reporting a flat field.
         render("1-ready", CameraTestUiState(cameras = twoCameras))
+    }
+
+    @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun in_landscape() {
+        // Camera previews have a fixed aspect and no scroll container above them, which is the
+        // combination most likely to overflow a short viewport.
+        render("camera-10-landscape", CameraTestUiState(cameras = twoCameras))
     }
 
     @Test

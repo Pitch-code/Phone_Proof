@@ -116,6 +116,14 @@ class HomeScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun home_in_landscape() {
+        // Home scrolls, so this should hold. Rendered because it is the screen every buyer sees first and
+        // the one where a broken layout would be noticed by everybody.
+        render("home-6-landscape")
+    }
+
+    @Test
     fun home_in_light_mode() {
         // The header gear is new and light mode has produced two real bugs in this project already.
         composeRule.setContent {

@@ -80,6 +80,14 @@ class TouchGridScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun the_grid_in_landscape() {
+        // The grid is sized from the viewport, so a wide short screen is the case most likely to squeeze
+        // the result card underneath it out of existence.
+        render("touchgrid-8-landscape", TouchGridUiState(spec = spec))
+    }
+
+    @Test
     fun partway_through_the_sweep() {
         // Top two-thirds covered, so the empty cells read clearly as "not done yet".
         val covered = block(0, 0, spec.columns, (spec.rows * 2) / 3)
