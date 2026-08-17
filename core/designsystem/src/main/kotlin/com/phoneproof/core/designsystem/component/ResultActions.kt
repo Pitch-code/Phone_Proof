@@ -129,7 +129,8 @@ fun ResultActions(
                     // read as a fault or to compete with a FAIL card breathing above it.
                     phase * 0.45f,
                 ),
-                contentColor = PhoneProofTheme.colors.textPrimary,
+                // onAccent, not textPrimary: the latter fails WCAG AA on this blue in both themes.
+                contentColor = PhoneProofTheme.colors.onAccent,
             ),
         ) {
             Text(text = retestLabel, style = MaterialTheme.typography.titleSmall)

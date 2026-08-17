@@ -30,6 +30,19 @@ data class PhoneProofPalette(
     val fail: Color,
     val unknown: Color,
     val accent: Color,
+    /**
+     * The label colour for anything sitting on [accent], and it is not [textPrimary].
+     *
+     * Using [textPrimary] there fails WCAG AA in both themes, which is measurable rather than a matter
+     * of taste. Against light mode's #2563EB, near-black #18181B gives 3.47:1; against dark mode's
+     * lighter #3B82F6, near-white #FAFAFA gives 3.52:1. AA wants 4.5:1 for text this size, so both
+     * miss — and the surprise is that swapping them fixes both.
+     *
+     * Hence white on the light theme's deeper blue (5.12:1) and near-black on the dark theme's lighter
+     * blue (5.38:1). A light accent carrying a dark label is also exactly what Material 3 does with
+     * `onPrimary` in a dark theme, so it reads as deliberate rather than inverted.
+     */
+    val onAccent: Color,
     /** An untouched cell in the coverage grid: visible as an outline, clearly not yet covered. */
     val gridEmpty: Color,
     // gridReserved is gone. It coloured the coverage cells Android reserved for its own gestures,
@@ -62,6 +75,8 @@ val DarkPalette = PhoneProofPalette(
     fail = Color(0xFFF43F5E),
     unknown = Color(0xFF52525B),
     accent = Color(0xFF3B82F6),
+    // Near-black on the lighter blue: 5.38:1.
+    onAccent = Color(0xFF0A0A0B),
     gridEmpty = Color(0x0FFFFFFF),
     isDark = true,
 )
@@ -87,6 +102,8 @@ val LightPalette = PhoneProofPalette(
     fail = Color(0xFFDC2626),
     unknown = Color(0xFF71717A),
     accent = Color(0xFF2563EB),
+    // White on the deeper blue: 5.12:1.
+    onAccent = Color(0xFFFFFFFF),
     gridEmpty = Color(0x0D000000),
     isDark = false,
 )
