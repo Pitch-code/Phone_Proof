@@ -3,6 +3,8 @@ package com.phoneproof.checks.vibration
 import com.google.common.truth.Truth.assertThat
 import com.phoneproof.checks.sensors.SensorReading
 import com.phoneproof.core.model.CheckOutcome
+import kotlin.math.PI
+import kotlin.math.sin
 import org.junit.Test
 
 /**
@@ -119,13 +121,17 @@ class RealPhoneCalibrationTest {
 
     @Test
     fun a_percentile_keeps_the_peak_a_mean_averages_away() {
-        // Why the measurement changed as well as the numbers. An oscillation spends part of every swing
-        // barely moving, and a mean counts those moments against the peak the motor actually reached.
-        val oscillating = buildList {
-            repeat(20) { index ->
-                val swing = if (index % 2 == 0) 0.0f else 0.3f
-                add(SensorReading(swing, 0f, 9.8f))
-            }
+        // Why the measurement changed as well as the numbers.
+        //
+        // Modelled as a sine deliberately. The first version of this test used a square wave alternating
+        // between two values, where every consecutive difference is identical — so the mean and the
+        // percentile came out exactly equal and the test failed, correctly. A real motor produces an
+        // oscillation whose samples move fastest through the middle of each swing and barely at all at the
+        // turning points, and it is those slow moments that a mean counts against the peak.
+        val samplesPerCycle = 8
+        val oscillating = (0 until 64).map { index ->
+            val phase = 2.0 * PI * index / samplesPerCycle
+            SensorReading((0.3 * sin(phase)).toFloat(), 0f, 9.8f)
         }
 
         val mean = meanJerk(oscillating)
