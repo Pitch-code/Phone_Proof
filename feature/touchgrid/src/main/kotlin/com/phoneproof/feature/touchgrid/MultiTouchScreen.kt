@@ -29,7 +29,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,6 +40,7 @@ import androidx.compose.ui.window.Dialog
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ConditionPrompt
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.nounFor
 
@@ -72,11 +75,7 @@ fun MultiTouchScreen(
         // and the heading repeated directly above it reads as a rendering mistake. The card keeps the title
         // because saved reports have nothing else to supply the context.
         if (state.stage != MultiTouchStage.DONE) {
-            Text(
-                text = "Fingers at once",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle("Fingers at once")
         }
 
         if (state.stage == MultiTouchStage.DONE) {
@@ -160,6 +159,15 @@ private fun ColumnScope.Counting(
                 } else {
                     PhoneProofTheme.colors.textPrimary
                 },
+                // Announced as it changes, because this is the one number in the app a blind user cannot
+                // get at any other way: their fingers are on the glass, so they cannot also be exploring
+                // the screen to find out what the count says.
+                //
+                // Polite, not assertive, so it waits for a gap rather than cutting across whatever is
+                // being said. And applied here and *not* to the countdowns on the charging and sensor
+                // screens: those tick every second, and a live region on them would talk continuously
+                // over the person trying to follow an instruction.
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
             Text(
                 text = if (state.reachedTarget) {

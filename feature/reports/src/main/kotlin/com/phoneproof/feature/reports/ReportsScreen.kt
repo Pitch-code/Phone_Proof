@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.OutcomeBadge
+import com.phoneproof.core.designsystem.component.ScreenTitle
+import com.phoneproof.core.designsystem.component.decorative
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.reports.SavedReport
 import com.phoneproof.core.reports.summaryLine
@@ -52,11 +54,7 @@ fun ReportsScreen(
             .padding(horizontal = 20.dp),
     ) {
         Spacer(Modifier.height(16.dp))
-        Text(
-            text = "Saved reports",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("Saved reports")
         // Suppressed while there is nothing to retain. Announcing "this version keeps your last 2"
         // to someone with zero reports explains a limit they have not met and reads as an upsell on
         // an empty screen.
@@ -123,6 +121,8 @@ fun ReportsScreen(
                             )
                             Text(
                                 text = "›",
+                                // A glyph, not information. The row's own text says where it goes.
+                                modifier = Modifier.decorative(),
                                 style = MaterialTheme.typography.titleLarge,
                                 color = PhoneProofTheme.colors.accent,
                             )

@@ -33,6 +33,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.OutcomeBadge
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.component.accent
 import com.phoneproof.core.designsystem.component.glyph
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
@@ -307,11 +308,7 @@ private fun CurrentStepCard(
             style = MaterialTheme.typography.labelSmall,
             color = PhoneProofTheme.colors.accent,
         )
-        Text(
-            text = step.title,
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle(step.title)
         Text(
             text = step.why,
             style = MaterialTheme.typography.bodyMedium,

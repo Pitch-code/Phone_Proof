@@ -25,8 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.phoneproof.core.preferences.Entitlement
-import com.phoneproof.core.reports.ShopBranding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -35,9 +33,13 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
+import com.phoneproof.core.designsystem.component.ScreenTitle
+import com.phoneproof.core.designsystem.component.decorative
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.designsystem.theme.ThemeMode
+import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.reports.ShopBranding
 
 /**
  * Settings.
@@ -69,12 +71,7 @@ fun SettingsScreen(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-            modifier = Modifier.padding(top = 12.dp),
-        )
+        ScreenTitle(text = "Settings", modifier = Modifier.padding(top = 12.dp))
 
         Section("Appearance") {
             ThemeMode.entries.forEach { mode ->
@@ -402,6 +399,8 @@ private fun ActionRow(label: String, onClick: () -> Unit) {
         )
         Text(
             text = "›",
+            // A glyph, not information. The row's own text says where it goes.
+            modifier = Modifier.decorative(),
             style = MaterialTheme.typography.titleLarge,
             color = PhoneProofTheme.colors.textTertiary,
         )

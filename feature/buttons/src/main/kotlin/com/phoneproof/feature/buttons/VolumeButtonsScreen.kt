@@ -30,6 +30,7 @@ import androidx.compose.ui.window.Dialog
 import com.phoneproof.checks.buttons.ButtonObservation
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -62,11 +63,7 @@ fun VolumeButtonsScreen(
         // and the heading repeated directly above it reads as a rendering mistake. The card keeps the title
         // because saved reports have nothing else to supply the context.
         if (state.stage != VolumeStage.DONE) {
-            Text(
-                text = "Volume buttons",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle("Volume buttons")
         }
 
         if (state.stage == VolumeStage.DONE) {

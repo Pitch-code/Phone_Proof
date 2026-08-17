@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.ScreenFinding
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -93,11 +94,7 @@ private fun Intro(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(8.dp))
-        Text(
-            text = "Dead pixels and burn-in",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("Dead pixels and burn-in")
         Text(
             text = "No app can look at the screen it is drawing on, so this one is down to your " +
                 "eyes. The phone will fill the screen with $total plain colours, which is what " +
@@ -238,11 +235,7 @@ private fun Question(
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Spacer(Modifier.height(8.dp))
-        Text(
-            text = "What did you see?",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("What did you see?")
         Text(
             text = "$viewed of $total patterns viewed.",
             style = MaterialTheme.typography.bodyMedium,

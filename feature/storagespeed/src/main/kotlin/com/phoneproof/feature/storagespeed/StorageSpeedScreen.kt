@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.StorageSpeedCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -58,11 +59,7 @@ fun StorageSpeedScreen(
     ) {
         Spacer(Modifier.height(10.dp))
         if (state.stage != StorageSpeedStage.DONE) {
-            Text(
-                text = "Storage speed",
-                style = MaterialTheme.typography.titleLarge,
-                color = PhoneProofTheme.colors.textPrimary,
-            )
+            ScreenTitle("Storage speed")
         }
 
         when (state.stage) {

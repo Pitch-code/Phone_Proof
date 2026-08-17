@@ -33,6 +33,7 @@ import com.phoneproof.checks.radios.RadioCheck
 import com.phoneproof.checks.radios.RadioKind
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ResultActions
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 
@@ -67,11 +68,7 @@ fun RadiosScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(10.dp))
-        Text(
-            text = "Wi-Fi and Bluetooth",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("Wi-Fi and Bluetooth")
 
         when (state.stage) {
             RadiosStage.WATCHING -> Watching(state, onOpenSettings, onAnswerEnableClaim, onFinish)

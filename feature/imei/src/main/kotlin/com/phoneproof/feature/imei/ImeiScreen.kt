@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.imei.Imei
 import com.phoneproof.checks.imei.ImeiCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ScreenTitle
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 
@@ -65,11 +66,7 @@ fun ImeiScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Spacer(Modifier.height(6.dp))
-        Text(
-            text = "IMEI and the stolen-phone register",
-            style = MaterialTheme.typography.titleLarge,
-            color = PhoneProofTheme.colors.textPrimary,
-        )
+        ScreenTitle("IMEI and the stolen-phone register")
         Text(
             text = "Android does not let any app read the IMEI, so this one is typed in. On the " +
                 "phone, dial *#06#, or look in Settings, About phone.",
