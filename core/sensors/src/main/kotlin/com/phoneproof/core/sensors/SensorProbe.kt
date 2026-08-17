@@ -86,10 +86,13 @@ class SensorProbe(private val context: Context) {
                 trySend(
                     SensorEventUpdate.Sample(
                         kind = kind,
-                        reading = SensorReading(
-                            // Single-axis sensors fill only the first slot, so the rest are read
-                            // defensively rather than assumed — a short values array here would
-                            // otherwise crash the screen on some OEM driver.
+                        // Slots are read defensively — a short values array would otherwise crash the
+                        // screen on some OEM driver — and then trimmed to the ones that mean something
+                        // for this sensor. Light and proximity report a single number, and a driver is
+                        // free to put anything in the slots after it; treating that as part of a vector
+                        // is what once made a working light sensor impossible to satisfy.
+                        reading = SensorReading.of(
+                            kind = kind,
                             x = values.getOrElse(0) { 0f },
                             y = values.getOrElse(1) { 0f },
                             z = values.getOrElse(2) { 0f },

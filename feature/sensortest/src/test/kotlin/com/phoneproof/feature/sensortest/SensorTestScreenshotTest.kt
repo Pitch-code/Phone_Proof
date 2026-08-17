@@ -98,7 +98,7 @@ class SensorTestScreenshotTest {
                 available = everything,
                 secondsLeft = 4,
                 proximityFelt = true,
-                lightWentDark = false,
+                lightReacted = false,
             ),
         )
     }

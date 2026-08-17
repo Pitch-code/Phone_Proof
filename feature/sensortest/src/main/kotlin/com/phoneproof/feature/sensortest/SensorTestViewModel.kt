@@ -46,7 +46,7 @@ data class SensorTestUiState(
     val tiltProgress: Float = 0f,
     val turnProgress: Float = 0f,
     val proximityFelt: Boolean = false,
-    val lightWentDark: Boolean = false,
+    val lightReacted: Boolean = false,
     val gestureComplete: Boolean = false,
     val results: List<CheckResult> = emptyList(),
 ) {
@@ -126,11 +126,17 @@ class SensorTestViewModel(private val probe: SensorProbe) : ViewModel() {
 
         collect(kinds, COVER_MILLIS) { readings ->
             val proximity = SensorGesture.proximityResponded(stats(readings, SensorKind.PROXIMITY))
-            val dark = SensorGesture.lightWentDark(stats(readings, SensorKind.LIGHT))
+            // lightResponded, not lightWentDark, and the difference was a visible bug. The tick used to
+            // track the strict witness bar while the light sensor's own verdict used this looser one, so
+            // the buyer could be shown an unsatisfied indicator for a sensor the app then reported as
+            // fine — and the phase would burn its full 25 seconds waiting for a tick that never came.
+            // Going dark still matters, but only as evidence against proximity, which is not something
+            // the buyer is being asked to achieve.
+            val reacted = SensorGesture.lightResponded(stats(readings, SensorKind.LIGHT))
             val done = (proximity || SensorKind.PROXIMITY !in kinds) &&
-                (dark || SensorKind.LIGHT !in kinds)
+                (reacted || SensorKind.LIGHT !in kinds)
             _uiState.update {
-                it.copy(proximityFelt = proximity, lightWentDark = dark, gestureComplete = done)
+                it.copy(proximityFelt = proximity, lightReacted = reacted, gestureComplete = done)
             }
             done
         }

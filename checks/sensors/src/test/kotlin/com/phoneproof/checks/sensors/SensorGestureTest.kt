@@ -82,4 +82,58 @@ class SensorGestureTest {
         assertThat(SensorGesture.lightResponded(dim)).isTrue()
         assertThat(SensorGesture.lightWentDark(dim)).isFalse()
     }
+
+    // ------------------------------------------------- a palm in a bright room, which used to fail
+
+    private fun light(vararg lux: Float): TraceStats =
+        SensorTrace(SensorKind.LIGHT, lux.map { SensorReading(it) }).stats
+
+    @Test
+    fun a_palm_in_a_lit_room_counts_as_dark_even_though_it_never_reaches_eight_lux() {
+        // Measured on a real handset: roughly 300 lux, a palm laid over the earpiece, and the reading
+        // bottomed out in the dozens rather than near zero — light leaks around a hand and the screen
+        // itself is lit. The old absolute-only rule scored that as no hand at all, so the indicator was
+        // impossible to satisfy and the phase ran its full 25 seconds every time.
+        assertThat(SensorGesture.lightWentDark(light(300f, 300f, 25f, 25f, 298f))).isTrue()
+        assertThat(SensorGesture.lightWentDark(light(600f, 600f, 60f, 61f, 590f))).isTrue()
+    }
+
+    @Test
+    fun a_room_that_was_always_dark_is_not_mistaken_for_a_hand() {
+        // Both routes insist on a real drop, so an unchanging reading proves nothing however low it is.
+        // Without that, a phone in a drawer would testify that a palm had covered it, and could then be
+        // used to call a working proximity sensor dead.
+        assertThat(SensorGesture.lightWentDark(light(0f, 0f, 0f))).isFalse()
+        assertThat(SensorGesture.lightWentDark(light(3f, 3f, 4f, 3f))).isFalse()
+    }
+
+    @Test
+    fun a_flickering_room_is_not_mistaken_for_a_hand() {
+        // The reason the fractional route also demands absolute lux. Fluorescent tubes and people
+        // walking past swing a low reading by large proportions, and on proportion alone that flicker
+        // would have been enough to call a perfectly good proximity sensor dead.
+        assertThat(SensorGesture.lightWentDark(light(40f, 20f, 38f, 22f))).isFalse()
+        assertThat(SensorGesture.lightWentDark(light(100f, 45f, 98f, 50f))).isFalse()
+    }
+
+    @Test
+    fun the_light_indicator_is_never_stricter_than_the_light_verdict() {
+        // The incoherence this fix removes, stated as a property over a spread of shop conditions: the
+        // tick the buyer is asked to satisfy tracks lightResponded, so it must never demand more than
+        // the verdict does. A tick that cannot be earned by a sensor the app calls fine reads as a bug.
+        val conditions = listOf(
+            light(300f, 25f, 300f),
+            light(14f, 3f),
+            light(600f, 60f, 590f),
+            light(40f, 20f, 38f),
+            light(0f, 0f),
+            light(320f, 4f, 318f),
+        )
+
+        conditions.forEach { stats ->
+            if (SensorGesture.lightWentDark(stats)) {
+                assertThat(SensorGesture.lightResponded(stats)).isTrue()
+            }
+        }
+    }
 }
