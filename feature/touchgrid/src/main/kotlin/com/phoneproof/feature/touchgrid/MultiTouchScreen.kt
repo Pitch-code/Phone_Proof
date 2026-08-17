@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -94,15 +95,23 @@ fun MultiTouchScreen(
     // them the test had already got what it needed — so they held on, or lifted early and wondered. This is
     // deliberately not a Dialog: a dialog would cancel the gesture, every finger would report as lifted, and
     // the prompt would destroy the reading it exists to announce. See ConditionPrompt.
+    // Compact on a short screen. The 96dp clearance below was measured in portrait, and in landscape the
+    // full card swallowed most of the pad — the fingers being counted disappeared behind the notice that
+    // they had been counted. One line, tucked closer to the bottom, says the same thing without doing that.
+    val compact = shortViewport()
     ConditionPrompt(
         visible = state.stage == MultiTouchStage.COUNTING && state.reachedTarget && state.current > 0,
         headline = "You can lift your fingers now",
-        detail = "The screen followed ${state.best} at once, which is everything this phone claims. " +
-            "This closes by itself when you let go.",
+        detail = if (compact) {
+            null
+        } else {
+            "The screen followed ${state.best} at once, which is everything this phone claims. " +
+                "This closes by itself when you let go."
+        },
         // Held clear of the counter and the "see the result" button below the pad. Touches pass through
         // this card, so covering that button would have left it working but invisible — which is worse
         // than covering something inert, because the buyer would stop looking for it.
-        modifier = Modifier.padding(bottom = 96.dp),
+        modifier = Modifier.padding(bottom = if (compact) 72.dp else 96.dp),
     )
 
     if (state.stage == MultiTouchStage.ASKING) {
@@ -128,14 +137,20 @@ private fun ColumnScope.Counting(
         style = MaterialTheme.typography.bodyLarge,
         color = PhoneProofTheme.colors.textSecondary,
     )
-    Text(
-        // The reason the count matters, said before the test rather than after. A buyer who understands
-        // what they are watching for does not need the verdict explained to them.
-        text = "If the number stops going up while you are still adding fingers, that is the fault " +
-            "this test is looking for.",
-        style = MaterialTheme.typography.bodyMedium,
-        color = PhoneProofTheme.colors.textTertiary,
-    )
+    // Dropped on a short screen, which in practice means landscape. The pad has to be big enough to put
+    // five fingers on, and in landscape this paragraph plus the line above it left it about a third of the
+    // height it has in portrait. The sentence above carries the instruction; this one carries the reason,
+    // and the reason is the part that can wait for the result card.
+    if (!shortViewport()) {
+        Text(
+            // The reason the count matters, said before the test rather than after. A buyer who understands
+            // what they are watching for does not need the verdict explained to them.
+            text = "If the number stops going up while you are still adding fingers, that is the fault " +
+                "this test is looking for.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textTertiary,
+        )
+    }
 
     TouchPad(
         state = state,
@@ -334,3 +349,16 @@ private fun FingersQuestion(
 /** Rings grow with each extra finger, so overlapping ones stay tellable apart. */
 private const val RING_RADIUS_PX = 46f
 private const val RING_STEP_PX = 9f
+
+/**
+ * Whether this screen has been given so little height that something has to give.
+ *
+ * In practice this means landscape, and the number is a threshold rather than an orientation check on
+ * purpose: a tall phone held sideways and a short window on a foldable are the same problem, and asking
+ * about the height asks about the problem instead of guessing at its cause.
+ */
+@Composable
+private fun shortViewport(): Boolean = LocalConfiguration.current.screenHeightDp < SHORT_VIEWPORT_DP
+
+/** Below this the pad is too small to put a hand on without trimming the words around it. */
+private const val SHORT_VIEWPORT_DP = 500

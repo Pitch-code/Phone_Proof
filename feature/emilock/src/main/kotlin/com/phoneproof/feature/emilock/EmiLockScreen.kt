@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CategoryChip
 import com.phoneproof.core.designsystem.component.CheckCategory
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckResult
 
@@ -67,16 +67,13 @@ fun EmiLockScreen(
             CheckResultCard(result)
         }
 
-        OutlinedButton(
-            onClick = onRecheck,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp),
-        ) {
-            // The action for almost every negative outcome here is "reset the phone, then check
-            // again", so re-running has to be one obvious tap.
-            Text("Check again")
-        }
+        // The action for almost every negative outcome here is "reset the phone, then check again", so
+        // re-running has to be one obvious tap — and there has to be a way out beside it.
+        //
+        // This screen was missed when Back was added across the app, because the sweep looked for the
+        // words "Test again" and "Scan again" and this one says "Check again". Found by rendering it in
+        // landscape and noticing the lone button.
+        ResultActions(retestLabel = "Check again", onRetest = onRecheck)
     }
 }
 
