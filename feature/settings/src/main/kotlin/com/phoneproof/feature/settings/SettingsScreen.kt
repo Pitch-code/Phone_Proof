@@ -172,23 +172,10 @@ fun SettingsScreen(
             }
         }
 
-        if (state.showTestingControls) {
-            Section("Testing only") {
-                Text(
-                    text = "This build cannot take payments, so the paid tiers are unlocked here " +
-                        "to be tested. Debug builds only.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PhoneProofTheme.colors.caution,
-                )
-                Entitlement.entries.forEach { tier ->
-                    ThemeLikeRow(
-                        title = tier.label,
-                        selected = state.entitlement == tier,
-                        onClick = { onEntitlementSelected(tier) },
-                    )
-                }
-            }
-        }
+        // Two files named TierOverride.kt exist, one in src/debug and one in src/release. The debug one
+        // draws a switcher for every tier; the release one draws nothing. So a shipped APK contains no
+        // code that can grant a paid tier — there is no flag here to get wrong.
+        TierOverride(current = state.entitlement, onSelect = onEntitlementSelected)
 
         Section("About") {
             InfoRow("Version", state.versionName)
@@ -210,7 +197,8 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun Section(
+// internal, not private: the debug-only tier switcher lives in src/debug and composes with these.
+internal fun Section(
     title: String,
     content: @Composable () -> Unit,
 ) {
@@ -504,7 +492,7 @@ private fun FreeTrialCard(active: Boolean, scansLeft: Int?) {
 
 /** The theme row's selectable look, reused so the tier switcher does not invent a second one. */
 @Composable
-private fun ThemeLikeRow(
+internal fun ThemeLikeRow(
     title: String,
     selected: Boolean,
     onClick: () -> Unit,

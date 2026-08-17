@@ -336,7 +336,6 @@ fun PhoneProofNavHost(
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
                 // Only a debug build can switch tiers by hand. Read here rather than inside the
                 // feature module so a release build has no code path to the switcher at all.
-                showTestingControls = BuildConfig.DEBUG,
                 modifier = Modifier.fillMaxSize(),
             )
         }

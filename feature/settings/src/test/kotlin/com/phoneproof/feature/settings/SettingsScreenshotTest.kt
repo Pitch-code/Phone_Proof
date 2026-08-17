@@ -79,9 +79,12 @@ class SettingsScreenshotTest {
     /**
      * The Shop tier's branding fields and the debug tier switcher.
      *
-     * These shipped with no render at all: every test above leaves `entitlement` at FREE and
-     * `showTestingControls` false, so two whole sections — five interactive controls between them —
-     * had never been drawn, let alone looked at.
+     * These shipped with no render at all: every test above leaves `entitlement` at FREE, so two whole
+     * sections — five interactive controls between them — had never been drawn, let alone looked at.
+     *
+     * The switcher now appears because these tests run against the debug variant, which compiles the
+     * `src/debug` copy of `TierOverride`. A release build compiles the `src/release` copy, which draws
+     * nothing — so this render is proof the debug affordance exists, not that it ships.
      */
     @Test
     @Config(qualifiers = "w411dp-h3000dp-xhdpi")
@@ -101,7 +104,6 @@ class SettingsScreenshotTest {
                         shopName = "Krishna Mobiles",
                         shopContact = "98765 43210 · MG Road",
                         shopLogoPath = "/files/branding/shop-logo.png",
-                        showTestingControls = true,
                     ),
                     onThemeSelected = {},
                     onOpenPrivacyPolicy = {},

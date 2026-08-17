@@ -30,15 +30,13 @@ fun SettingsRoute(
     versionName: String,
     versionCode: Long,
     onOpenDiagnostics: () -> Unit,
-    /** True only for a debug build. See [SettingsUiState.showTestingControls]. */
-    showTestingControls: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val repository = remember(context) { SettingsRepository(context) }
 
-    val state by remember(repository, versionName, versionCode, showTestingControls) {
+    val state by remember(repository, versionName, versionCode) {
         combine(
             repository.themeMode,
             repository.entitlement,
@@ -65,7 +63,6 @@ fun SettingsRoute(
                 shopName = branding.name,
                 shopContact = branding.contact,
                 shopLogoPath = branding.logoPath,
-                showTestingControls = showTestingControls,
                 freeScansLeft = if (entitlement.hasUnlimitedScans) {
                     null
                 } else {
