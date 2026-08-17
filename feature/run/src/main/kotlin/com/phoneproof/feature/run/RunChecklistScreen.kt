@@ -149,7 +149,7 @@ private fun BeforeYouStart(onStart: () -> Unit) {
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = PhoneProofTheme.colors.accent,
-            contentColor = PhoneProofTheme.colors.textPrimary,
+            contentColor = PhoneProofTheme.colors.onAccent,
         ),
     ) {
         Text(text = "Start", style = MaterialTheme.typography.titleLarge)
@@ -208,7 +208,7 @@ private fun RunInProgress(
             colors = if (next == null) {
                 ButtonDefaults.buttonColors(
                     containerColor = PhoneProofTheme.colors.accent,
-                    contentColor = PhoneProofTheme.colors.textPrimary,
+                    contentColor = PhoneProofTheme.colors.onAccent,
                 )
             } else {
                 ButtonDefaults.buttonColors(
@@ -333,7 +333,7 @@ private fun CurrentStepCard(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = PhoneProofTheme.colors.accent,
-                contentColor = PhoneProofTheme.colors.textPrimary,
+                contentColor = PhoneProofTheme.colors.onAccent,
             ),
         ) {
             Text(

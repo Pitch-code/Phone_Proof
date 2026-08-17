@@ -1,7 +1,5 @@
 package com.phoneproof.feature.guide
 
-import android.content.Context
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -16,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.phoneproof.core.designsystem.ADVISORY_TRIAL_EXCLUSION
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.component.LockedFeature
+import com.phoneproof.core.designsystem.theme.rememberAnimationsEnabled
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
@@ -59,7 +58,7 @@ fun GuideRoute(
     // phone, someone waiting.
     var expandedId by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val animate = remember(context) { context.animationsEnabled() }
+    val animate = rememberAnimationsEnabled()
 
     val photoStore = remember(context) { WalkthroughPhotos(context) }
     var photos by remember { mutableStateOf(photoStore.all()) }
@@ -117,16 +116,3 @@ fun GuideRoute(
 
 private const val TAG = "GuideRoute"
 
-/**
- * Whether the system has animations switched on.
- *
- * Read from the platform rather than offered as an in-app toggle. Someone who has turned animations off
- * system-wide — for motion sensitivity, or because the phone is slow — has already answered this
- * question, and asking again in every app is how that setting comes to be ignored.
- *
- * Defaults to true when the value cannot be read. The diagrams are the point of this screen, and failing
- * to read one system setting is not a reason to show everyone eight static drawings.
- */
-private fun Context.animationsEnabled(): Boolean = runCatching {
-    Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
-}.getOrDefault(true)

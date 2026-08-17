@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
+import com.phoneproof.core.designsystem.theme.rememberAnimationsEnabled
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.CheckResult
@@ -62,7 +63,11 @@ fun CheckResultCard(
     // colour, with a separate stricter test for saturated red. A 1.4 second cycle is 0.7 Hz — an
     // order of magnitude below that line — and it ramps smoothly rather than switching on and off,
     // so it never reads as a flash at all. It still cannot be ignored, which is the point.
-    val pulse: Float = if (isProblem && emphasise) {
+    // Someone who has switched animation off system-wide has usually done it for vestibular or
+    // photosensitivity reasons, and a FAIL card is exactly the surface where ignoring that would be worst.
+    // The border stays at its resting weight instead, which is still heavier than any other outcome.
+    val animate = rememberAnimationsEnabled()
+    val pulse: Float = if (isProblem && emphasise && animate) {
         val transition = rememberInfiniteTransition(label = "problemPulse")
         transition.animateFloat(
             initialValue = 0f,
