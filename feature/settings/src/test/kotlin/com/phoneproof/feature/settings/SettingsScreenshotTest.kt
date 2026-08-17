@@ -76,6 +76,39 @@ class SettingsScreenshotTest {
         render("settings-3-full", ThemeMode.DARK)
     }
 
+    @Test
+    @Config(qualifiers = "w411dp-h3000dp-xhdpi")
+    fun a_payment_still_settling() {
+        // UPI and net-banking sit pending for minutes, which is ordinary here rather than an edge case.
+        //
+        // Rendered because the copy is the whole point of the state: someone who has just paid and sees
+        // "Free trial" concludes the payment failed, and the usual response to that is to pay again. This
+        // is the screen that has to stop them, so the wording needs looking at rather than compiling.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.LIGHT) {
+                SettingsScreen(
+                    state = SettingsUiState(
+                        themeMode = ThemeMode.LIGHT,
+                        versionName = "0.1.0",
+                        versionCode = 1,
+                        billingAvailable = true,
+                        entitlement = Entitlement.FREE,
+                        freeScansLeft = 2,
+                        playPrices = mapOf(PremiumPlan.PREMIUM.productId to "₹99.00"),
+                        pendingProductIds = listOf(PremiumPlan.PREMIUM.productId),
+                    ),
+                    onThemeSelected = {},
+                    onOpenPrivacyPolicy = {},
+                    onShareApp = {},
+                    onOpenDiagnostics = {},
+                    onChoosePlan = {},
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/settings-5-payment-pending.png")
+    }
+
     /**
      * The Shop tier's branding fields and the debug tier switcher.
      *
