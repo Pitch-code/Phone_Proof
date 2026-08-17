@@ -25,6 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -223,6 +225,9 @@ private fun OutcomeCell(
     val label = outcome?.shortLabel() ?: stringResource(R.string.compare_not_tested)
     val colour = outcome?.accent() ?: PhoneProofTheme.colors.textTertiary
 
+    // Read here rather than inside the semantics lambda, which is not a composable scope.
+    val betterDescription = stringResource(R.string.compare_better_description)
+
     Row(
         modifier = modifier.padding(end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -235,10 +240,15 @@ private fun OutcomeCell(
         )
         if (isBetter) {
             Text(
-                text = " ✓",
+                text = stringResource(R.string.compare_better_tick),
                 style = MaterialTheme.typography.bodyMedium,
                 color = PhoneProofTheme.colors.pass,
                 fontWeight = FontWeight.Bold,
+                // The tick and the bold weight are both invisible to a screen reader, so the only thing
+                // marking the winning side would have been lost. This says it in words instead.
+                modifier = Modifier.semantics {
+                    contentDescription = betterDescription
+                },
             )
         }
     }

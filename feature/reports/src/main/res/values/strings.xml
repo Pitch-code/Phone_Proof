@@ -67,4 +67,12 @@
     <string name="outcome_short_fail">Problem</string>
     <string name="outcome_short_unknown">Can\'t tell</string>
 
+    <!--
+      The tick beside whichever phone did better on a row. The glyph itself is not translatable, but what
+      it means is: bold text and a tick are both invisible to a screen reader, so the description is what
+      actually conveys "this side won this row".
+    -->
+    <string name="compare_better_tick" translatable="false"> \u2713</string>
+    <string name="compare_better_description">better</string>
+
 </resources>
