@@ -1,9 +1,14 @@
 package com.phoneproof.feature.settings
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,9 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
+import com.phoneproof.core.billing.BillingProducts
+import com.phoneproof.core.billing.EntitlementSync
+import com.phoneproof.core.billing.PlayBilling
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.SettingsRepository
@@ -36,7 +41,34 @@ fun SettingsRoute(
     val scope = rememberCoroutineScope()
     val repository = remember(context) { SettingsRepository(context) }
 
-    val state by remember(repository, versionName, versionCode) {
+    // Billing, and the three pieces of state the screen needs from it.
+    //
+    // `connected` is what decides whether a buy button is offered at all: on a sideloaded build Play
+    // cannot answer, and a button that opens nothing is worse than a sentence explaining why.
+    val billing = remember(context) { PlayBilling(context) }
+    val connected by billing.connected.collectAsStateWithLifecycle()
+    var prices by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var pending by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Prices come from Play, never from the constants in PremiumPlan: they vary by country, tax and any
+    // promotion, and a hardcoded price disagreeing with the checkout sheet is a policy problem as well as
+    // a support burden.
+    LaunchedEffect(billing) {
+        if (billing.connect()) {
+            prices = BillingProducts.onSale.mapNotNull { id ->
+                billing.priceOf(id)?.let { id to it }
+            }.toMap()
+        }
+        pending = EntitlementSync(billing, repository).sync()
+    }
+
+    // A purchase completing, or a pending payment settling later, takes the same path as a cold start.
+    val update by billing.purchaseUpdates.collectAsStateWithLifecycle()
+    LaunchedEffect(update) {
+        if (update != null) pending = EntitlementSync(billing, repository).sync()
+    }
+
+    val state by remember(repository, versionName, versionCode, connected, prices, pending) {
         combine(
             repository.themeMode,
             repository.entitlement,
@@ -47,9 +79,12 @@ fun SettingsRoute(
                 themeMode = mode,
                 versionName = versionName,
                 versionCode = versionCode,
-                // Flipped on when Play Billing is wired and the app ships through Play. Until then
-                // the UI says so instead of offering a button that cannot work.
-                billingAvailable = false,
+                // True only when Play actually answered. False on a sideloaded build, on a device with
+                // no Play Store and when offline, and the UI then says so rather than offering a button
+                // that cannot work.
+                billingAvailable = connected,
+                playPrices = prices,
+                pendingProductIds = pending,
                 entitlement = entitlement,
                 // Derived from the entitlement rather than left null, which is what it was since the
                 // Settings screen was written. The render of the Shop tier made the consequence
@@ -122,11 +157,6 @@ fun SettingsRoute(
         onOpenPrivacyPolicy = { openUrl(context, PRIVACY_POLICY_URL) },
         onShareApp = { shareApp(context) },
         onOpenDiagnostics = onOpenDiagnostics,
-        onChoosePlan = { plan ->
-            // No purchase flow yet, so record the intent rather than pretending. When billing lands
-            // this becomes the launch point, and the log already shows which plan people tap.
-            Diagnostics.info(TAG, "plan tapped: ${plan.productId} (billing unavailable)")
-        },
         onShopNameChanged = { name ->
             // Local state first and synchronously, so the field redraws from the keystroke rather
             // than from the disk. The write still happens per keystroke, which is cheap enough for
@@ -150,6 +180,17 @@ fun SettingsRoute(
                 // they explicitly took back.
                 state.shopLogoPath?.let { runCatching { File(it).delete() } }
                 repository.setShopLogoPath(null)
+            }
+        },
+        onChoosePlan = { plan ->
+            // Play owns the checkout sheet, the price and the payment method. The result does not come
+            // back from here — it arrives on purchaseUpdates, which is why a pending UPI payment is
+            // handled by exactly the same code as a completed card payment.
+            val activity = context as? Activity
+            if (activity == null) {
+                Diagnostics.warn(TAG, "no activity to launch checkout from")
+            } else {
+                scope.launch { billing.launchPurchase(activity, plan.productId) }
             }
         },
         onEntitlementSelected = { tier ->

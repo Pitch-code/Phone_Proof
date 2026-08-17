@@ -98,7 +98,9 @@ fun SettingsScreen(
                 PlanCard(
                     plan = plan,
                     owned = state.ownedPlan == plan,
-                    purchasable = state.billingAvailable,
+                    purchasable = state.isPurchasable(plan),
+                    price = state.priceOf(plan),
+                    pending = state.isPending(plan),
                     onClick = { onChoosePlan(plan) },
                 )
             }
@@ -270,6 +272,10 @@ private fun PlanCard(
     plan: PremiumPlan,
     owned: Boolean,
     purchasable: Boolean,
+    /** Play's own figure where it is known; the built-in constant until Play answers. */
+    price: String,
+    /** A payment started and not yet settled — routine with UPI. */
+    pending: Boolean,
     onClick: () -> Unit,
 ) {
     val accent = PhoneProofTheme.colors.accent
@@ -305,7 +311,9 @@ private fun PlanCard(
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = plan.price,
+                    // Play's price, not the constant, whenever Play has answered: it varies by country,
+                    // tax and promotion, and disagreeing with the checkout sheet is a policy problem.
+                    text = price,
                     style = PhoneProofType.NumericLarge,
                     color = PhoneProofTheme.colors.textPrimary,
                 )
@@ -336,12 +344,31 @@ private fun PlanCard(
         Text(
             text = when {
                 owned -> "Active on this device"
+                // Said before "unavailable", because to someone who has just paid by UPI the two look
+                // nothing alike: one is the app waiting, the other is the app refusing.
+                pending -> "Waiting for your payment to clear"
                 !purchasable -> "Unavailable"
                 else -> "Choose ${plan.title}"
             },
             style = MaterialTheme.typography.labelLarge,
-            color = if (owned) PhoneProofTheme.colors.pass else accent,
+            color = when {
+                owned -> PhoneProofTheme.colors.pass
+                pending -> PhoneProofTheme.colors.caution
+                else -> accent
+            },
         )
+        if (pending) {
+            Text(
+                // The sentence that stops a second payment. A buyer who thinks a UPI payment failed
+                // will try again, and paying twice for a one-time product is a refund request and a
+                // bad review.
+                text = "Your payment has not failed. UPI and bank transfers can take a few minutes, " +
+                    "and this unlocks by itself as soon as Google confirms it — you do not need to " +
+                    "pay again.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = PhoneProofTheme.colors.textSecondary,
+            )
+        }
     }
 }
 
