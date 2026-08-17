@@ -172,16 +172,25 @@ class VibrationCheckTest {
     }
 
     @Test
-    fun every_outcome_tells_the_buyer_what_to_do_next() {
-        VibrationAttempt.entries.forEach { attempt ->
-            // Driven off the enum rather than a hand-written list, because the list went five entries
-            // stale once before and a new attempt with no action would have slipped through.
-            val trace = if (attempt == VibrationAttempt.MEASURED) {
-                measured(resting = 0.05, active = 6.0)
+    fun every_outcome_that_is_not_a_clean_pass_tells_the_buyer_what_to_do_next() {
+        // Driven off the enum rather than a hand-written list, because such a list went stale once before
+        // and a new attempt with no action would have slipped through unnoticed.
+        //
+        // A PASS is deliberately exempt: there is nothing for the buyer to do about working hardware, and
+        // inventing an instruction for it would be noise.
+        val traces = VibrationAttempt.entries.map { attempt ->
+            if (attempt == VibrationAttempt.MEASURED) {
+                measured(resting = 0.05, active = 0.06)
             } else {
                 VibrationTrace(attempt)
             }
-            assertThat(VibrationCheck.evaluate(trace).action).isNotEmpty()
+        } + measured(resting = 1.5, active = 6.0) + measured(resting = 0.05, active = 6.0)
+
+        traces.forEach { trace ->
+            val result = VibrationCheck.evaluate(trace)
+            if (result.outcome != CheckOutcome.PASS) {
+                assertThat(result.action).isNotEmpty()
+            }
         }
     }
 
