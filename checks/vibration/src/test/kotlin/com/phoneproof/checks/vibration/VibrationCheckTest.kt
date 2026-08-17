@@ -43,7 +43,7 @@ class VibrationCheckTest {
     }
 
     @Test
-    fun a_motor_that_never_moved_is_a_caution_and_names_the_surface_first() {
+    fun a_motor_that_never_moved_is_a_caution_and_sends_the_buyer_to_their_own_fingers() {
         val result = VibrationCheck.evaluate(measured(resting = 0.05, active = 0.06))
 
         // Never a bare failure: the app cannot see whether the phone was on a table or a folded coat, which
@@ -51,7 +51,13 @@ class VibrationCheckTest {
         assertThat(result.outcome).isEqualTo(CheckOutcome.CAUTION)
         assertThat(result.confidence).isEqualTo(Confidence.MEDIUM)
         assertThat(result.falsePositiveCauses.first()).contains("coat")
-        assertThat(result.action).contains("hard table")
+
+        // The advice used to be "put the phone on a hard table, not your hand". A real phone was already on
+        // a hard desk when it was told that, which made the only suggested remedy the thing already being
+        // done — and a heavy surface takes the movement into itself, so it was the worse of the two
+        // positions anyway. It now defers to the buyer's fingers over its own number.
+        assertThat(result.action).contains("hand")
+        assertThat(result.action).contains("trust your fingers")
     }
 
     @Test
@@ -73,22 +79,30 @@ class VibrationCheckTest {
         // The first version of this test used 0.05 m/s² and did not demonstrate anything, because the ratio
         // floor had already capped the divisor and the ratio came out at 2.5. The test failed and was right
         // to: the numbers have to clear one threshold and miss the other for the case to mean what it says.
-        val trace = measured(resting = 0.005, active = 0.2)
+        // Recalibrated against a real handset: the floors moved from 0.35 and 0.02 to 0.02 and 0.005, so
+        // the old numbers here (0.005 and 0.2) now describe a healthy motor and pass. These are scaled to
+        // the thresholds that exist, and the outcome is no longer CAUTION — see below.
+        val trace = measured(resting = 0.001, active = 0.015)
 
         assertThat(VibrationCheck.ratio(trace)).isGreaterThan(VibrationCheck.SHAKE_RATIO)
         assertThat(trace.activeJerk).isLessThan(VibrationCheck.MINIMUM_ACTIVE_JERK)
-        assertThat(VibrationCheck.evaluate(trace).outcome).isEqualTo(CheckOutcome.CAUTION)
+        // UNKNOWN rather than CAUTION, and this is the point of the middle band: movement too small to
+        // feel is not proof of a working motor, and it is not proof of a broken one either. Accusing here
+        // is what told a working phone it needed a repair.
+        assertThat(VibrationCheck.evaluate(trace).outcome).isEqualTo(CheckOutcome.UNKNOWN)
     }
 
     @Test
     fun strong_absolute_movement_that_is_barely_above_a_restless_baseline_is_not_enough_either() {
         // Both tests have to pass. Here the phone moved a lot in absolute terms and was already moving
         // nearly that much before the motor started, so the motor has proved nothing.
-        val trace = measured(resting = 0.5, active = 1.0)
+        val trace = measured(resting = 0.5, active = 0.8)
 
         assertThat(trace.activeJerk).isGreaterThan(VibrationCheck.MINIMUM_ACTIVE_JERK)
         assertThat(VibrationCheck.ratio(trace)).isLessThan(VibrationCheck.SHAKE_RATIO)
-        assertThat(VibrationCheck.evaluate(trace).outcome).isEqualTo(CheckOutcome.CAUTION)
+        // Again UNKNOWN: a restless baseline means the app cannot separate the motor from the hand, which
+        // is a failure to measure rather than a finding about the hardware.
+        assertThat(VibrationCheck.evaluate(trace).outcome).isEqualTo(CheckOutcome.UNKNOWN)
     }
 
     @Test

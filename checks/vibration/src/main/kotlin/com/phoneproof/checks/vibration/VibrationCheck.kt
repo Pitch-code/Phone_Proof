@@ -86,22 +86,43 @@ object VibrationCheck {
     private const val TITLE = "Vibration"
 
     /**
-     * The motor has to produce this many times the resting movement.
+     * The motor has to produce this many times the resting movement to earn a pass.
      *
-     * Three. A running motor typically produces ten to fifty times the jerk of a still phone, so this is a
-     * long way below what working hardware achieves — the margin is there because a phone on a soft surface
-     * loses most of its movement to the surface.
+     * ## Calibrated against a real phone, having twice been wrong
+     *
+     * This was three, on the reasoning that "a running motor typically produces ten to fifty times the jerk
+     * of a still phone". That guess was never measured. A working handset lying on a hard desk reported
+     * **0.01 m/s² at rest and 0.04 while buzzing — a ratio of 2.07** — and was told its motor might need
+     * replacing.
+     *
+     * Two, therefore, which the measured phone clears. The measurement itself also changed in the same
+     * commit — a faster sampling rate, no silent tail in the window, and a percentile instead of a mean —
+     * so the figures a phone reports now should be larger than that 2.07 and this bar more comfortable
+     * still. Both changes are needed: a better measurement does not excuse a threshold nobody checked.
      */
-    const val SHAKE_RATIO: Double = 3.0
+    const val SHAKE_RATIO: Double = 2.0
 
     /**
-     * And it has to clear this absolutely, in m/s² of mean change between samples.
+     * And it has to clear this absolutely, in m/s² at the ninetieth percentile of change between samples.
      *
-     * The ratio alone is not enough. A phone lying on a stone slab can have a resting jerk near zero, and
-     * three times almost-nothing is still almost-nothing — so a tiny absolute movement could satisfy the
-     * ratio without the motor having done anything a person would feel.
+     * The ratio alone is not enough: a phone on a stone slab can rest near zero, and twice almost-nothing is
+     * still almost-nothing. But this was 0.35, roughly **nine times** what the real phone above actually
+     * produced, so it failed working hardware on its own.
+     *
+     * 0.02 is twice the resting noise that phone reported, which is the useful comparison — the floor exists
+     * to clear the sensor's own noise, not to assert how hard a motor ought to shake a desk.
      */
-    const val MINIMUM_ACTIVE_JERK: Double = 0.35
+    const val MINIMUM_ACTIVE_JERK: Double = 0.02
+
+    /**
+     * Below this ratio the phone did not measurably move at all, and only then may the motor be doubted.
+     *
+     * The gap between this and [SHAKE_RATIO] is deliberate and is the most important part of this check.
+     * A reading in between means *the app could not tell* — not that the hardware is faulty. Before this
+     * existed, everything short of a confident pass was reported as a probable fault, which is how a
+     * working motor came to be described as "a repair — worth 800 off".
+     */
+    const val FLAT_RATIO: Double = 1.25
 
     /**
      * Above this much resting movement, the phone was not still enough to measure against.
@@ -200,39 +221,63 @@ object VibrationCheck {
             )
         }
 
-        val strongEnough = ratio(trace) >= SHAKE_RATIO && trace.activeJerk >= MINIMUM_ACTIVE_JERK
+        val measuredRatio = ratio(trace)
+        val strongEnough = measuredRatio >= SHAKE_RATIO && trace.activeJerk >= MINIMUM_ACTIVE_JERK
 
-        return if (strongEnough) {
-            CheckResult(
+        if (strongEnough) {
+            return CheckResult(
                 id = CHECK_ID,
                 title = TITLE,
                 outcome = CheckOutcome.PASS,
                 confidence = Confidence.HIGH,
                 // Says how it knows. This is the one hardware test in the app that usually comes down to
                 // opinion, and the whole point is that here it did not.
-                headline = "The accelerometer felt the phone shake — ${format(ratio(trace))} times " +
+                headline = "The accelerometer felt the phone shake — ${format(measuredRatio)} times " +
                     "more movement than at rest. Nobody had to be asked.",
                 measurements = measurements,
             )
-        } else {
-            CheckResult(
+        }
+
+        // The middle band, and the reason this check no longer accuses working hardware.
+        //
+        // Something moved, but not by enough to be sure it was the motor rather than the desk, the sensor's
+        // own noise, or a phone whose vibration is coupled into whatever it is lying on. "I could not tell"
+        // is the truthful answer, and it is the one a buyer can act on by feeling the phone for themselves.
+        if (measuredRatio >= FLAT_RATIO) {
+            return CheckResult(
                 id = CHECK_ID,
                 title = TITLE,
-                // CAUTION, never a bare failure. The app cannot see what the phone was resting on, and a
-                // folded coat absorbs almost everything — the same reasoning that keeps the camera check
-                // from failing a phone with a finger over the lens.
-                outcome = CheckOutcome.CAUTION,
-                confidence = Confidence.MEDIUM,
-                headline = "Android accepted the vibration and the phone barely moved.",
-                consequence = "A dead motor means silent mode stops getting your attention: you will " +
-                    "miss calls with the phone in your pocket, and every alarm becomes a sound " +
-                    "everyone around you hears too.",
-                action = "Put the phone on a hard table, not your hand, and run it again. If it " +
-                    "still does not move, the motor is a repair — worth 800 off.",
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                headline = "The phone moved a little while the motor ran, but not enough to call it " +
+                    "either way.",
+                action = "Hold the phone loosely in your hand and run it again — a heavy table takes " +
+                    "the movement into itself, so a phone lying flat on one can read almost still. " +
+                    "Trust your fingers over this number.",
                 measurements = measurements,
-                falsePositiveCauses = FALSE_POSITIVE_CAUSES,
             )
         }
+
+        return CheckResult(
+            id = CHECK_ID,
+            title = TITLE,
+            // CAUTION, never a bare failure. The app cannot see what the phone was resting on, and a
+            // folded coat absorbs almost everything — the same reasoning that keeps the camera check
+            // from failing a phone with a finger over the lens.
+            outcome = CheckOutcome.CAUTION,
+            confidence = Confidence.MEDIUM,
+            headline = "Android accepted the vibration and the phone did not move at all.",
+            consequence = "A dead motor means silent mode stops getting your attention: you will " +
+                "miss calls with the phone in your pocket, and every alarm becomes a sound " +
+                "everyone around you hears too.",
+            // No price on it any more. The old wording named a figure off the back of a threshold nobody
+            // had measured, on a screen where being wrong costs the seller money.
+            action = "Hold it loosely in your hand and run it again, and put a finger on the back " +
+                "while it does. If you feel nothing at all, treat the motor as a repair and get the " +
+                "price down — but trust your fingers, not this number.",
+            measurements = measurements,
+            falsePositiveCauses = FALSE_POSITIVE_CAUSES,
+        )
     }
 
     /**
@@ -244,7 +289,18 @@ object VibrationCheck {
     fun ratio(trace: VibrationTrace): Double =
         trace.activeJerk / trace.restingJerk.coerceAtLeast(RATIO_FLOOR)
 
-    private const val RATIO_FLOOR = 0.02
+    /**
+     * The smallest resting movement the ratio will divide by.
+     *
+     * This was 0.02, and it was doing real damage. The real phone rested at **0.01** — half the floor — so
+     * the clamp replaced its true baseline with a number twice as large and reported 2.07× when the honest
+     * figure was about 4×. A guard against dividing by almost-nothing had quietly become the thing deciding
+     * the verdict.
+     *
+     * 0.005 sits below the resting noise a real accelerometer produces, so it guards the division without
+     * touching any reading a phone actually reports.
+     */
+    private const val RATIO_FLOOR = 0.005
 
     private fun format(value: Double): String = String.format(Locale.ROOT, "%.2f", value)
 }

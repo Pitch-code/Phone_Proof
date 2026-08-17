@@ -41,6 +41,26 @@ sealed interface SensorEventUpdate {
  * turn. At the UI rate — about 16 Hz — a quick flick of the wrist can fall between two samples, and a
  * missed peak reads as a gyroscope that did not respond.
  */
+/**
+ * How often to ask the sensor for a reading.
+ *
+ * Both are permission-free. Android only gates sampling **above** 200 Hz behind
+ * `HIGH_SAMPLING_RATE_SENSORS`, and neither of these asks for more than that.
+ */
+enum class SensorRate {
+    /** About 50 Hz. Fast enough for a wrist turn, and what every gesture test uses. */
+    STANDARD,
+
+    /**
+     * As fast as the sensor offers, which the platform caps at 200 Hz without a permission.
+     *
+     * Needed for the vibration test and nothing else. A phone's motor runs somewhere around 150-235 Hz,
+     * so at the standard rate the samples are 20 ms apart and land at essentially unrelated points of
+     * each oscillation — the measurement then reports a fraction of the movement the motor really made.
+     */
+    FASTEST,
+}
+
 class SensorProbe(private val context: Context) {
 
     private val manager: SensorManager? =
@@ -71,7 +91,10 @@ class SensorProbe(private val context: Context) {
      * subscription left alive at 50 Hz after the buyer has navigated away drains the seller's battery
      * and is exactly the kind of thing that gets an app pulled from review.
      */
-    fun stream(kinds: Set<SensorKind>): Flow<SensorEventUpdate> = callbackFlow {
+    fun stream(
+        kinds: Set<SensorKind>,
+        rate: SensorRate = SensorRate.STANDARD,
+    ): Flow<SensorEventUpdate> = callbackFlow {
         val sensorManager = manager
         if (sensorManager == null) {
             trySend(SensorEventUpdate.Subscribed(emptySet()))
@@ -110,7 +133,10 @@ class SensorProbe(private val context: Context) {
                 sensor != null && sensorManager.registerListener(
                     listener,
                     sensor,
-                    SensorManager.SENSOR_DELAY_GAME,
+                    when (rate) {
+                        SensorRate.STANDARD -> SensorManager.SENSOR_DELAY_GAME
+                        SensorRate.FASTEST -> SensorManager.SENSOR_DELAY_FASTEST
+                    },
                 )
             }.onFailure {
                 Diagnostics.error(TAG, "could not subscribe to $kind", it)
