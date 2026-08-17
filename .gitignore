@@ -12,6 +12,11 @@ local.properties
 *.jks
 *.keystore
 keystore.properties
+# One deliberate exception: the debug key is committed so every build shares a signature and can be
+# installed over the last one. It cannot publish anything — Play rejects debug-signed APKs — and its
+# password is the universally known "android", so there is no secret in it. The rules above still
+# protect every release key, and keystore.properties stays ignored. See app/build.gradle.kts.
+!keystore/debug.keystore
 /.kotlin
 
 # Roborazzi writes rendered screens here. They ARE committed on purpose so the UI can be

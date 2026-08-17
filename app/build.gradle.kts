@@ -16,9 +16,40 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        /**
+         * A debug key that is committed to the repository, on purpose.
+         *
+         * Without this, every machine and every CI run generates its own throwaway `~/.android/debug.keystore`.
+         * Two builds of the same commit then carry different signatures, and Android refuses to install one
+         * over the other: "App not installed". Anyone testing successive builds has to uninstall first, which
+         * also throws away their saved reports — so the app's own report history could never be tested across
+         * more than one build.
+         *
+         * Committing it is safe and is the standard practice for a *debug* key:
+         *
+         *  - it cannot publish anything. Play rejects an APK signed with a debug certificate outright.
+         *  - the password is the universally known "android", the same as the one Android generates. There is
+         *    no secret here to leak.
+         *  - `applicationIdSuffix = ".debug"` keeps these builds in their own package, so a debug build can
+         *    never overwrite or impersonate a real installation.
+         *
+         * **The release key is a completely different matter and must never be committed.** `.gitignore` still
+         * excludes every `*.keystore` and `*.jks`; this one file is a single deliberate exception, and
+         * `keystore.properties` stays ignored so release credentials are supplied by the signing environment.
+         */
+        getByName("debug") {
+            storeFile = rootProject.file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
         release {
             isMinifyEnabled = true
