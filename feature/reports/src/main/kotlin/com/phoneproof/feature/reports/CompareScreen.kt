@@ -246,9 +246,10 @@ private fun OutcomeCell(
                 fontWeight = FontWeight.Bold,
                 // The tick and the bold weight are both invisible to a screen reader, so the only thing
                 // marking the winning side would have been lost. This says it in words instead.
-                modifier = Modifier.semantics {
-                    contentDescription = betterDescription
-                },
+                modifier = Modifier
+                    // The gap the string used to carry as a leading space, put where it belongs.
+                    .padding(start = 4.dp)
+                    .semantics { contentDescription = betterDescription },
             )
         }
     }

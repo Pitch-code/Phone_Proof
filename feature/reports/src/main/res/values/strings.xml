@@ -71,8 +71,12 @@
       The tick beside whichever phone did better on a row. The glyph itself is not translatable, but what
       it means is: bold text and a tick are both invisible to a screen reader, so the description is what
       actually conveys "this side won this row".
+
+      No leading space in here. AAPT trims whitespace at the edges of a string resource, so a space
+      written here silently disappears - and spacing is the layout's job anyway, not something to encode
+      in a string a translator will retype.
     -->
-    <string name="compare_better_tick" translatable="false"> \u2713</string>
+    <string name="compare_better_tick" translatable="false">\u2713</string>
     <string name="compare_better_description">better</string>
 
 </resources>
