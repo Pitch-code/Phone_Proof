@@ -14,6 +14,16 @@ enum class VibrationAttempt {
     /** The platform refused the request, so nothing was ever asked of the motor. */
     REFUSED,
 
+    /**
+     * The app itself was not allowed to run the motor, because it is missing the permission to do so.
+     *
+     * Separate from [REFUSED] because it is a bug in this app and the buyer must not be told to go
+     * hunting through their settings for it. This exists because that is precisely what happened: the
+     * manifest was missing `android.permission.VIBRATE` and a working phone was told to check Do Not
+     * Disturb.
+     */
+    NOT_PERMITTED,
+
     /** No working accelerometer, so there is nothing to feel the phone with. */
     NO_ACCELEROMETER,
 
@@ -145,6 +155,19 @@ object VibrationCheck {
                 headline = "The phone would not let the app run the motor, so nothing was tested.",
                 action = "Check Do Not Disturb is off and try again. Otherwise set a one-minute " +
                     "alarm and feel it for yourself.",
+                measurements = measurements,
+            )
+
+            VibrationAttempt.NOT_PERMITTED -> return CheckResult(
+                id = CHECK_ID,
+                title = TITLE,
+                outcome = CheckOutcome.UNKNOWN,
+                confidence = Confidence.LOW,
+                // Owns it. There is no version of this the buyer can fix, so sending them to a settings
+                // screen would waste their time and quietly imply their phone is at fault.
+                headline = "This test could not run because of a fault in this app, not in the phone.",
+                action = "Nothing you can do from here, and nothing here counts against the phone. " +
+                    "Update the app, and test vibration by setting a one-minute alarm.",
                 measurements = measurements,
             )
 
