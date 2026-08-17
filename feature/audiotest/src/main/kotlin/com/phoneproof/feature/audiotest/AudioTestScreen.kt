@@ -22,8 +22,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -181,11 +182,8 @@ fun AudioTestScreen(
                 )
             }
 
-            AudioStage.FINISHED -> OutlinedButton(
-                onClick = onRestart,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) { Text("Test again") }
+            AudioStage.FINISHED ->
+                ResultActions(retestLabel = "Test again", onRetest = onRestart)
 
             // Nothing here for these: a dialog is carrying the question, and a recording in progress has
             // no action for the buyer beyond holding still.

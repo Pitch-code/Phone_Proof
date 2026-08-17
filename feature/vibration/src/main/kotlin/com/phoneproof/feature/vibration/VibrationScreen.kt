@@ -21,7 +21,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.vibration.VibrationCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -239,11 +239,5 @@ private fun StillnessMeter(state: VibrationUiState) {
 private fun Done(state: VibrationUiState, onRestart: () -> Unit) {
     state.result?.let { CheckResultCard(it) }
 
-    OutlinedButton(
-        onClick = onRestart,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Test again")
-    }
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }

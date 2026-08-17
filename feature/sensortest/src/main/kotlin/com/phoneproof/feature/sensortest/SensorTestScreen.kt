@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.sensors.SensorKind
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 import com.phoneproof.core.model.plural
@@ -231,7 +232,7 @@ private fun Done(state: SensorTestUiState, onRestart: () -> Unit) {
 
     state.results.forEach { CheckResultCard(it) }
 
-    PrimaryButton(text = "Test again", onClick = onRestart)
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }
 
 // ---------------------------------------------------------------------- pieces

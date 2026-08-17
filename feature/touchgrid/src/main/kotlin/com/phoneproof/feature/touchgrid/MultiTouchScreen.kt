@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ConditionPrompt
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.nounFor
 
@@ -262,13 +263,7 @@ private fun TouchPad(
 private fun Finished(state: MultiTouchUiState, onRestart: () -> Unit) {
     state.result?.let { CheckResultCard(it) }
 
-    OutlinedButton(
-        onClick = onRestart,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Test again")
-    }
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }
 
 /**

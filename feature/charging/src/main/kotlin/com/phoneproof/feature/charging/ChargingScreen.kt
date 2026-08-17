@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.device.ChargingCheck
 import com.phoneproof.core.designsystem.component.CheckResultCard
 import com.phoneproof.core.designsystem.component.ConditionPrompt
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -239,11 +240,5 @@ private fun Done(state: ChargingUiState, onRestart: () -> Unit) {
         )
     }
 
-    OutlinedButton(
-        onClick = onRestart,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Test again")
-    }
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }

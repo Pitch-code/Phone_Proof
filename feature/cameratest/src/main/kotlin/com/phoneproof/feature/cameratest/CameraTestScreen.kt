@@ -36,6 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 
 /**
@@ -157,11 +158,8 @@ fun CameraTestScreen(
                 }
             }
 
-            CameraStage.FINISHED -> OutlinedButton(
-                onClick = onRestart,
-                modifier = Modifier.fillMaxWidth().height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-            ) { Text("Test again") }
+            CameraStage.FINISHED ->
+                ResultActions(retestLabel = "Test again", onRetest = onRestart)
 
             CameraStage.TESTING -> Unit
         }

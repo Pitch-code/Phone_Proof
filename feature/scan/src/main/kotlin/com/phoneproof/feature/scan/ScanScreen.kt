@@ -25,7 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.component.CategoryChip
 import com.phoneproof.core.designsystem.component.CheckCategory
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.component.accent
 import com.phoneproof.core.designsystem.component.glyph
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
@@ -93,15 +93,11 @@ fun ScanScreen(
         }
 
         if (state.finished) {
-            OutlinedButton(
-                onClick = onRescan,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .padding(bottom = 4.dp),
-            ) {
-                Text("Scan again")
-            }
+            ResultActions(
+                retestLabel = "Scan again",
+                onRetest = onRescan,
+                modifier = Modifier.padding(bottom = 4.dp),
+            )
         } else {
             Spacer(Modifier.height(8.dp))
         }
