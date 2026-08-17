@@ -50,6 +50,15 @@ class EmiLockScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun in_landscape() {
+        // This screen has no scroll container, so landscape is where it either adapts or clips. The
+        // activity declares configChanges for orientation, which means it is never recreated on rotation
+        // and the layout has to cope on its own — nothing reloads to save it.
+        render("emilock-6-landscape", DeviceAdminSnapshot())
+    }
+
+    @Test
     fun clean_phone_passes() {
         render("emilock-1-pass", DeviceAdminSnapshot())
     }

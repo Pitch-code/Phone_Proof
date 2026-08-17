@@ -142,6 +142,14 @@ class CameraTestScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun in_landscape() {
+        // Camera previews have a fixed aspect and no scroll container above them, which is the
+        // combination most likely to overflow a short viewport.
+        render("camera-10-landscape", CameraTestUiState(cameras = twoCameras))
+    }
+
+    @Test
     fun both_cameras_alive() {
         render(
             "2-both-pass",

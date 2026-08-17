@@ -65,6 +65,23 @@ class MultiTouchScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w891dp-h411dp-xhdpi")
+    fun the_pad_in_landscape_with_the_prompt_up() {
+        // Two things that both want the bottom of the screen: the counter row and the lift-your-fingers
+        // prompt, whose clearance is a fixed 96dp measured in portrait.
+        render(
+            "multitouch-10-landscape",
+            MultiTouchUiState(
+                stage = MultiTouchStage.COUNTING,
+                claimedPoints = 5,
+                current = 5,
+                best = 5,
+                positions = spread(5),
+            ),
+        )
+    }
+
+    @Test
     fun the_target_reached_says_so_before_the_buyer_lets_go() {
         // Green while the fingers are still on the glass. A buyer who has to lift off and read a verdict to
         // find out whether it worked has to do the whole thing again if it did not.
