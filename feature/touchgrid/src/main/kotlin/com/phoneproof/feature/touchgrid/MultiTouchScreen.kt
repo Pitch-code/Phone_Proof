@@ -98,6 +98,10 @@ fun MultiTouchScreen(
         headline = "You can lift your fingers now",
         detail = "The screen followed ${state.best} at once, which is everything this phone claims. " +
             "This closes by itself when you let go.",
+        // Held clear of the counter and the "see the result" button below the pad. Touches pass through
+        // this card, so covering that button would have left it working but invisible — which is worse
+        // than covering something inert, because the buyer would stop looking for it.
+        modifier = Modifier.padding(bottom = 96.dp),
     )
 
     if (state.stage == MultiTouchStage.ASKING) {

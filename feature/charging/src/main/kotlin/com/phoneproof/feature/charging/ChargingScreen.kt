@@ -80,9 +80,12 @@ fun ChargingScreen(
     ConditionPrompt(
         visible = state.stage == ChargingStage.WAITING && !state.plugged,
         headline = "Please connect the charger",
-        detail = "The test starts on its own the moment you do, and this closes by itself. It is worth " +
-            "doing: a loose socket charges fine while you watch and gives up overnight, and that is " +
-            "what the next twenty seconds are counting.",
+        // Short, because the paragraph behind explains why the test matters and this only has to say what
+        // happens next. Skipping is mentioned here rather than left as a separate line, so the buyer can
+        // see the consequence of the button before pressing it.
+        detail = "The test starts on its own the moment you do, and this closes by itself. If you have " +
+            "no cable, skipping is fine — the report will say charging was not tested rather than " +
+            "pretending otherwise.",
         alignment = Alignment.Center,
         action = "There is no charger here",
         onAction = onGiveUp,
@@ -109,19 +112,12 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
 
     LiveState(state)
 
-    OutlinedButton(
-        onClick = onGiveUp,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("There is no charger here")
-    }
-    Text(
-        text = "Skipping is fine — the report will say charging was not tested rather than pretending " +
-            "otherwise. It is worth coming back for, though.",
-        style = MaterialTheme.typography.labelSmall,
-        color = PhoneProofTheme.colors.textTertiary,
-    )
+    // The way out used to live here, and it now lives in the prompt instead.
+    //
+    // While this screen is waiting, the prompt is always showing — WAITING means nothing is plugged in by
+    // definition — so a button here would be a second, identical "there is no charger here" sitting
+    // underneath the card. Touches pass through the prompt, so it would have been a live button the buyer
+    // could not see. One of the two had to go, and the visible one is the one worth keeping.
 }
 
 @Composable
