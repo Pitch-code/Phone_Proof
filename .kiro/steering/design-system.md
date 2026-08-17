@@ -106,8 +106,36 @@ It is constrained, and the constraints are the reason it is allowed:
 - `CheckResultCard(emphasise = false)` **must** be used anywhere a measurement is running. That is
   not optional: the battery check cannot produce an honest reading next to an animating surface.
 
-Nothing else in the app loops. If a second exception is ever wanted, it needs the same three things:
-a rate below the flash threshold, a way to switch it off during measurement, and a written reason.
+If a further exception is ever wanted, it needs the same three things: a rate below the flash
+threshold, a way to switch it off during measurement, and a written reason.
+
+#### The actual list of looping animations
+
+The heading above said "exactly two" while the code had four. That drift is the thing this section
+exists to prevent, so the list is now kept here in full and a new loop is not done without adding to it.
+
+| Where | Rate | Cannot run during a measurement because | Honours "remove animations" |
+|---|---|---|---|
+| `CheckResultCard` FAIL border | 0.7 Hz | `emphasise = false` is mandatory wherever measuring | no — see below |
+| Guide diagrams | slow tween | the guide measures nothing at all | yes |
+| Home free-trial line | 0.7 Hz | Home measures nothing | no — see below |
+| Camera torch button | 0.7 Hz | the torch test takes no timed measurement | no — see below |
+| `ResultActions` retest button | 0.7 Hz | it is only ever shown on a *finished* result | yes |
+
+**Every looping animation must honour `ANIMATOR_DURATION_SCALE`.** Someone who has switched animation
+off has usually done it for vestibular or photosensitivity reasons, and an app that ignores that is
+not accessible. `rememberAnimationsEnabled()` in `core/designsystem` is the shared check — it was
+private inside the guide until `ResultActions` needed it.
+
+Three of the five above predate that helper and do not call it yet. That is a known accessibility gap,
+not a decision, and it should be closed the next time any of those three screens is touched.
+
+#### The retest button, which is the fifth exception
+
+Asked for directly: the "Test again" / "Scan again" button should draw the eye until it is used. It
+qualifies on all three counts — 0.7 Hz, structurally unable to run beside a measurement because it only
+appears once a result exists, and it **stops permanently once tapped**, so it can never settle into
+being decoration. It fades the container only, never the label, so the text never loses contrast.
 
 ## Window insets — every screen, every time
 

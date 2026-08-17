@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.phoneproof.checks.radios.RadioCheck
 import com.phoneproof.checks.radios.RadioKind
 import com.phoneproof.core.designsystem.component.CheckResultCard
+import com.phoneproof.core.designsystem.component.ResultActions
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.model.CheckOutcome
 
@@ -305,11 +306,5 @@ private fun Done(state: RadiosUiState, onRestart: () -> Unit) {
 
     Note(title = "WHY THERE IS NO LIST OF NETWORKS", body = RadioCheck.NO_SCAN_NOTE)
 
-    OutlinedButton(
-        onClick = onRestart,
-        modifier = Modifier.fillMaxWidth().height(48.dp),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Text("Test again")
-    }
+    ResultActions(retestLabel = "Test again", onRetest = onRestart)
 }
