@@ -65,6 +65,9 @@ dependencies {
 
     testImplementation(libs.junit)
     testImplementation(libs.truth)
+    // The charging state machine is a clock racing a broadcast receiver, so its rules are only testable in
+    // virtual time. ChargingViewModelTest is what a handset bug report cost the project for want of this.
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(platform(libs.androidx.compose.bom))
     testImplementation(libs.androidx.compose.ui.test.junit4)
