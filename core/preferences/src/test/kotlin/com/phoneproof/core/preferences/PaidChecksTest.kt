@@ -25,13 +25,74 @@ class PaidChecksTest {
     }
 
     @Test
-    fun every_locked_check_is_one_a_buyer_could_settle_by_hand() {
-        // The property that makes them safe to lock, restated as the reason each one is on the list:
+    fun every_locked_check_says_how_to_get_the_answer_without_paying() {
+        // The property that makes these three safe to lock, and the one thing this file has to enforce
+        // rather than describe:
         //  - multi-touch: a spec, not a fault. Dead patches are found by the free touch test.
         //  - radios: ten seconds with the two toggles.
         //  - vibration: a finger on the back of the phone.
-        // Nothing here is the only route to knowing something expensive.
-        assertThat(PaidChecks.routes).hasSize(3)
+        //
+        // This test used to assert `routes.hasSize(3)` under this name, which checked nothing of the sort —
+        // it would have passed just as happily with the earpiece test locked and no way out written down.
+        // Now that the wording lives beside the decision, the claim in the name is the claim being made.
+        PaidChecks.routes.forEach { route ->
+            val copy = PaidChecks.copyFor(route)
+            assertThat(copy).isNotNull()
+
+            // Long enough to be an actual instruction. A placeholder like "Upgrade." would satisfy a
+            // null check and defeat the entire point of having the field.
+            assertThat(copy!!.doItYourself.length).isGreaterThan(40)
+            assertThat(copy.whatItFinds.length).isGreaterThan(40)
+        }
+    }
+
+    @Test
+    fun a_locked_check_cannot_exist_without_wording() {
+        // `routes` is derived from the copy map, so this is structural rather than a convention someone has
+        // to remember. The failure it prevents is specific and ugly: a row marked Premium that opens onto a
+        // paywall with an empty body, asking for money and saying nothing.
+        assertThat(PaidChecks.routes.mapNotNull { PaidChecks.copyFor(it) })
+            .hasSize(PaidChecks.routes.size)
+    }
+
+    @Test
+    fun no_paywall_promises_a_refund_window_or_denies_one() {
+        // Same rule PurchaseTermsTest holds for the terms screen, applied to the three screens that ask for
+        // money first. The developer cannot make "no refunds" true — Google refunds at its own discretion —
+        // and Play requires the disclosure to be accurate, so neither claim may appear here.
+        // The false claims only. The bare word is not banned: a truthful pointer to the terms screen would
+        // be fine here, and a test that forbade it would be enforcing silence rather than accuracy.
+        val forbidden = listOf("non-refundable", "no refunds", "all sales final")
+
+        PaidChecks.routes.forEach { route ->
+            val copy = PaidChecks.copyFor(route)!!
+            val prose = "${copy.explanation} ${copy.whatUnlockingGives}".lowercase()
+            forbidden.forEach { claim ->
+                assertThat(prose).doesNotContain(claim)
+            }
+        }
+    }
+
+    @Test
+    fun no_paywall_names_a_price() {
+        // Prices belong to Play, which localises and changes them. A number typed into a paywall is wrong
+        // in every country it was not typed for, and wrong everywhere the moment the Console changes.
+        PaidChecks.routes.forEach { route ->
+            val copy = PaidChecks.copyFor(route)!!
+            val prose = "${copy.explanation} ${copy.whatUnlockingGives}"
+            assertThat(prose).doesNotContain("₹")
+            assertThat(prose).doesNotContain("Rs")
+        }
+    }
+
+    @Test
+    fun the_unlock_sentence_offers_more_than_the_screen_being_unblocked() {
+        // "Pay to see this screen" is a toll. The tier has to be worth buying on its own terms, so every
+        // paywall names what else comes with it.
+        PaidChecks.routes.forEach { route ->
+            val gives = PaidChecks.copyFor(route)!!.whatUnlockingGives
+            assertThat(gives).contains("report")
+        }
     }
 
     @Test

@@ -221,11 +221,6 @@ fun PhoneProofNavHost(
         composable(Routes.VIBRATION) {
             PaidCheckGate(
                 route = Routes.VIBRATION,
-                title = "Vibration",
-                whatItFinds = "This measures the buzz with the accelerometer and puts a number on it, " +
-                    "so nobody has to be asked whether they felt something.",
-                doItYourself = "Put a finger on the back of the phone and set a one-minute alarm. " +
-                    "This check's own advice says to trust your fingers over its number anyway.",
                 onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -246,11 +241,6 @@ fun PhoneProofNavHost(
         composable(Routes.RADIOS) {
             PaidCheckGate(
                 route = Routes.RADIOS,
-                title = "Wi-Fi and Bluetooth",
-                whatItFinds = "This watches both radios and records, in the report, that they " +
-                    "switched on and joined a network.",
-                doItYourself = "You can settle this in ten seconds yourself: open the phone's " +
-                    "settings, turn both on, and join any network.",
                 onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -346,11 +336,6 @@ fun PhoneProofNavHost(
         composable(Routes.MULTI_TOUCH) {
             PaidCheckGate(
                 route = Routes.MULTI_TOUCH,
-                title = "Fingers at once",
-                whatItFinds = "This counts how many fingers the screen can follow at the same time, " +
-                    "and shows a numbered ring under each one.",
-                doItYourself = "Dead patches on the screen are the fault that actually costs you, and " +
-                    "the touch test finds those — it stays free.",
                 onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
             ) {

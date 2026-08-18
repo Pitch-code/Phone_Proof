@@ -103,6 +103,35 @@ class HomeScreenshotTest {
 
     @Test
     @Config(qualifiers = "w411dp-h1800dp-xhdpi")
+    fun the_checks_with_the_trial_locks_showing() {
+        // The list as a free user sees it, which had no render at all: every other shot here leaves `locked`
+        // at its default, so the "· Premium" marker was drawn in exactly zero images and the screenshot gate
+        // stayed green while the restriction shipped unlooked-at.
+        //
+        // Marked by appending to the title, so the thing worth checking is a layout question rather than a
+        // wording one: "Fingers at once · Premium" is the longest row title in the app and this is where it
+        // would wrap badly, or collide with the subtitle, on a narrow screen.
+        //
+        // The locked set is read from PaidChecks in the app module, which this module cannot see — so the
+        // three routes are named here. Named rather than counted: if the locked set changes, this render
+        // stops matching the app and the diff in the PNG is what says so.
+        val locked = setOf("multi-touch", "radios", "vibration")
+
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                ChecksScreen(
+                    checks = HomeCatalogue.map {
+                        HomeCheck(it.title, it.subtitle, locked = it.route in locked) {}
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/checks-3-premium-marked.png")
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h1800dp-xhdpi")
     fun the_checks_on_their_own_full_column() {
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) {

@@ -49,12 +49,52 @@ package com.phoneproof.core.preferences
  */
 object PaidChecks {
 
-    /** Navigation routes of the checks the free trial leaves out. */
-    val routes: Set<String> = setOf(
-        "multi-touch",
-        "radios",
-        "vibration",
+    /**
+     * What each locked check is worth, and how to get the same answer without paying.
+     *
+     * The wording lives here, next to the reasoning it has to stay consistent with, rather than in the
+     * navigation graph where it started. Three reasons. A paywall's prose is the part most likely to drift
+     * away from the decision behind it, and the two are now impossible to read apart. The `doItYourself`
+     * line is a *rule*, not a nicety — it is the property these three were chosen by — so it belongs
+     * somewhere a test can insist every locked check has one. And the locked set is now derived from these
+     * keys, which makes locking a check without saying what it costs the buyer unrepresentable rather than
+     * merely discouraged.
+     */
+    private val copy: Map<String, PaidCheckCopy> = mapOf(
+        "multi-touch" to PaidCheckCopy(
+            title = "Fingers at once",
+            whatItFinds = "This counts how many fingers the screen can follow at the same time, and " +
+                "shows a numbered ring under each one.",
+            doItYourself = "Dead patches on the screen are the fault that actually costs you, and the " +
+                "touch test finds those — it stays free.",
+        ),
+        "radios" to PaidCheckCopy(
+            title = "Wi-Fi and Bluetooth",
+            whatItFinds = "This watches both radios and records, in the report, that they switched on " +
+                "and joined a network.",
+            doItYourself = "You can settle this in ten seconds yourself: open the phone's settings, " +
+                "turn both on, and join any network.",
+        ),
+        "vibration" to PaidCheckCopy(
+            title = "Vibration",
+            whatItFinds = "This measures the buzz with the accelerometer and puts a number on it, so " +
+                "nobody has to be asked whether they felt something.",
+            doItYourself = "Put a finger on the back of the phone and set a one-minute alarm. This " +
+                "check's own advice says to trust your fingers over its number anyway.",
+        ),
     )
+
+    /**
+     * Navigation routes of the checks the free trial leaves out.
+     *
+     * Derived from [copy] rather than listed separately, so a locked check always has wording explaining
+     * itself. Two lists would eventually disagree, and the way they would disagree is the bad way: a row
+     * marked Premium opening onto a paywall with nothing written on it.
+     */
+    val routes: Set<String> = copy.keys
+
+    /** What to say on the paywall for [route], or null if the trial includes it. */
+    fun copyFor(route: String): PaidCheckCopy? = copy[route]
 
     /** Whether [route] needs a paid tier. */
     fun requiresPremium(route: String): Boolean = route in routes
@@ -66,4 +106,43 @@ object PaidChecks {
      */
     fun isUnlocked(route: String, entitlement: Entitlement): Boolean =
         !requiresPremium(route) || entitlement.hasPremiumExtras
+}
+
+/**
+ * The wording shown when a locked check is opened on the free trial.
+ *
+ * Both sentences are required by the type, because a paywall missing either one is a specific kind of bad.
+ * Without [whatItFinds] it asks for money without saying what for. Without [doItYourself] it stops being a
+ * limit and becomes a hostage.
+ */
+data class PaidCheckCopy(
+    /** The check's name, as the buyer saw it on the list they tapped. */
+    val title: String,
+    /** What this check measures, in the buyer's terms — they are deciding whether to pay for it. */
+    val whatItFinds: String,
+    /**
+     * How to get the same answer without paying.
+     *
+     * Every locked check has one; that is the rule they were chosen by. Printing it costs a sale
+     * occasionally, and is the whole difference between a limit and a hostage.
+     */
+    val doItYourself: String,
+) {
+    /**
+     * The two sentences as the paywall shows them.
+     *
+     * Assembled here rather than at the call site so the screen, and any test reading it, are looking at
+     * one string rather than two copies of an idea about how it is put together.
+     */
+    val explanation: String
+        get() = "$whatItFinds\n\nThe free trial leaves this one out. $doItYourself"
+
+    /**
+     * What paying actually buys, which has to be more than the screen being unblocked.
+     *
+     * Shared across all three, because it is a property of the tier rather than of the check.
+     */
+    val whatUnlockingGives: String
+        get() = "Premium unlocks this and the other two measured checks the trial leaves out, keeps " +
+            "every report instead of the last two, and adds PDF export and side-by-side comparison."
 }

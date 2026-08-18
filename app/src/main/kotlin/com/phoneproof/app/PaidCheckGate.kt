@@ -1,11 +1,11 @@
 package com.phoneproof.app
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
 import com.phoneproof.core.designsystem.component.LockedFeature
 import com.phoneproof.core.preferences.Entitlement
 import com.phoneproof.core.preferences.PaidChecks
@@ -20,23 +20,13 @@ import com.phoneproof.core.preferences.SettingsRepository
  * feature modules is three places for the wording and the rule to drift apart, which is the whole reason
  * `LockedFeature` exists.
  *
- * Which checks are locked, and the reasoning for each, is in [PaidChecks] — deliberately not here, so the
- * decision sits next to the entitlement it belongs to rather than inside the navigation graph.
+ * Which checks are locked, what each paywall says, and the reasoning for both, all live in [PaidChecks] —
+ * deliberately not here, so the decision, the wording and the entitlement sit together instead of being
+ * spread across the navigation graph.
  */
 @Composable
 fun PaidCheckGate(
     route: String,
-    title: String,
-    /** What this check finds, in the buyer's terms. Concrete: they are deciding whether to pay for it. */
-    whatItFinds: String,
-    /**
-     * How to get the same answer without paying.
-     *
-     * Every locked check has one — that is the rule they were chosen by. Saying it out loud costs a sale
-     * occasionally and is the difference between a limit and a hostage: none of these is withheld because
-     * the buyer would be stuck without it.
-     */
-    doItYourself: String,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -45,17 +35,20 @@ fun PaidCheckGate(
     val entitlement by remember(context) { SettingsRepository(context).entitlement }
         .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
 
-    if (PaidChecks.isUnlocked(route, entitlement)) {
+    // Not `isUnlocked`, because the copy lookup is what decides here: a route with no wording written for
+    // it is not a locked route, and falling through to the check is the right way to fail. The alternative
+    // — a paywall with an empty body over a screen that works — asks for money and says nothing.
+    val locked = PaidChecks.copyFor(route)?.takeIf { !entitlement.hasPremiumExtras }
+
+    if (locked == null) {
         content()
         return
     }
 
     LockedFeature(
-        title = title,
-        explanation = "$whatItFinds\n\nThe free trial leaves this one out. $doItYourself",
-        whatUnlockingGives = "Premium unlocks this and the other two measured checks the trial leaves " +
-            "out, keeps every report instead of the last two, and adds PDF export and side-by-side " +
-            "comparison.",
+        title = locked.title,
+        explanation = locked.explanation,
+        whatUnlockingGives = locked.whatUnlockingGives,
         onOpenSettings = onOpenSettings,
         modifier = modifier,
     )
