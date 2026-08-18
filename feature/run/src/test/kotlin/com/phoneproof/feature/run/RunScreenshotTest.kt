@@ -52,6 +52,41 @@ class RunScreenshotTest {
     }
 
     @Test
+    @Config(qualifiers = "w411dp-h1400dp-xhdpi")
+    fun the_intro_on_the_free_trial_says_how_many_steps_need_premium() {
+        // The whole reason this state is rendered: a buyer should learn the shape of the run before they are
+        // standing in front of a seller, not five paywalls into it. Tall viewport so the advice box and the
+        // Start button are in one image.
+        renderChecklist(
+            "run-12-intro-free-trial",
+            RunState(),
+            lockedStepIds = lockedOnTheFreeTrial,
+        )
+    }
+
+    @Test
+    @Config(qualifiers = "w411dp-h1800dp-xhdpi")
+    fun a_free_trial_run_marks_the_steps_it_does_not_include() {
+        // Partway through, so this catches the two places the marker appears at once: the current-step card
+        // (a "Premium" tag, and a button that promises an explanation rather than a measurement it will not
+        // deliver) and the full list below it.
+        //
+        // Multi-touch is deliberately the next step here — it is the first locked one in plan order, so it
+        // is the card a real free-trial buyer meets first.
+        renderChecklist(
+            "run-13-free-trial-locked-steps",
+            state(
+                results = mapOf(
+                    "scan" to listOf(storagePass(), batteryUnknown()),
+                    "storage-speed" to listOf(storagePass()),
+                    "touch" to listOf(touchFail()),
+                ),
+            ),
+            lockedStepIds = lockedOnTheFreeTrial,
+        )
+    }
+
+    @Test
     fun a_run_partway_through_with_a_fault_already_found() {
         renderChecklist(
             "run-2-partway",
@@ -195,6 +230,7 @@ class RunScreenshotTest {
         name: String,
         state: RunState,
         themeMode: ThemeMode = ThemeMode.DARK,
+        lockedStepIds: Set<String> = emptySet(),
     ) {
         composeRule.setContent {
             PhoneProofTheme(themeMode = themeMode) {
@@ -205,11 +241,21 @@ class RunScreenshotTest {
                     onSkip = {},
                     onSeeVerdict = {},
                     modifier = Modifier.fillMaxSize(),
+                    lockedStepIds = lockedStepIds,
                 )
             }
         }
         composeRule.onRoot().captureRoboImage("$outputDir/$name.png")
     }
+
+    /**
+     * What the free trial's five locked steps look like.
+     *
+     * Named rather than read from PaidChecks: this module cannot see the app module, and naming them means
+     * the render stops matching the app if the locked set changes, with the PNG diff saying so.
+     */
+    private val lockedOnTheFreeTrial =
+        setOf("multi-touch", "vibration", "radios", "claims", "guide")
 
     private fun renderVerdict(
         name: String,

@@ -14,10 +14,12 @@ import com.phoneproof.core.device.androidLabel
 import com.phoneproof.core.device.deviceLabel
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.PaidChecks
 import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.reports.ReportStore
 import com.phoneproof.core.reports.SavedReport
 import com.phoneproof.core.reports.reportStore
+import com.phoneproof.core.run.RunPlan
 import com.phoneproof.core.run.RunSession
 import com.phoneproof.core.run.RunState
 import com.phoneproof.core.run.RunStep
@@ -29,10 +31,15 @@ private const val TAG = "RunRoute"
 /**
  * The checklist, wired to the session.
  *
- * Carries no paywall logic of its own on purpose. Each step already gates itself — the scan against
- * the free scan allowance, claims and the walkthrough against the advisory tier — so a second gate
- * here would be a second place to keep those rules right, and would stop a free-trial buyer from
- * using the six steps they are entitled to.
+ * **Still carries no gate of its own**, and that part was always right: every step gates itself — the scan
+ * against the free scan allowance, claims and the walkthrough against the advisory tier, and now
+ * multi-touch, vibration and the radios against Premium. A second gate here would be a second place to
+ * keep the same rules right.
+ *
+ * What it does now is *say so in advance*. The old comment here claimed a free-trial buyer was "entitled to
+ * six steps", which was wrong twice over — it is ten of fifteen — and the screen said nothing at all about
+ * the other five. So the run walked a buyer into a paywall five separate times, mid-inspection, in front of
+ * a seller. Marking them costs nothing and removes every one of those surprises.
  */
 @Composable
 fun RunRoute(
@@ -44,6 +51,17 @@ fun RunRoute(
     val context = LocalContext.current
     val state by session.state.collectAsStateWithLifecycle()
     val retain = rememberRetention()
+
+    val settings = remember(context) { SettingsRepository(context) }
+    val entitlement by remember(settings) { settings.entitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+
+    // Asked of PaidChecks rather than assembled here, so the marker on a run step, the marker on the same
+    // check in the checks list, and the paywall itself all come from one place. Step ids are route names,
+    // which is what makes this a direct lookup — RunPlanRoutesTest is what keeps that true.
+    val lockedStepIds = remember(entitlement) {
+        RunPlan.steps.map { it.id }.filter { PaidChecks.isLocked(it, entitlement) }.toSet()
+    }
 
     // Written as the run goes rather than only at the end, keyed on the findings so far. An inspection
     // gets interrupted — the seller wants the phone back, the buyer's own phone rings — and a report
@@ -67,6 +85,7 @@ fun RunRoute(
         onSkip = { step -> session.skip(step.id) },
         onSeeVerdict = onSeeVerdict,
         modifier = modifier,
+        lockedStepIds = lockedStepIds,
     )
 }
 
