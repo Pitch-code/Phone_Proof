@@ -33,3 +33,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.truth)
 }
+
+tasks.withType<Test>().configureEach {
+    // PassCodeTest reads licensing/code-test-vectors.txt, the one file both the Kotlin reader and the
+    // JavaScript issuer are checked against. Passed in rather than reached for with a relative path, which
+    // breaks the moment a test runs from a different working directory.
+    systemProperty("phoneproof.repoRoot", rootProject.projectDir.absolutePath)
+}
