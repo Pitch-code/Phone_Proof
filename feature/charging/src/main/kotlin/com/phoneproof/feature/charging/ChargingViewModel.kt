@@ -8,10 +8,12 @@ import com.phoneproof.checks.device.ChargeTrace
 import com.phoneproof.checks.device.ChargingCheck
 import com.phoneproof.checks.device.PlugType
 import com.phoneproof.core.device.ChargeSample
-import com.phoneproof.core.device.ChargingProbe
+import com.phoneproof.core.device.ChargeSource
 import com.phoneproof.core.diagnostics.Diagnostics
 import com.phoneproof.core.model.CheckResult
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,7 +23,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 
 enum class ChargingStage {
     /** Waiting for a cable. The app cannot make this happen, so it waits and says so. */
@@ -58,7 +59,7 @@ data class ChargingUiState(
  * charger to hand should get an honest "not tested" rather than sit watching a countdown.
  */
 class ChargingViewModel(
-    private val probe: ChargingProbe,
+    private val probe: ChargeSource,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ChargingUiState(live = probe.snapshot()))
@@ -118,44 +119,121 @@ class ChargingViewModel(
      * reliability of this check. A buyer pulling the cable out when they think the test is over would
      * otherwise be recorded as a loose socket. A genuine loose port drops and comes back on its own; a
      * deliberate unplug never comes back.
+     *
+     * ## Why the tick loop owns the clock
+     *
+     * This used to be a fixed `withTimeoutOrNull(20s)` racing a countdown derived from
+     * `System.currentTimeMillis()`, and **neither one looked at whether the charger was still there.** Pull
+     * the cable out and the countdown ran to the end regardless — which is the bug a buyer reported, and the
+     * smaller half of it. The larger half was what happened next: the window published a confident
+     * `MEASURED` verdict with a wattage averaged over seconds when nothing was connected at all.
+     *
+     * So the loop below is the only clock, and it is the thing that decides when to stop. It reads
+     * [ChargingUiState] rather than local variables because the sample collector runs in a separate
+     * coroutine, and a `StateFlow` read is safe across both where a captured `var` would not be.
+     *
+     * Counting ticks rather than reading the wall clock also makes the whole rule testable in virtual time,
+     * and immune to the clock being changed underneath it mid-measurement.
      */
-    private suspend fun measure() {
-        _uiState.update { it.copy(stage = ChargingStage.MEASURING, dropouts = 0) }
-
-        val samples = mutableListOf<ChargeSample>()
-        var recoveries = 0
-        var wasPlugged = true
-
-        val ticker = viewModelScope.launch {
-            val startedAt = System.currentTimeMillis()
-            while (isActive) {
-                val remaining = SAMPLE_SECONDS * 1000L - (System.currentTimeMillis() - startedAt)
-                _uiState.update {
-                    it.copy(secondsLeft = ((remaining + 999) / 1000).coerceAtLeast(0).toInt())
-                }
-                delay(250)
-            }
+    private suspend fun measure() = coroutineScope {
+        _uiState.update {
+            it.copy(
+                stage = ChargingStage.MEASURING,
+                dropouts = 0,
+                secondsLeft = SAMPLE_SECONDS,
+            )
         }
 
-        withTimeoutOrNull(SAMPLE_SECONDS * 1000L) {
+        val samples = mutableListOf<ChargeSample>()
+        var wasPlugged = true
+        val stop = CompletableDeferred<StopReason>()
+
+        val collector = launch {
             probe.stream()
                 .onEach { sample ->
                     samples += sample
                     if (sample.plugged && !wasPlugged) {
-                        recoveries++
-                        _uiState.update { it.copy(dropouts = recoveries) }
+                        _uiState.update { it.copy(dropouts = it.dropouts + 1) }
                     }
                     wasPlugged = sample.plugged
                     _uiState.update { it.copy(live = sample) }
                 }
                 .collect()
         }
-        ticker.cancel()
 
-        publish(samples, recoveries)
+        val ticker = launch {
+            var elapsedMillis = 0L
+            var unpluggedMillis = 0L
+
+            while (isActive) {
+                delay(TICK_MILLIS)
+                elapsedMillis += TICK_MILLIS
+
+                val state = _uiState.value
+                unpluggedMillis = if (state.plugged) 0L else unpluggedMillis + TICK_MILLIS
+
+                val remaining = SAMPLE_SECONDS * 1000L - elapsedMillis
+                _uiState.update {
+                    it.copy(secondsLeft = ((remaining + 999) / 1000).coerceAtLeast(0).toInt())
+                }
+
+                if (unpluggedMillis >= CABLE_GONE_MILLIS) {
+                    // Two very different situations, told apart by whether anything was found before the
+                    // cable went. Both are "the charger is not there any more"; only one of them is a
+                    // finding, and discarding the other would be inventing one.
+                    stop.complete(
+                        if (state.dropouts > 0) {
+                            StopReason.ENOUGH_ALREADY
+                        } else {
+                            StopReason.CABLE_REMOVED
+                        },
+                    )
+                    return@launch
+                }
+
+                if (elapsedMillis >= SAMPLE_SECONDS * 1000L) {
+                    stop.complete(StopReason.FINISHED)
+                    return@launch
+                }
+            }
+        }
+
+        val reason = stop.await()
+        ticker.cancel()
+        collector.cancel()
+
+        when (reason) {
+            // Back to waiting rather than to a verdict, and deliberately not to "not tested" either. The
+            // cable coming out is nearly always someone knocking it or deciding to stop, and WAITING is the
+            // state that says so: the "please connect the charger" prompt reappears on its own, and plugging
+            // back in starts a clean measurement. The honest "not tested" is still one tap away on the
+            // give-up button, where it belongs — chosen by the buyer rather than assumed for them.
+            StopReason.CABLE_REMOVED -> _uiState.update {
+                it.copy(stage = ChargingStage.WAITING, secondsLeft = 0, dropouts = 0)
+            }
+
+            // The socket already let go and came back at least once. That is the finding this check exists
+            // for, and it is worth more than the remaining seconds — so it is published rather than thrown
+            // away because the cable came out afterwards.
+            StopReason.ENOUGH_ALREADY,
+            StopReason.FINISHED,
+            -> publish(samples, _uiState.value.dropouts, elapsedSecondsOf(reason))
+        }
     }
 
-    private fun publish(samples: List<ChargeSample>, dropouts: Int) {
+    /**
+     * How long was actually watched, in whole seconds.
+     *
+     * Reported rather than assumed, because a measurement stopped early is not a twenty-second one and the
+     * verdict says "in twenty seconds" out loud. Claiming the full window for a window that was cut short
+     * would be a small lie in the one sentence a buyer repeats to the seller.
+     */
+    private fun elapsedSecondsOf(reason: StopReason): Int = when (reason) {
+        StopReason.FINISHED -> SAMPLE_SECONDS
+        else -> (SAMPLE_SECONDS - _uiState.value.secondsLeft).coerceAtLeast(1)
+    }
+
+    private fun publish(samples: List<ChargeSample>, dropouts: Int, watchedSeconds: Int) {
         val last = samples.lastOrNull() ?: _uiState.value.live
         if (last == null) {
             giveUp()
@@ -182,12 +260,13 @@ class ChargingViewModel(
             currentMilliamps = currents.takeIf { it.isNotEmpty() }?.average()?.toInt(),
             temperatureCelsius = last.temperatureCelsius,
             dropouts = dropouts,
-            sampleSeconds = SAMPLE_SECONDS,
+            sampleSeconds = watchedSeconds,
         )
 
         Diagnostics.info(
             TAG,
-            "attempt=$attempt watts=${trace.watts} dropouts=$dropouts samples=${samples.size}",
+            "attempt=$attempt watts=${trace.watts} dropouts=$dropouts " +
+                "samples=${samples.size} watched=${watchedSeconds}s",
         )
         _uiState.update {
             it.copy(
@@ -200,8 +279,34 @@ class ChargingViewModel(
 
     private fun List<Int>.averageOrZero(): Int = if (isEmpty()) 0 else average().toInt()
 
+    /** Why a measurement stopped, which decides whether there is anything worth publishing. */
+    private enum class StopReason {
+        /** The full window elapsed. */
+        FINISHED,
+
+        /** The charger went and stayed gone, with nothing found before it did. */
+        CABLE_REMOVED,
+
+        /** The charger went, but the socket had already let go at least once. That is the finding. */
+        ENOUGH_ALREADY,
+    }
+
     private companion object {
         const val TAG = "ChargingTest"
+
+        /** How often the clock is read and the countdown redrawn. */
+        const val TICK_MILLIS = 250L
+
+        /**
+         * How long the charger must be absent before the test accepts that it is gone.
+         *
+         * Three seconds, and the number is a compromise between the two things being told apart. A loose
+         * socket lets go for a fraction of a second and comes back; anything still absent after three
+         * seconds is a cable that has been taken out. Too short and a bad socket would be read as a buyer
+         * giving up, which loses the finding; too long and someone who has already unplugged sits watching a
+         * countdown for a charger that is in their other hand.
+         */
+        const val CABLE_GONE_MILLIS = 3_000L
 
         /**
          * Twenty seconds.

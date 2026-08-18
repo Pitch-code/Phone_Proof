@@ -126,19 +126,39 @@ private fun Waiting(state: ChargingUiState, onGiveUp: () -> Unit) {
 
 @Composable
 private fun Measuring(state: ChargingUiState) {
-    Text(
-        text = stringResource(R.string.charging_measuring_headline, state.secondsLeft),
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.SemiBold,
-        color = PhoneProofTheme.colors.accent,
-    )
-    Text(
-        // The one instruction that decides whether the result means anything: moving the phone pulls the
-        // cable and looks exactly like a loose socket.
-        text = stringResource(R.string.charging_measuring_hold_still),
-        style = MaterialTheme.typography.bodyMedium,
-        color = PhoneProofTheme.colors.textSecondary,
-    )
+    // Two headlines, because there are two situations and one of them used to be described by the other.
+    //
+    // A buyer reported the countdown carrying on after they pulled the charger out, and they were reading a
+    // screen that said "watching for 19 more seconds" directly above a line saying "Charger: not connected".
+    // Whichever of those they believed, the screen was wrong. The countdown is only the truth while
+    // something is actually being watched.
+    if (state.plugged) {
+        Text(
+            text = stringResource(R.string.charging_measuring_headline, state.secondsLeft),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = PhoneProofTheme.colors.accent,
+        )
+        Text(
+            // The one instruction that decides whether the result means anything: moving the phone pulls the
+            // cable and looks exactly like a loose socket.
+            text = stringResource(R.string.charging_measuring_hold_still),
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
+        )
+    } else {
+        Text(
+            text = stringResource(R.string.charging_measuring_unplugged),
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = PhoneProofTheme.colors.caution,
+        )
+        Text(
+            text = stringResource(R.string.charging_measuring_unplugged_detail),
+            style = MaterialTheme.typography.bodyMedium,
+            color = PhoneProofTheme.colors.textSecondary,
+        )
+    }
 
     LiveState(state)
 

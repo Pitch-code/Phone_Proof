@@ -144,6 +144,21 @@ class ChargingScreenshotTest {
     }
 
     @Test
+    fun the_charger_coming_out_while_the_test_is_running() {
+        // The state a buyer reported and the render that did not exist. It used to draw "watching for 19 more
+        // seconds" directly above "Charger: not connected", which is a screen contradicting itself — so the
+        // countdown is now replaced rather than sitting there being wrong.
+        render(
+            "charging-13-unplugged-mid-test",
+            ChargingUiState(
+                stage = ChargingStage.MEASURING,
+                live = sample(plug = PlugType.NONE, charging = false, milliamps = null),
+                secondsLeft = 12,
+            ),
+        )
+    }
+
+    @Test
     fun waiting_in_light_mode() {
         render(
             "charging-12-waiting-light",

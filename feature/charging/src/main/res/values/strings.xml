@@ -32,6 +32,14 @@
     <string name="charging_measuring_hold_still">Leave the phone and the cable alone. Moving either one looks identical to a loose socket, and this is counting how many times charging stops.</string>
 
     <!--
+      Shown the moment the charger stops being connected during a measurement, in place of the countdown.
+      No number in it: the seconds remaining are meaningless while nothing is being watched, and printing
+      them next to "not connected" is how this screen contradicted itself.
+    -->
+    <string name="charging_measuring_unplugged">The charger came out</string>
+    <string name="charging_measuring_unplugged_detail">Plug it back in to carry on. If you meant to stop, leave it — the test goes back to waiting in a moment and nothing is recorded against the phone.</string>
+
+    <!--
       A count, so plurals rather than an if. English needs two forms and puts the boundary at one; several
       of the languages this app is aimed at do neither, and "time"/"times" chosen by an if in Kotlin
       cannot be fixed by a translator.

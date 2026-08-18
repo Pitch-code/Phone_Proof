@@ -25,6 +25,23 @@ data class ChargeSample(
 }
 
 /**
+ * Where charger readings come from.
+ *
+ * Extracted so the charging state machine can be tested without a phone, a charger, or a human to pull the
+ * cable out. That is not a theoretical benefit: the rule about what happens when the cable is removed
+ * mid-measurement was wrong for the entire life of the check, and it was wrong precisely because there was
+ * no way to write a test that would have said so.
+ */
+interface ChargeSource {
+
+    /** The state right now, or null if the phone will not say. */
+    fun snapshot(): ChargeSample?
+
+    /** Every change until the collector stops, starting with the state as it is now. */
+    fun stream(): Flow<ChargeSample>
+}
+
+/**
  * Watches the charger.
  *
  * `ACTION_BATTERY_CHANGED` is a sticky broadcast, so the current state is available immediately by
@@ -33,20 +50,19 @@ data class ChargeSample(
  *
  * No permission for any of this.
  */
-class ChargingProbe(private val context: Context) {
+class ChargingProbe(private val context: Context) : ChargeSource {
 
     private val batteryManager: BatteryManager? =
         runCatching { context.getSystemService(BatteryManager::class.java) }.getOrNull()
 
     /** The state right now, from the sticky broadcast. */
-    fun snapshot(): ChargeSample? = runCatching {
+    override fun snapshot(): ChargeSample? = runCatching {
         @Suppress("UnspecifiedRegisterReceiverFlag")
         val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         intent?.let(::read)
     }.onFailure { Diagnostics.error(TAG, "could not read the battery state", it) }.getOrNull()
 
-    /** Every change until the collector stops, starting with the state as it is now. */
-    fun stream(): Flow<ChargeSample> = callbackFlow {
+    override fun stream(): Flow<ChargeSample> = callbackFlow {
         snapshot()?.let { trySend(it) }
 
         val receiver = object : BroadcastReceiver() {
