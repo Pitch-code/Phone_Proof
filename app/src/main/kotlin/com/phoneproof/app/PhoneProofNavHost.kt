@@ -2,45 +2,46 @@ package com.phoneproof.app
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.PaidChecks
 import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.run.RunSession
-import com.phoneproof.feature.diagnostics.DiagnosticsRoute
-import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.buttons.VolumeButtonsRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.charging.ChargingRoute
-import com.phoneproof.feature.radios.RadiosRoute
 import com.phoneproof.feature.claims.ClaimsRoute
+import com.phoneproof.feature.diagnostics.DiagnosticsRoute
+import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.ChecksScreen
 import com.phoneproof.feature.home.HomeCatalogue
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.imei.ImeiRoute
+import com.phoneproof.feature.radios.RadiosRoute
 import com.phoneproof.feature.reports.CompareRoute
 import com.phoneproof.feature.reports.ReportDetailRoute
 import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.run.RunRoute
 import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
-import com.phoneproof.feature.storagespeed.StorageSpeedRoute
-import com.phoneproof.feature.sensortest.SensorTestRoute
-import com.phoneproof.feature.vibration.VibrationRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
+import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
+import com.phoneproof.feature.storagespeed.StorageSpeedRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
+import com.phoneproof.feature.vibration.VibrationRoute
 
 /**
  * Every destination in the app.
@@ -60,6 +61,14 @@ internal object Routes {
     const val STORAGE_SPEED = "storage-speed"
     const val DIAGNOSTICS = "diagnostics"
     const val SETTINGS = "settings"
+
+    /**
+     * Settings, arriving at the plans.
+     *
+     * A separate route rather than an argument on [SETTINGS] so that `launchSingleTop` still treats the
+     * two as one destination while the intent stays readable at the call site.
+     */
+    const val SETTINGS_PLANS = "settings?focus=plans"
     const val REPORTS = "reports"
     const val SCREEN_PATTERNS = "screen-patterns"
     const val GUIDE = "guide"
@@ -137,6 +146,9 @@ fun PhoneProofNavHost(
                 onOpenGuide = { navController.navigate(Routes.GUIDE) },
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // Lands on the plans, not the top of Settings. Someone who has just been told the trial
+                // is used up should not have to hunt for what it costs.
+                onOpenPlans = { navController.navigate(Routes.SETTINGS_PLANS) },
                 // null for a paid tier, so no counter is shown at all rather than a limit that does
                 // not apply. coerceAtLeast guards a stored count above the limit, which would
                 // otherwise render as a negative number of scans left.
@@ -158,6 +170,11 @@ fun PhoneProofNavHost(
                     HomeCheck(
                         title = entry.title,
                         subtitle = entry.subtitle,
+                        // Marked from the same source the gates read, so the marker on the row and the
+                        // paywall behind it cannot disagree. `isLocked` rather than `requiresPremium`
+                        // because two of these rows are gated inside their own feature module, and a
+                        // buyer reading the list neither knows nor cares which one draws the paywall.
+                        locked = PaidChecks.isLocked(entry.route, entitlement),
                         onClick = { navController.navigateToCheck(entry.route) },
                     )
                 },
@@ -204,10 +221,16 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.VIBRATION) {
-            VibrationRoute(
-                onResults = { runSession.record(Routes.VIBRATION, it) },
+            PaidCheckGate(
+                route = Routes.VIBRATION,
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                VibrationRoute(
+                    onResults = { runSession.record(Routes.VIBRATION, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.CHARGING) {
@@ -218,10 +241,16 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.RADIOS) {
-            RadiosRoute(
-                onResults = { runSession.record(Routes.RADIOS, it) },
+            PaidCheckGate(
+                route = Routes.RADIOS,
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                RadiosRoute(
+                    onResults = { runSession.record(Routes.RADIOS, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.SENSORS) {
@@ -307,10 +336,16 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.MULTI_TOUCH) {
-            MultiTouchRoute(
-                onResults = { runSession.record(Routes.MULTI_TOUCH, it) },
+            PaidCheckGate(
+                route = Routes.MULTI_TOUCH,
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                MultiTouchRoute(
+                    onResults = { runSession.record(Routes.MULTI_TOUCH, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.SCAN) {
@@ -334,8 +369,19 @@ fun PhoneProofNavHost(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE.toLong(),
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
-                // Only a debug build can switch tiers by hand. Read here rather than inside the
-                // feature module so a release build has no code path to the switcher at all.
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        // The same screen, arriving at the plans. Reached from the "tap here to see the plans" line on
+        // Home, which only appears once the trial is used up — at which point being dropped at the top of
+        // Settings means hunting for the thing you were just asked to buy.
+        composable(Routes.SETTINGS_PLANS) {
+            SettingsRoute(
+                versionName = BuildConfig.VERSION_NAME,
+                versionCode = BuildConfig.VERSION_CODE.toLong(),
+                onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                focusPlans = true,
                 modifier = Modifier.fillMaxSize(),
             )
         }

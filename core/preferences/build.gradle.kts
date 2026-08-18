@@ -28,4 +28,8 @@ dependencies {
     implementation(project(":core:diagnostics"))
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.core)
+
+    // PaidChecks is plain Kotlin, so which checks the trial excludes is testable without a device.
+    testImplementation(libs.junit)
+    testImplementation(libs.truth)
 }

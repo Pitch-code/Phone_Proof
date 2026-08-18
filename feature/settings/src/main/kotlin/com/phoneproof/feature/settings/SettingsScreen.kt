@@ -25,8 +25,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -55,6 +62,14 @@ fun SettingsScreen(
     onShareApp: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onChoosePlan: (PremiumPlan) -> Unit,
+    /**
+     * Scroll the plans into view on arrival.
+     *
+     * True when someone got here from the "tap here to see the plans" line on Home, having just been told
+     * the trial is used up. Landing them at the top of Settings would make them hunt for the thing they
+     * were asked to buy.
+     */
+    focusPlans: Boolean = false,
     onShopNameChanged: (String) -> Unit = {},
     onShopContactChanged: (String) -> Unit = {},
     onPickLogo: () -> Unit = {},
@@ -62,12 +77,26 @@ fun SettingsScreen(
     onEntitlementSelected: (Entitlement) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
+    val scroll = rememberScrollState()
+    // Where the plans section ended up, reported by the layout rather than guessed. A hardcoded offset
+    // would be wrong the moment a row above it changes height, or the text scales for accessibility.
+    var plansOffset by remember { mutableStateOf<Float?>(null) }
+
+    LaunchedEffect(focusPlans, plansOffset) {
+        val target = plansOffset
+        if (focusPlans && target != null) {
+            // Animated rather than jumped, so it is clear the screen moved and where from. Someone who
+            // arrived from Home should see the plans, not wonder whether the tap did anything.
+            scroll.animateScrollTo(target.toInt())
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(PhoneProofTheme.colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
@@ -93,7 +122,12 @@ fun SettingsScreen(
             )
         }
 
-        Section("Premium") {
+        Section(
+            title = "Premium",
+            // Measured rather than guessed at: the section reports where it ended up, and the scroll
+            // uses that. A hardcoded offset would be wrong the moment a row above it changes height.
+            modifier = Modifier.onGloballyPositioned { plansOffset = it.positionInParent().y },
+        ) {
             PremiumPlan.entries.forEach { plan ->
                 PlanCard(
                     plan = plan,
@@ -220,9 +254,10 @@ fun SettingsScreen(
 // internal, not private: the debug-only tier switcher lives in src/debug and composes with these.
 internal fun Section(
     title: String,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // titleSmall and bold in secondary ink, up from labelSmall in tertiary — the smallest and
         // faintest combination the design system has, used for the only labels that tell you where
         // you are on the screen. "YOUR SHOP" was reported as not catching the eye; it was set two

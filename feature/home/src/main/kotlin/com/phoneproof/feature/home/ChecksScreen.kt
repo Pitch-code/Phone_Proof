@@ -74,7 +74,14 @@ fun ChecksScreen(
 
         checks.forEach { check ->
             NavigationRow(
-                title = check.title,
+                // Marked in words, not with a padlock emoji: an emoji renders as a tofu box on some
+                // of the cheap handsets this app is most used on, and "🔒" read aloud by a screen
+                // reader is worse than nothing.
+                //
+                // The row still opens — onto the explanation of what the check finds and how to settle
+                // the same thing by hand — because a dead grey line asks for money without saying what
+                // for.
+                title = if (check.locked) "${check.title} · Premium" else check.title,
                 subtitle = check.subtitle,
                 onClick = check.onClick,
             )

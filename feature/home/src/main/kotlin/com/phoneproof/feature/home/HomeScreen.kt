@@ -18,10 +18,12 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -38,7 +40,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.MANUAL_CHECKS_TITLE
 import com.phoneproof.core.designsystem.component.decorative
@@ -64,6 +68,14 @@ fun HomeScreen(
     onOpenGuide: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenSettings: () -> Unit,
+    /**
+     * Opens Settings with the plans already in view.
+     *
+     * Separate from [onOpenSettings] because it is a different intent: one is "I want the settings", the
+     * other is "I have just been told I cannot scan and want to know what it costs". Landing the second
+     * one at the top of Settings would make somebody hunt for the thing they were just asked to buy.
+     */
+    onOpenPlans: () -> Unit = onOpenSettings,
     /**
      * Scans left on the free trial, or null when they are unlimited.
      *
@@ -172,16 +184,47 @@ fun HomeScreen(
             }
             Text(
                 text = when (freeScansLeft) {
-                    0 -> "Free trial used up — see the plans in Settings"
+                    0 -> "Free trial used up"
                     1 -> "1 scan left on the free trial"
                     else -> "$freeScansLeft scans left on the free trial"
                 },
-                // titleSmall, up from labelSmall. This was the line reported as hard to read.
-                style = MaterialTheme.typography.titleSmall,
+                // titleMedium once the trial is gone, up again from titleSmall: this is the line that has
+                // to be noticed, and it was reported twice as easy to miss. The counting-down states stay
+                // titleSmall — they are information, not a dead end, and shouting them would be nagging.
+                style = if (freeScansLeft == 0) {
+                    MaterialTheme.typography.titleMedium
+                } else {
+                    MaterialTheme.typography.titleSmall
+                },
+                fontWeight = if (freeScansLeft == 0) FontWeight.SemiBold else null,
                 color = lerp(restColour, PhoneProofTheme.colors.textPrimary, pulse),
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
             )
+
+            if (freeScansLeft == 0) {
+                // A route out of the dead end, on the screen where the dead end is.
+                //
+                // "See the plans in Settings" told someone where to go and left them to walk. This goes
+                // there, and it lands on the plans themselves rather than the top of Settings — being
+                // told to hunt for the thing you have just been asked to buy is a poor way to ask.
+                //
+                // Underlined and 48dp tall because it is the only tappable text on this screen: colour
+                // alone would not mark it as a control, and would fail for anyone who cannot see it.
+                Text(
+                    text = "Tap here to see the plans",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    textDecoration = TextDecoration.Underline,
+                    color = PhoneProofTheme.colors.accent,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .clickable(onClick = onOpenPlans)
+                        .wrapContentHeight(),
+                )
+            }
         }
 
         Text(
@@ -310,5 +353,14 @@ internal fun NavigationRow(
 data class HomeCheck(
     val title: String,
     val subtitle: String,
+    /**
+     * Whether the free trial leaves this one out.
+     *
+     * Shown rather than hidden, deliberately. A restriction nobody can see gives nobody a reason to pay,
+     * and hiding the row would also make the app look like it tests less than it does. The row stays
+     * tappable: it opens the explanation of what the check finds and how to settle the same thing by
+     * hand, which is a fairer place to ask for money than a dead grey line.
+     */
+    val locked: Boolean = false,
     val onClick: () -> Unit,
 )
