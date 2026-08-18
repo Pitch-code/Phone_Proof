@@ -115,6 +115,23 @@ fun SettingsScreen(
                     color = PhoneProofTheme.colors.textTertiary,
                 )
             }
+
+            // Who takes the money, and who can give it back.
+            //
+            // Said before the purchase rather than discovered after it, because the commonest support
+            // question about a paid app is "how do I get my money back" and the answer is not the
+            // developer. This app has no payment relationship with anyone: Play takes the payment, so
+            // Play is the only party that can reverse it.
+            //
+            // Deliberately does NOT claim purchases are non-refundable. See monetisation.md — the
+            // developer cannot make that true, Google refunds regardless of what an app says, and a
+            // false statement on the screen that asks for money is the last place this app can afford
+            // one. Do not "tighten" this wording into a no-refunds policy.
+            Text(
+                text = PURCHASE_TERMS,
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
         }
 
         if (state.entitlement.hasShopBranding) {
@@ -581,3 +598,25 @@ private val ThemeMode.description: String
         ThemeMode.LIGHT -> "The default. Easier to read in bright sunlight"
         ThemeMode.DARK -> "Kinder to the eyes indoors"
     }
+
+/**
+ * What a buyer is told about the money, before they part with it.
+ *
+ * Internal rather than inline so a test can assert what it does and does not say.
+ *
+ * Every clause here is something the developer can actually stand behind:
+ *
+ *  - Play handles the payment, so the app genuinely never sees a card.
+ *  - The app cannot issue a refund. True: there is no server, no merchant account and no payment
+ *    relationship — only Google can reverse a Google payment.
+ *  - Refund requests go to Google, and Google decides. Accurate, and it sends the request to the only
+ *    party who can act on it instead of to an inbox that cannot.
+ *  - A refund switches the features off again. Also true, and worth saying: entitlement is recomputed
+ *    from Play on every launch, so it is not a threat, it is a description.
+ *
+ * What it does not say is that purchases are non-refundable, and that omission is deliberate.
+ */
+internal const val PURCHASE_TERMS: String =
+    "One payment, taken by Google Play — this app never sees your card and cannot take or return " +
+        "money itself. Any refund is Google's decision and is requested through Google Play; if a " +
+        "purchase is refunded, the paid features switch off again."
