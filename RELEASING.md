@@ -94,7 +94,9 @@ All four values are required together. Supplying some but not all **fails the bu
 
 The Console needs these to exist before the app can be sold, and the app will not behave correctly without them:
 
-- **In-app products**, matching the ids in the code exactly: `phoneproof_premium` and `phoneproof_shop_yearly`. A missing id is not an error the app can report usefully — the billing library returns an empty product list, which looks like "nothing for sale".
+- **One in-app product**, id exactly `phoneproof_premium`, type **one-time** (not a subscription). A missing or misspelled id is not an error the app can report usefully — the billing library returns an empty product list, which simply looks like "nothing for sale".
+
+  **Do not create `phoneproof_shop_yearly`.** An earlier version of this document said to, which was wrong: the app does not offer the Shop tier, so a product for it would sit in the Console unsold and unreviewable. The reason it is not offered is worth recording, because it is a design constraint rather than unfinished work — **a Play purchase belongs to a Google account, and this app runs on the phone being inspected.** That phone is the customer's, signed in to the customer's account, so a shop's own purchase would never be recognised on it. Selling a Shop tier under those rules would be selling something that does not work. If it is ever offered, it needs a licence code the shop types in, which means a server.
 - **An internal testing track with licence testers**, or purchases cannot be tested without real money. Test purchases only work for accounts on that list.
 - **Data safety** and **privacy policy**: `docs/privacy.html` is in this repo and served from GitHub Pages.
 

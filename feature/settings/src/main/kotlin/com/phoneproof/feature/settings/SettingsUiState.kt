@@ -114,4 +114,23 @@ data class SettingsUiState(
      * decision, and saying "unavailable" for it invites someone to keep tapping and wondering.
      */
     fun isOnSale(plan: PremiumPlan): Boolean = plan.productId in BillingProducts.onSale
+
+    /**
+     * The plans worth putting on the screen: whatever is for sale, plus whatever this install already owns.
+     *
+     * Every plan used to be drawn, which meant a dealer saw a Shop card with a firm ₹999 on it, five
+     * appealing lines, and then "Not on sale yet". A price beside something that cannot be bought is a small
+     * broken promise, and it was sitting on the one screen that asks for money.
+     *
+     * Shop is not for sale because of how Play purchases work rather than because it is unfinished. A
+     * purchase belongs to a Google account, and this app runs on the phone being inspected — which is the
+     * customer's phone, signed in to the customer's account. A shop would have to sign into every customer's
+     * handset for their own purchase to be recognised. Selling that would be selling something that does not
+     * work.
+     *
+     * Owned plans stay visible so that anyone who somehow holds a Shop entitlement still sees their status
+     * rather than a screen that has forgotten about them.
+     */
+    val visiblePlans: List<PremiumPlan>
+        get() = PremiumPlan.entries.filter { isOnSale(it) || ownedPlan == it }
 }

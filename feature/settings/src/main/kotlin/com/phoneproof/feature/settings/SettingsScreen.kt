@@ -128,7 +128,7 @@ fun SettingsScreen(
             // uses that. A hardcoded offset would be wrong the moment a row above it changes height.
             modifier = Modifier.onGloballyPositioned { plansOffset = it.positionInParent().y },
         ) {
-            PremiumPlan.entries.forEach { plan ->
+            state.visiblePlans.forEach { plan ->
                 PlanCard(
                     plan = plan,
                     owned = state.ownedPlan == plan,
@@ -402,9 +402,10 @@ private fun PlanCard(
                 // Said before "unavailable", because to someone who has just paid by UPI the two look
                 // nothing alike: one is the app waiting, the other is the app refusing.
                 pending -> "Waiting for your payment to clear"
-                // Separated from "unavailable" after looking at the render: with billing working, the
-                // Shop card said "Unavailable", which is not what is happening. It is not on sale, which
-                // is a decision — and one worth stating plainly rather than leaving someone tapping.
+                // A backstop rather than the normal path now. `visiblePlans` only draws what is for sale or
+                // already owned, so this line should be unreachable — it is kept because the alternative
+                // wording for a plan that is shown but cannot be bought is "Unavailable", which sounds like
+                // a fault rather than a decision.
                 !onSale -> "Not on sale yet"
                 !purchasable -> "Unavailable"
                 else -> "Choose ${plan.title}"
