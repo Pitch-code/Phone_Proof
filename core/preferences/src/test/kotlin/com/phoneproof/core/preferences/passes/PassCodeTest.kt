@@ -76,8 +76,8 @@ class PassCodeTest {
 
         listOf(
             "pp-n6we-dkze",
-            "  PP N6WE DKZX  ",
-            "PP_N6WE_DKZX",
+            "  PP N6WE DKZE  ",
+            "PP_N6WE_DKZE",
             "N6WEDKZE",
             "ppn6wedkze",
         ).forEach { typed ->
