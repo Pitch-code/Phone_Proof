@@ -117,6 +117,49 @@ jobs:
           path: "**/build/reports/tests/"
           if-no-files-found: ignore
 
+      - name: Build the signed release bundle
+        # The AAB is what Play accepts; the APK attached to a release is for sideloading and cannot be
+        # uploaded to the Console. Tags only, because this is the one moment a private key is needed.
+        #
+        # Skips with a warning rather than failing when the secret is absent, so tagging keeps working
+        # before the upload key exists. It cannot skip *silently*: an unsigned bundle is useless, and the
+        # only thing worse than not producing it is producing one that looks fine and is rejected on upload.
+        #
+        # The keystore is a GitHub secret holding base64, because a secret is text and a keystore is not. It
+        # is written under RUNNER_TEMP, outside the workspace, so it can never be picked up by a build step
+        # or committed by accident.
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          PHONEPROOF_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          PHONEPROOF_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          PHONEPROOF_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RELEASE_KEYSTORE_BASE64:-}" ]; then
+            echo "::warning::No RELEASE_KEYSTORE_BASE64 secret, so no App Bundle was built."
+            echo "The release will carry only the sideloadable debug APK. See RELEASING.md to set the key up."
+            exit 0
+          fi
+          keystore="${RUNNER_TEMP}/upload-key.jks"
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 -d > "$keystore"
+          # Proves the secret decoded to a real keystore before Gradle reports it as a password problem.
+          keytool -list -keystore "$keystore" -storepass "$PHONEPROOF_KEYSTORE_PASSWORD" > /dev/null
+          echo "Keystore decoded and opened."
+          PHONEPROOF_KEYSTORE_FILE="$keystore" ./gradlew bundleRelease --stacktrace
+          shred -u "$keystore" 2>/dev/null || rm -f "$keystore"
+          ls -la app/build/outputs/bundle/release/
+
+      - name: Upload the App Bundle
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+          # Ignored rather than error: no key configured yet is a supported state, and the step above has
+          # already said so loudly.
+          if-no-files-found: ignore
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
@@ -150,17 +193,35 @@ jobs:
           name: app-debug-apk
           path: apk
 
-      - name: Name it after the tag
+      - name: Download the App Bundle, if one was built
+        # Absent whenever no upload key is configured, which must not fail the release: the sideloadable
+        # APK is still worth publishing on its own.
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release-aab
+          path: apk
+
+      - name: Name them after the tag
         # app-debug.apk tells whoever downloads it nothing about which build they have.
         run: |
           set -euo pipefail
           mv apk/app-debug.apk "apk/phoneproof-${GITHUB_REF_NAME}.apk"
+          # Only present when the bundle was built. Named to say plainly that this one is not installable,
+          # because an .aab looks like just another download and Android will refuse to open it.
+          if [ -f apk/app-release.aab ]; then
+            mv apk/app-release.aab "apk/phoneproof-${GITHUB_REF_NAME}-for-play-upload.aab"
+          fi
           ls -la apk/
 
-      - name: Attach it
+      - name: Attach them
         uses: softprops/action-gh-release@v2
         with:
-          files: apk/*.apk
-          fail_on_unmatched_files: true
+          files: |
+            apk/*.apk
+            apk/*.aab
+          # False because the .aab line matches nothing until an upload key exists, and a release with the
+          # APK attached is still exactly what it was before.
+          fail_on_unmatched_files: false
           # The release is usually created before the tag is pushed, and this must not blank its notes.
           append_body: false
