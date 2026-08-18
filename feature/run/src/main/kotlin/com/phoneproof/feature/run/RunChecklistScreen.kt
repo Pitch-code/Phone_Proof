@@ -65,6 +65,17 @@ fun RunChecklistScreen(
     onSkip: (RunStep) -> Unit,
     onSeeVerdict: () -> Unit,
     modifier: Modifier = Modifier,
+    /**
+     * Step ids the buyer's tier does not include, so the checklist can say so before they start.
+     *
+     * Passed in rather than looked up here, because the checklist has to stay renderable without a
+     * `Context` — that is what lets the screenshot tests draw a half-finished run.
+     *
+     * Marked, not removed. A buyer standing in front of a seller should meet no surprises: without this
+     * the run simply presented every step as available and produced a paywall five separate times,
+     * mid-inspection, which is the worst moment in the app to ask anyone for money.
+     */
+    lockedStepIds: Set<String> = emptySet(),
 ) {
     Column(
         modifier = modifier
@@ -78,13 +89,17 @@ fun RunChecklistScreen(
         Spacer(Modifier.height(16.dp))
 
         if (!state.active) {
-            BeforeYouStart(onStart = onStart)
+            BeforeYouStart(
+                onStart = onStart,
+                lockedCount = RunPlan.steps.count { it.id in lockedStepIds },
+            )
         } else {
             RunInProgress(
                 state = state,
                 onOpenStep = onOpenStep,
                 onSkip = onSkip,
                 onSeeVerdict = onSeeVerdict,
+                lockedStepIds = lockedStepIds,
             )
         }
 
@@ -101,7 +116,7 @@ fun RunChecklistScreen(
  * room was too loud has already produced a confident wrong answer.
  */
 @Composable
-private fun BeforeYouStart(onStart: () -> Unit) {
+private fun BeforeYouStart(onStart: () -> Unit, lockedCount: Int) {
     Text(
         text = "Test this phone",
         style = MaterialTheme.typography.displaySmall,
@@ -120,7 +135,7 @@ private fun BeforeYouStart(onStart: () -> Unit) {
     val conditions = RunCondition.entries.filter { condition ->
         RunPlan.steps.any { condition in it.needs }
     }
-    if (conditions.isNotEmpty()) {
+    if (conditions.isNotEmpty() || lockedCount > 0) {
         SectionLabel("Before you start")
         Column(
             modifier = Modifier
@@ -135,6 +150,17 @@ private fun BeforeYouStart(onStart: () -> Unit) {
                 AdviceLine(
                     "The last few steps need the seller: what the advert claimed, and the IMEI " +
                         "read off the phone.",
+                )
+            }
+            if (lockedCount > 0) {
+                // Said here, once, rather than discovered five times in front of a seller. It also names
+                // the way out that costs nothing, because every one of these steps can be settled by hand
+                // and each says how.
+                AdviceLine(
+                    "$lockedCount of these ${nounFor(lockedCount, "step")} " +
+                        "${if (lockedCount == 1) "needs" else "need"} Premium. Skip " +
+                        "${if (lockedCount == 1) "it" else "them"} if you like — each one shows you how " +
+                        "to check the same thing by hand.",
                 )
             }
         }
@@ -175,6 +201,7 @@ private fun RunInProgress(
     onOpenStep: (RunStep) -> Unit,
     onSkip: (RunStep) -> Unit,
     onSeeVerdict: () -> Unit,
+    lockedStepIds: Set<String>,
 ) {
     val next = state.nextStep
 
@@ -193,6 +220,7 @@ private fun RunInProgress(
             total = state.steps.size,
             onOpen = { onOpenStep(next) },
             onSkip = { onSkip(next) },
+            locked = next.id in lockedStepIds,
         )
     }
 
@@ -238,6 +266,7 @@ private fun RunInProgress(
             worstOutcome = state.worstOutcomeOf(step.id),
             isNext = step.id == next?.id,
             onClick = { onOpenStep(step) },
+            locked = step.id in lockedStepIds,
         )
     }
 }
@@ -294,6 +323,7 @@ private fun CurrentStepCard(
     total: Int,
     onOpen: () -> Unit,
     onSkip: () -> Unit,
+    locked: Boolean,
 ) {
     Column(
         modifier = Modifier
@@ -318,6 +348,13 @@ private fun CurrentStepCard(
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Tag(labelFor(step.effort))
             Tag("about ${secondsLabel(step.typicalSeconds)}")
+            // A tag here rather than "· Premium" appended to the title, which is how the list rows and the
+            // checks screen mark it. The title above is a ScreenTitle — a TalkBack heading — and appending
+            // to it would have the screen announce itself as "Vibration · Premium", which is a strange
+            // thing for a page to be called. The card already has a row for what this step costs you.
+            if (locked) {
+                Tag("Premium")
+            }
         }
 
         step.needs.forEach { condition -> AdviceLine(adviceFor(condition)) }
@@ -334,11 +371,18 @@ private fun CurrentStepCard(
             ),
         ) {
             Text(
-                text = when (step.effort) {
-                    StepEffort.AUTOMATIC -> "Run it"
-                    StepEffort.HANDS_ON -> "Start this test"
-                    StepEffort.ASK_THE_SELLER -> "Open it"
-                    StepEffort.LOOK_YOURSELF -> "Show me what to look for"
+                // "Run it" on a locked step would be a lie: the tap produces a paywall, not a
+                // measurement. What is behind it is a real explanation — what the check finds, and how to
+                // settle the same thing by hand — so the button promises that instead.
+                text = if (locked) {
+                    "See what this finds"
+                } else {
+                    when (step.effort) {
+                        StepEffort.AUTOMATIC -> "Run it"
+                        StepEffort.HANDS_ON -> "Start this test"
+                        StepEffort.ASK_THE_SELLER -> "Open it"
+                        StepEffort.LOOK_YOURSELF -> "Show me what to look for"
+                    }
                 },
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -363,6 +407,7 @@ private fun StepRow(
     worstOutcome: CheckOutcome?,
     isNext: Boolean,
     onClick: () -> Unit,
+    locked: Boolean,
 ) {
     Row(
         modifier = Modifier
@@ -389,7 +434,10 @@ private fun StepRow(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
-                text = step.title,
+                // Same "· Premium" as the checks list, on purpose: it is the same kind of thing in the same
+                // kind of list, and a buyer should only have to learn one marker. In words rather than a
+                // padlock emoji, which is a tofu box on cheap handsets and meaningless read aloud.
+                text = if (locked) "${step.title} · Premium" else step.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = if (status == RunStepStatus.PENDING) {
                     PhoneProofTheme.colors.textPrimary
