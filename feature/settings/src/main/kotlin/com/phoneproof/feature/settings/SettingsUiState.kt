@@ -2,6 +2,7 @@ package com.phoneproof.feature.settings
 
 import androidx.compose.runtime.Immutable
 import com.phoneproof.core.designsystem.theme.ThemeMode
+import com.phoneproof.core.billing.BillingProducts
 import com.phoneproof.core.preferences.Entitlement
 
 /**
@@ -79,4 +80,38 @@ data class SettingsUiState(
     /** Scans left on the free trial, or null when unlimited. Shown on the free-trial card. */
     val freeScansLeft: Int? = null,
     val ownedPlan: PremiumPlan? = null,
-)
+    /**
+     * Prices exactly as Play states them, keyed by product id.
+     *
+     * Play is the only authoritative source: prices vary by country, tax and promotion, and a hardcoded
+     * figure disagreeing with the checkout sheet is a policy problem as well as a support burden. The
+     * constants on [PremiumPlan] are a fallback for when Play has not answered yet.
+     */
+    val playPrices: Map<String, String> = emptyMap(),
+    /**
+     * Products the user has started paying for and Play has not settled.
+     *
+     * Not a rare case: UPI and net-banking are ordinary in India and routinely sit pending for minutes.
+     * Without showing it, someone who has just paid sees "Free trial" and reasonably concludes the payment
+     * failed — and the usual response to that is to pay a second time.
+     */
+    val pendingProductIds: List<String> = emptyList(),
+) {
+    /** What to print on a plan card: Play's price when known, the built-in one until then. */
+    fun priceOf(plan: PremiumPlan): String = playPrices[plan.productId] ?: plan.price
+
+    fun isPending(plan: PremiumPlan): Boolean = plan.productId in pendingProductIds
+
+    /** Only products actually on sale can be bought, and only when Play answered. */
+    fun isPurchasable(plan: PremiumPlan): Boolean =
+        billingAvailable && isOnSale(plan) && ownedPlan != plan
+
+    /**
+     * Whether this tier is offered at all.
+     *
+     * Distinct from [isPurchasable] because the two mean different things to a reader. "Unavailable" is
+     * about the app not being able to take payments; a tier that is deliberately not sold yet is a
+     * decision, and saying "unavailable" for it invites someone to keep tapping and wondering.
+     */
+    fun isOnSale(plan: PremiumPlan): Boolean = plan.productId in BillingProducts.onSale
+}

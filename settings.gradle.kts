@@ -55,6 +55,7 @@ include(":core:permissions")
 // Audio capture: the AudioRecord/AudioTrack layer feeding checks:media.
 include(":core:media")
 include(":core:device")
+include(":core:billing")
 include(":core:preferences")
 include(":core:sensors")
 include(":core:reports")

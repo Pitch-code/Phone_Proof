@@ -95,6 +95,7 @@ dependencies {
     implementation(project(":feature:emilock"))
     implementation(project(":feature:scan"))
     implementation(project(":feature:storagespeed"))
+    implementation(project(":core:billing"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:reports"))
     implementation(project(":feature:screentest"))
