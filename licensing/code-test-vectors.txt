@@ -1,0 +1,65 @@
+# Pass-code test vectors. ONE source of truth for two implementations.
+#
+# PassCode.kt in the Android app reads codes; the licence Worker issues them. Two
+# implementations of one checksum drift, and the failure is silent and awful: a code the
+# buyer paid for that the app calls invalid, while they stand in front of a seller.
+#
+# Algorithm: Crockford Base32 alphabet, 7 payload characters plus 1 check character.
+#   check = ALPHABET[ sum(value(c[i]) * (2i+1)) mod 32 ]
+# The weights are ODD deliberately - see PassCode.checkCharacter for why, and for what it costs.
+#
+# Regenerate only when the algorithm changes deliberately. Never edit one line to make an
+# implementation agree with itself.
+#
+# Format:  <input>  <TAB>  VALID|INVALID  <TAB>  <canonical body, or ->
+
+# --- Valid codes, canonical form ------------------------------------------------
+PP-N6WE-DKZE	VALID	N6WEDKZE
+PP-PEHF-60HH	VALID	PEHF60HH
+PP-W76A-VDXG	VALID	W76AVDXG
+PP-DTY0-ED1B	VALID	DTY0ED1B
+PP-EBT1-NEX8	VALID	EBT1NEX8
+PP-K26E-7YXV	VALID	K26E7YXV
+PP-ECR2-1Q4J	VALID	ECR21Q4J
+PP-4GNW-S141	VALID	4GNWS141
+PP-FPZC-17VN	VALID	FPZC17VN
+PP-9HER-6KWX	VALID	9HER6KWX
+PP-HDYZ-XZM5	VALID	HDYZXZM5
+PP-A8BM-MT7J	VALID	A8BMMT7J
+
+# --- The same code, typed the way people actually type it -----------------------
+N6WEDKZE	VALID	N6WEDKZE
+pp-N6WE-dkze	VALID	N6WEDKZE
+  PP N6WE DKZE  	VALID	N6WEDKZE
+PP_N6WE_DKZE	VALID	N6WEDKZE
+
+# --- Crockford substitutions: O reads as 0, I and L read as 1 ------------------
+PP-PEHF-6OHH	VALID	PEHF60HH
+PP-DTYO-ED1B	VALID	DTY0ED1B
+PP-DTY0-EDLB	VALID	DTY0ED1B
+PP-EBTI-NEX8	VALID	EBT1NEX8
+PP-ECR2-LQ4J	VALID	ECR21Q4J
+PP-4GNW-SL4L	VALID	4GNWS141
+
+# --- One character wrong: every one of these is caught, by design ---------------
+PP-W6WE-DKZE	INVALID	-
+PP-XEHF-60HH	INVALID	-
+PP-376A-VDXG	INVALID	-
+PP-MTY0-ED1B	INVALID	-
+PP-NBT1-NEX8	INVALID	-
+PP-T26E-7YXV	INVALID	-
+
+# --- Adjacent characters swapped -----------------------------------------------
+PP-6NWE-DKZE	INVALID	-
+PP-EPHF-60HH	INVALID	-
+PP-7W6A-VDXG	INVALID	-
+PP-TDY0-ED1B	INVALID	-
+
+# --- Wrong shape ---------------------------------------------------------------
+	INVALID	-	# empty
+PP	INVALID	-	# prefix only
+PP-ABC-DEF	INVALID	-	# seven characters
+PP-ABCD-EFGHJ	INVALID	-	# nine characters
+PP-ABCD-EFGU	INVALID	-	# U is not in the alphabet
+PP-ABCD-EFG!	INVALID	-	# punctuation
+QQ-ABCD-EFGH	INVALID	-	# wrong prefix
