@@ -26,13 +26,22 @@ class SettingsScreenshotTest {
     private val outputDir: String =
         System.getProperty("phoneproof.screenshotDir") ?: "build/screenshots"
 
+    /**
+     * A made-up version, on purpose, and not updated when the real one changes.
+     *
+     * These renders would otherwise churn on every release for no review value. Kept obviously fake so that
+     * a reviewer reading "0.1.0" here does not conclude the version wiring has regressed - the real version
+     * comes from version.properties and is asserted against BuildConfig by AppVersionTest.
+     */
+    private val FIXTURE_VERSION = "0.1.0"
+
     private fun render(name: String, themeMode: ThemeMode) {
         composeRule.setContent {
             PhoneProofTheme(themeMode = themeMode) {
                 SettingsScreen(
                     state = SettingsUiState(
                         themeMode = themeMode,
-                        versionName = "0.1.0",
+                        versionName = FIXTURE_VERSION,
                         versionCode = 1L,
                         billingAvailable = false,
                         // Set, because a free-trial user always has a count — the route computes it
@@ -89,7 +98,7 @@ class SettingsScreenshotTest {
                 SettingsScreen(
                     state = SettingsUiState(
                         themeMode = ThemeMode.LIGHT,
-                        versionName = "0.1.0",
+                        versionName = FIXTURE_VERSION,
                         versionCode = 1,
                         billingAvailable = true,
                         entitlement = Entitlement.FREE,
@@ -127,7 +136,7 @@ class SettingsScreenshotTest {
                 SettingsScreen(
                     state = SettingsUiState(
                         themeMode = ThemeMode.DARK,
-                        versionName = "0.1.0",
+                        versionName = FIXTURE_VERSION,
                         versionCode = 1,
                         billingAvailable = false,
                         entitlement = Entitlement.SHOP,
