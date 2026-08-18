@@ -353,5 +353,14 @@ internal fun NavigationRow(
 data class HomeCheck(
     val title: String,
     val subtitle: String,
+    /**
+     * Whether the free trial leaves this one out.
+     *
+     * Shown rather than hidden, deliberately. A restriction nobody can see gives nobody a reason to pay,
+     * and hiding the row would also make the app look like it tests less than it does. The row stays
+     * tappable: it opens the explanation of what the check finds and how to settle the same thing by
+     * hand, which is a fairer place to ask for money than a dead grey line.
+     */
+    val locked: Boolean = false,
     val onClick: () -> Unit,
 )

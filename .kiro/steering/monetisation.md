@@ -120,6 +120,58 @@ The free-scan counter is local, so a factory reset or clearing app data returns 
 **Leave it.** Closing that gap needs accounts or a server, and the machinery would cost more trust than
 the leaked scans are worth — while to the user, getting their trial back after a reset reads as fair.
 
+## Which individual checks the trial leaves out
+
+Asked for by the product owner, who was right about the gap: until now the **only** thing the free trial
+restricted was the instant scan. All twelve individual check screens were ungated — unlimited, forever —
+so "run everything, then uninstall" was not a worry, it was the actual behaviour.
+
+### The rule they were chosen by
+
+**Lock what a buyer wants to see. Never lock what protects them.**
+
+A locked row has to create a genuine wish to pay, and the honest lever is *completeness*: a list with
+three rows marked Premium is an itch. The dishonest lever is *fear* — withholding the test that would
+have caught an expensive fault so the buyer pays out of worry.
+
+The second one is not available here, and not only on ethical grounds. If someone buys a phone with a
+dead earpiece because this app hid the earpiece test behind ₹99, the app has done more harm than not
+existing — and the rule two sections above already forbids it.
+
+So every locked check shares one property: **a buyer can establish the same thing with their own hands
+in under a minute.** Locking them withholds convenience and a satisfying number, never protection. Each
+paywall says out loud how to get the answer for free, which costs a sale occasionally and is the
+difference between a limit and a hostage.
+
+### Locked
+
+| Check | Why it is safe to lock |
+|---|---|
+| Fingers at once | How many points the digitiser tracks is a spec, not a fault. Dead patches — which *are* a fault, and miserable — are found by the touch test, which stays free. |
+| Wi-Fi and Bluetooth | Ten seconds with the two toggles tells a buyer the same thing. |
+| Vibration | A finger on the back of the phone settles it, and the check's own advice already says "trust your fingers, not this number". |
+
+### Free, and to stay that way
+
+Every one of these finds something expensive that a buyer **cannot** establish by hand in a shop:
+charging (a loose socket), remote lock (a lender who can brick it), IMEI (stolen), touch response (dead
+strips), dead pixels and burn-in, microphone/earpiece/speaker, cameras and flashlight, sensors (a dead
+proximity sensor ends calls against a cheek), and storage speed (recycled flash).
+
+Volume buttons stay free too, for a different reason: a buyer can just press them, so locking it would
+add an itch while withholding nothing — pettiness rather than a business model.
+
+`PaidChecksTest` pins the locked set exactly **and** asserts each protective check by name, so promoting
+one into the paid set fails with a test name that explains why it is wrong.
+
+### The lock is visible
+
+Locked rows are marked "· Premium" in the checks list and still open — onto an explanation of what the
+check finds and how to settle the same thing by hand. Hidden restrictions give nobody a reason to pay and
+make the app look like it measures less than it does; a dead grey row asks for money without saying what
+for. Marked in words rather than a padlock emoji, which renders as a tofu box on cheap handsets and is
+meaningless to a screen reader.
+
 ## Refunds: what is said, and what was declined
 
 The product owner asked for **no refund option, stated when someone takes Premium or Shop**. The first

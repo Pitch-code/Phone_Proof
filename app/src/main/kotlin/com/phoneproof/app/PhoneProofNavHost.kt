@@ -2,45 +2,46 @@ package com.phoneproof.app
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.PaidChecks
 import com.phoneproof.core.preferences.SettingsRepository
 import com.phoneproof.core.run.RunSession
-import com.phoneproof.feature.diagnostics.DiagnosticsRoute
-import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.audiotest.AudioTestRoute
 import com.phoneproof.feature.buttons.VolumeButtonsRoute
 import com.phoneproof.feature.cameratest.CameraTestRoute
 import com.phoneproof.feature.charging.ChargingRoute
-import com.phoneproof.feature.radios.RadiosRoute
 import com.phoneproof.feature.claims.ClaimsRoute
+import com.phoneproof.feature.diagnostics.DiagnosticsRoute
+import com.phoneproof.feature.emilock.EmiLockRoute
 import com.phoneproof.feature.guide.GuideRoute
 import com.phoneproof.feature.home.ChecksScreen
 import com.phoneproof.feature.home.HomeCatalogue
 import com.phoneproof.feature.home.HomeCheck
 import com.phoneproof.feature.home.HomeScreen
 import com.phoneproof.feature.imei.ImeiRoute
+import com.phoneproof.feature.radios.RadiosRoute
 import com.phoneproof.feature.reports.CompareRoute
 import com.phoneproof.feature.reports.ReportDetailRoute
 import com.phoneproof.feature.reports.ReportsRoute
 import com.phoneproof.feature.run.RunRoute
 import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
-import com.phoneproof.feature.storagespeed.StorageSpeedRoute
-import com.phoneproof.feature.sensortest.SensorTestRoute
-import com.phoneproof.feature.vibration.VibrationRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
+import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.settings.SettingsRoute
+import com.phoneproof.feature.storagespeed.StorageSpeedRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
+import com.phoneproof.feature.vibration.VibrationRoute
 
 /**
  * Every destination in the app.
@@ -169,6 +170,9 @@ fun PhoneProofNavHost(
                     HomeCheck(
                         title = entry.title,
                         subtitle = entry.subtitle,
+                        // Marked from the same list the gate reads, so the padlock on the row and the
+                        // paywall behind it cannot disagree.
+                        locked = PaidChecks.requiresPremium(entry.route) && !entitlement.hasPremiumExtras,
                         onClick = { navController.navigateToCheck(entry.route) },
                     )
                 },
@@ -215,10 +219,21 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.VIBRATION) {
-            VibrationRoute(
-                onResults = { runSession.record(Routes.VIBRATION, it) },
+            PaidCheckGate(
+                route = Routes.VIBRATION,
+                title = "Vibration",
+                whatItFinds = "This measures the buzz with the accelerometer and puts a number on it, " +
+                    "so nobody has to be asked whether they felt something.",
+                doItYourself = "Put a finger on the back of the phone and set a one-minute alarm. " +
+                    "This check's own advice says to trust your fingers over its number anyway.",
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                VibrationRoute(
+                    onResults = { runSession.record(Routes.VIBRATION, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.CHARGING) {
@@ -229,10 +244,21 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.RADIOS) {
-            RadiosRoute(
-                onResults = { runSession.record(Routes.RADIOS, it) },
+            PaidCheckGate(
+                route = Routes.RADIOS,
+                title = "Wi-Fi and Bluetooth",
+                whatItFinds = "This watches both radios and records, in the report, that they " +
+                    "switched on and joined a network.",
+                doItYourself = "You can settle this in ten seconds yourself: open the phone's " +
+                    "settings, turn both on, and join any network.",
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                RadiosRoute(
+                    onResults = { runSession.record(Routes.RADIOS, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.SENSORS) {
@@ -318,10 +344,21 @@ fun PhoneProofNavHost(
         }
 
         composable(Routes.MULTI_TOUCH) {
-            MultiTouchRoute(
-                onResults = { runSession.record(Routes.MULTI_TOUCH, it) },
+            PaidCheckGate(
+                route = Routes.MULTI_TOUCH,
+                title = "Fingers at once",
+                whatItFinds = "This counts how many fingers the screen can follow at the same time, " +
+                    "and shows a numbered ring under each one.",
+                doItYourself = "Dead patches on the screen are the fault that actually costs you, and " +
+                    "the touch test finds those — it stays free.",
+                onOpenSettings = { navController.navigate(Routes.SETTINGS_PLANS) },
                 modifier = Modifier.fillMaxSize(),
-            )
+            ) {
+                MultiTouchRoute(
+                    onResults = { runSession.record(Routes.MULTI_TOUCH, it) },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         composable(Routes.SCAN) {
