@@ -120,6 +120,60 @@ The free-scan counter is local, so a factory reset or clearing app data returns 
 **Leave it.** Closing that gap needs accounts or a server, and the machinery would cost more trust than
 the leaked scans are worth — while to the user, getting their trial back after a reset reads as fair.
 
+## Refunds: what is said, and what was declined
+
+The product owner asked for **no refund option, stated when someone takes Premium or Shop**. The first
+half is done. The second was declined, and the reasoning is recorded here rather than argued again.
+
+### What the purchase screen now says
+
+`PURCHASE_TERMS` in `feature:settings`, under the plan cards, before anyone pays:
+
+> One payment, taken by Google Play — this app never sees your card and cannot take or return money
+> itself. Any refund is Google's decision and is requested through Google Play; if a purchase is
+> refunded, the paid features switch off again.
+
+Every clause is something the developer can stand behind: Play takes the payment; the app genuinely
+cannot refund (no server, no merchant account, no payment relationship); refunds are Google's to give;
+and a refund really does remove access, because entitlement is recomputed from Play on every launch.
+
+It also sends the commonest support question — "how do I get my money back" — to the only party who can
+act on it, which is the practical benefit the request was after.
+
+### Why "no refunds" is not written anywhere
+
+- **The developer cannot make it true.** Google refunds Play purchases at its own discretion, and a
+  buyer can charge back through their bank regardless. An app announcing no refunds is describing a
+  policy it has no power to enforce, and the first refund Google grants makes the app a liar.
+- **Play requires accurate disclosures.** Misstating refund terms is a review risk, on the one screen
+  where a rejection is most expensive.
+- **It would be false where this app can least afford it.** The same reasoning already weakened the
+  privacy line on Home (ads mean an advertising ID does leave the device) and forced
+  `ADVISORY_TRIAL_EXCLUSION` to name the real reason a screen is locked. A paywall that misstates its
+  own terms is precisely the pattern those decisions exist to prevent.
+
+`PurchaseTermsTest` enforces both halves: the terms must name Play, must say the app cannot refund, must
+say a refund removes access — and must not contain "non-refundable", "no refunds", "all sales final" or
+any relative, nor quote a refund window, since Google's window is Google's to change.
+
+**There is no refund flow in the app, and there should never be one.** Not as a policy stance — the app
+has no way to move money, so a refund button could only ever be a dead end or a lie.
+
+If this is to be revisited, revisit it deliberately. Do not let it arrive as a tightening of wording.
+
+## A failed payment grants nothing
+
+Asked directly, so it is written down. Two independent safeguards, either sufficient on its own:
+
+1. **Only `PURCHASED` counts.** `PurchaseReconciler` filters on it, so a declined card, an abandoned
+   checkout or an expired UPI payment produces nothing to grant. There is no optimistic unlock anywhere.
+2. **The failure callback never grants.** Play's purchase listener is used only as a trigger to re-ask
+   Play directly; the authoritative answer always comes from `queryPurchases()`. A spurious or malformed
+   callback therefore cannot unlock a tier.
+
+And `setEntitlement` is called from exactly one place in the billing layer, with `PaidTierWritesTest`
+failing the build if anything else anywhere writes a paid tier.
+
 ## The testing switcher must be impossible to ship
 
 Raised by the product owner: *"the TESTING ONLY section in settings should be removed when the final
