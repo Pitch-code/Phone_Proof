@@ -119,6 +119,67 @@ class PurchaseReconcilerTest {
         assertThat(result.pendingProductIds).isEmpty()
     }
 
+    // ------------------------------------------------- a payment that did not succeed unlocks nothing
+
+    @Test
+    fun a_declined_payment_unlocks_nothing() {
+        // Asked directly: does paying-but-failing enable premium? It cannot. Play reports a failed attempt
+        // through the purchases listener with a non-OK response, which becomes a Failed query — and a
+        // Failed query changes nothing, so a free user stays free.
+        val result = PurchaseReconciler.reconcile(PurchaseQuery.Failed("BILLING_UNAVAILABLE"))
+
+        assertThat(result.entitlement).isNull()
+    }
+
+    @Test
+    fun a_cancelled_checkout_unlocks_nothing() {
+        // Backing out of the Play sheet is the commonest "failure" of all.
+        val result = PurchaseReconciler.reconcile(PurchaseQuery.Failed("USER_CANCELED"))
+
+        assertThat(result.entitlement).isNull()
+        assertThat(result.toAcknowledge).isEmpty()
+    }
+
+    @Test
+    fun a_pending_payment_that_never_completes_ends_up_unlocking_nothing() {
+        // The UPI case followed through to its unhappy end. While it is pending nothing is granted; when
+        // it expires Play stops reporting it, and the next query is a successful empty one — which is the
+        // case that actively sets the tier back to free.
+        val whilePending = succeeded(purchase(state = PurchaseState.PENDING, acknowledged = false))
+        assertThat(whilePending.entitlement).isEqualTo(Entitlement.FREE)
+
+        val afterItExpired = succeeded()
+        assertThat(afterItExpired.entitlement).isEqualTo(Entitlement.FREE)
+    }
+
+    @Test
+    fun a_refunded_purchase_loses_access_at_the_next_launch() {
+        // The mirror image, and the reason the tier is recomputed rather than remembered: a chargeback or
+        // a refund removes the purchase from the account, and the next successful query says so.
+        val beforeRefund = succeeded(purchase())
+        assertThat(beforeRefund.entitlement).isEqualTo(Entitlement.PREMIUM)
+
+        val afterRefund = succeeded()
+        assertThat(afterRefund.entitlement).isEqualTo(Entitlement.FREE)
+    }
+
+    @Test
+    fun nothing_short_of_a_completed_purchase_grants_anything() {
+        // Stated as a property over every state Play can report, so a new state added to the enum cannot
+        // default into granting access. This is the guarantee behind the question "what if the payment
+        // failed" — there is no optimistic grant anywhere, for any tier.
+        PurchaseState.entries
+            .filter { it != PurchaseState.PURCHASED }
+            .forEach { state ->
+                for (productId in BillingProducts.recognised) {
+                    val result = succeeded(purchase(productId = productId, state = state))
+
+                    assertThat(result.entitlement).isEqualTo(Entitlement.FREE)
+                    assertThat(result.toAcknowledge).isEmpty()
+                }
+            }
+    }
+
     // --------------------------------------------------------------- acknowledgement, or Play refunds it
 
     @Test
