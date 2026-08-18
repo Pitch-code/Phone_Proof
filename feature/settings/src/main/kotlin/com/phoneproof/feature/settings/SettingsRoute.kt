@@ -35,6 +35,8 @@ fun SettingsRoute(
     versionName: String,
     versionCode: Long,
     onOpenDiagnostics: () -> Unit,
+    /** True when the buyer arrived from the "tap here to see the plans" line on Home. */
+    focusPlans: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -182,6 +184,7 @@ fun SettingsRoute(
                 repository.setShopLogoPath(null)
             }
         },
+        focusPlans = focusPlans,
         onChoosePlan = { plan ->
             // Play owns the checkout sheet, the price and the payment method. The result does not come
             // back from here — it arrives on purchaseUpdates, which is why a pending UPI payment is

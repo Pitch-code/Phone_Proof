@@ -60,6 +60,14 @@ internal object Routes {
     const val STORAGE_SPEED = "storage-speed"
     const val DIAGNOSTICS = "diagnostics"
     const val SETTINGS = "settings"
+
+    /**
+     * Settings, arriving at the plans.
+     *
+     * A separate route rather than an argument on [SETTINGS] so that `launchSingleTop` still treats the
+     * two as one destination while the intent stays readable at the call site.
+     */
+    const val SETTINGS_PLANS = "settings?focus=plans"
     const val REPORTS = "reports"
     const val SCREEN_PATTERNS = "screen-patterns"
     const val GUIDE = "guide"
@@ -137,6 +145,9 @@ fun PhoneProofNavHost(
                 onOpenGuide = { navController.navigate(Routes.GUIDE) },
                 onOpenReports = { navController.navigate(Routes.REPORTS) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                // Lands on the plans, not the top of Settings. Someone who has just been told the trial
+                // is used up should not have to hunt for what it costs.
+                onOpenPlans = { navController.navigate(Routes.SETTINGS_PLANS) },
                 // null for a paid tier, so no counter is shown at all rather than a limit that does
                 // not apply. coerceAtLeast guards a stored count above the limit, which would
                 // otherwise render as a negative number of scans left.
