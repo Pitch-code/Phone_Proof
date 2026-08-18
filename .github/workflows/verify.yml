@@ -30,6 +30,30 @@ jobs:
       - name: Check out
         uses: actions/checkout@v4
 
+      - name: Check the tag matches the version in the repo
+        # Only on a tag, because only a tag publishes anything.
+        #
+        # The APK is named after the tag, and its contents are named after version.properties. Nothing used
+        # to make those agree, which is how v0.2.1, v0.3.0 and v0.4.0 were all handed out as downloads whose
+        # insides said 0.1.0. Checked before the build rather than after, so a mistyped tag fails in seconds
+        # instead of at the end of a ten-minute run.
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          declared="$(sed -n 's/^versionName=//p' version.properties | tr -d '[:space:]')"
+          tagged="${GITHUB_REF_NAME#v}"
+          if [ -z "$declared" ]; then
+            echo "::error::version.properties does not declare versionName."
+            exit 1
+          fi
+          if [ "$declared" != "$tagged" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match versionName=${declared} in version.properties."
+            echo "Publishing would hand out an APK under a version it does not carry inside."
+            echo "Either bump version.properties to ${tagged} and re-tag, or tag v${declared} instead."
+            exit 1
+          fi
+          echo "Tag ${GITHUB_REF_NAME} matches versionName=${declared}."
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:

@@ -1,7 +1,84 @@
+// Imported rather than written as java.util.Properties, which does not compile in a Kotlin DSL script:
+// the Java plugin contributes an extension accessor called `java`, so `java.util` resolves `java` to that
+// extension and then fails to find `util` on it. A confusing error for an ordinary-looking line.
+import java.io.StringReader
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+}
+
+/**
+ * The version, read from `version.properties` at the repo root rather than written here.
+ *
+ * It was `versionCode = 1` and `versionName = "0.1.0"`, hardcoded, through four tagged releases. Two
+ * consequences, both live:
+ *
+ *  - **Play would have rejected the second upload.** `versionCode` must strictly increase, and this one
+ *    never moved. That is a publishing blocker that only shows up on the second attempt, which is the
+ *    worst time to discover it.
+ *  - **Every report the app has ever written names the wrong build.** `BuildConfig.VERSION_NAME` goes into
+ *    the diagnostics log and into every saved report, so a bug report from the v0.4.0 APK says 0.1.0. A
+ *    version number that lies is worse than no version number, because it is believed.
+ *
+ * Read through `providers.fileContents` rather than `File.readText` so the configuration cache knows this
+ * build depends on the file and re-runs configuration when it changes. Reading it directly would be
+ * invisible to the cache, and the first stale build would produce an APK with the previous version in it.
+ *
+ * Located via `layout.settingsDirectory` rather than `rootProject.file(...)`: both find the same file, but
+ * this one does not reach into another project's model during configuration, which keeps the build sound
+ * under isolated projects.
+ */
+val versionNameFromFile: String =
+    providers.fileContents(layout.settingsDirectory.file("version.properties"))
+        .asText
+        .orNull
+        ?.let { text ->
+            Properties()
+                .apply { load(StringReader(text)) }
+                .getProperty("versionName")
+                ?.trim()
+        }
+        ?.takeIf { it.isNotEmpty() }
+        ?: throw GradleException(
+            "version.properties is missing from the repo root, or does not define versionName. " +
+                "It should contain a single line like: versionName=0.5.0",
+        )
+
+/**
+ * `MAJOR*10000 + MINOR*100 + PATCH`, derived rather than stored.
+ *
+ * Two numbers that must agree, both maintained by hand, eventually disagree — and the failure is silent
+ * until Play rejects the upload. Deriving one from the other removes the possibility instead of relying on
+ * whoever is releasing to remember.
+ *
+ * The ceiling on MINOR and PATCH is what makes it monotonic: without it, 1.9.0 (10900) would outrank
+ * 1.10.0 (11000)'s intended ordering only by luck, and 0.0.100 would collide with 0.1.0.
+ */
+val versionCodeFromFile: Int = run {
+    val parts = versionNameFromFile.split(".")
+    if (parts.size != 3) {
+        throw GradleException(
+            "versionName in version.properties must be MAJOR.MINOR.PATCH with no suffix; " +
+                "found '$versionNameFromFile'.",
+        )
+    }
+    val (major, minor, patch) = parts.map { part ->
+        part.toIntOrNull()?.takeIf { it >= 0 }
+            ?: throw GradleException(
+                "versionName in version.properties must be three non-negative numbers; " +
+                    "found '$versionNameFromFile'.",
+            )
+    }
+    if (minor > 99 || patch > 99) {
+        throw GradleException(
+            "MINOR and PATCH must stay under 100 so the derived versionCode keeps increasing; " +
+                "found '$versionNameFromFile'. Raise MAJOR or MINOR instead.",
+        )
+    }
+    major * 10_000 + minor * 100 + patch
 }
 
 android {
@@ -12,8 +89,8 @@ android {
         applicationId = "com.phoneproof.app"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = versionCodeFromFile
+        versionName = versionNameFromFile
     }
 
     signingConfigs {
