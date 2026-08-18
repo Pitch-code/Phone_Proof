@@ -1,3 +1,9 @@
+// Imported rather than written as java.util.Properties, which does not compile in a Kotlin DSL script:
+// the Java plugin contributes an extension accessor called `java`, so `java.util` resolves `java` to that
+// extension and then fails to find `util` on it. A confusing error for an ordinary-looking line.
+import java.io.StringReader
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -30,8 +36,8 @@ val versionNameFromFile: String =
         .asText
         .orNull
         ?.let { text ->
-            java.util.Properties()
-                .apply { load(java.io.StringReader(text)) }
+            Properties()
+                .apply { load(StringReader(text)) }
                 .getProperty("versionName")
                 ?.trim()
         }
