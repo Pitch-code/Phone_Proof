@@ -13,7 +13,13 @@ package com.phoneproof.core.preferences
  * attracts.
  */
 enum class Entitlement {
-    /** The free trial: every measurement, but a limited number of scans. See [FREE_SCAN_LIMIT]. */
+    /**
+     * The free trial: [FREE_SCAN_LIMIT] scans, and all but a few named checks.
+     *
+     * This used to read "every measurement, but a limited number of scans", which stopped being true twice
+     * over — first when the advice screens were gated, then when three measured checks were. The exact list,
+     * and the rule it was chosen by, is in [PaidChecks].
+     */
     FREE,
     PREMIUM,
     SHOP,

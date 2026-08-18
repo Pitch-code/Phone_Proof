@@ -93,11 +93,43 @@ object PaidChecks {
      */
     val routes: Set<String> = copy.keys
 
+    /**
+     * Routes the free trial also excludes, but whose paywall is drawn inside their own feature module.
+     *
+     * These predate the three above and are gated on `hasAdvisoryTools` rather than `hasPremiumExtras`:
+     * they are advice, not measurement, which is a distinction worth keeping even though both flags
+     * currently mean the same thing.
+     *
+     * They are listed here for one reason: **the row marker has to tell the truth about all of them.**
+     * Marking three rows Premium teaches a buyer that an unmarked row is free, and "Claimed against
+     * measured" was sitting in the same list, locked, unmarked — so the marker would have taught a rule the
+     * app then broke. A surprise paywall is bad; a surprise paywall directly under a screen that has been
+     * carefully labelling its paywalls is worse.
+     */
+    val advisoryRoutes: Set<String> = setOf(
+        "claims",
+        "guide",
+    )
+
     /** What to say on the paywall for [route], or null if the trial includes it. */
     fun copyFor(route: String): PaidCheckCopy? = copy[route]
 
     /** Whether [route] needs a paid tier. */
     fun requiresPremium(route: String): Boolean = route in routes
+
+    /**
+     * Whether [route] should be marked as paid in a list of checks, for someone holding [entitlement].
+     *
+     * Covers both families, because a buyer reading the list does not know or care which module happens to
+     * draw the paywall. Each is asked against the capability that actually gates it rather than against a
+     * single "is paid" flag — those two capabilities coincide today, and writing that coincidence into the
+     * code is how they would come apart without anyone noticing.
+     */
+    fun isLocked(route: String, entitlement: Entitlement): Boolean = when {
+        route in routes -> !entitlement.hasPremiumExtras
+        route in advisoryRoutes -> !entitlement.hasAdvisoryTools
+        else -> false
+    }
 
     /**
      * Whether [entitlement] may open [route].

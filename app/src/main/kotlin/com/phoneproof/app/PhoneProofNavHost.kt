@@ -170,9 +170,11 @@ fun PhoneProofNavHost(
                     HomeCheck(
                         title = entry.title,
                         subtitle = entry.subtitle,
-                        // Marked from the same list the gate reads, so the padlock on the row and the
-                        // paywall behind it cannot disagree.
-                        locked = PaidChecks.requiresPremium(entry.route) && !entitlement.hasPremiumExtras,
+                        // Marked from the same source the gates read, so the marker on the row and the
+                        // paywall behind it cannot disagree. `isLocked` rather than `requiresPremium`
+                        // because two of these rows are gated inside their own feature module, and a
+                        // buyer reading the list neither knows nor cares which one draws the paywall.
+                        locked = PaidChecks.isLocked(entry.route, entitlement),
                         onClick = { navController.navigateToCheck(entry.route) },
                     )
                 },

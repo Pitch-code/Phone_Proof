@@ -143,6 +143,51 @@ class PaidChecksTest {
     }
 
     @Test
+    fun the_row_marker_covers_every_check_the_trial_cannot_open() {
+        // The bug this prevents was live until the render was looked at: three rows were marked Premium
+        // while "Claimed against measured" sat in the same list, equally locked, unmarked — because its
+        // paywall is drawn inside its own feature module rather than by the navigation graph's gate.
+        //
+        // Marking some rows and not others is worse than marking none. An unmarked row in a list that
+        // visibly marks paid ones reads as a promise that it is free.
+        val everyLockedRoute = PaidChecks.routes + PaidChecks.advisoryRoutes
+
+        everyLockedRoute.forEach { route ->
+            assertThat(PaidChecks.isLocked(route, Entitlement.FREE)).isTrue()
+        }
+    }
+
+    @Test
+    fun the_marker_and_the_gates_agree_about_which_family_a_route_is_in() {
+        // The two families are gated on different capabilities, which happen to coincide today. Asserted
+        // separately so that if they ever stop coinciding, the failure is here rather than on a buyer's
+        // screen — a row marked Premium that opens perfectly well, or worse, the reverse.
+        assertThat(PaidChecks.requiresPremium("claims")).isFalse()
+        assertThat(PaidChecks.isLocked("claims", Entitlement.FREE)).isTrue()
+
+        assertThat(PaidChecks.requiresPremium("vibration")).isTrue()
+        assertThat(PaidChecks.isLocked("vibration", Entitlement.FREE)).isTrue()
+    }
+
+    @Test
+    fun nothing_is_marked_for_a_paid_tier() {
+        val everyLockedRoute = PaidChecks.routes + PaidChecks.advisoryRoutes
+
+        listOf(Entitlement.PREMIUM, Entitlement.SHOP).forEach { tier ->
+            everyLockedRoute.forEach { route ->
+                assertThat(PaidChecks.isLocked(route, tier)).isFalse()
+            }
+        }
+    }
+
+    @Test
+    fun a_free_check_is_never_marked() {
+        listOf("charging", "touch", "audio", "camera", "sensors", "storage-speed", "imei", "lock").forEach {
+            assertThat(PaidChecks.isLocked(it, Entitlement.FREE)).isFalse()
+        }
+    }
+
+    @Test
     fun a_free_trial_can_open_everything_else() {
         // The limit is three named checks and the scan allowance. Not a general lock on measuring.
         listOf("charging", "touch", "audio", "camera", "sensors", "storage-speed", "imei").forEach {

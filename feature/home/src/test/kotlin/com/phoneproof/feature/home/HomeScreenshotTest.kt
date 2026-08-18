@@ -113,9 +113,13 @@ class HomeScreenshotTest {
         // would wrap badly, or collide with the subtitle, on a narrow screen.
         //
         // The locked set is read from PaidChecks in the app module, which this module cannot see — so the
-        // three routes are named here. Named rather than counted: if the locked set changes, this render
-        // stops matching the app and the diff in the PNG is what says so.
-        val locked = setOf("multi-touch", "radios", "vibration")
+        // routes are named here. Named rather than counted: if the locked set changes, this render stops
+        // matching the app and the diff in the PNG is what says so.
+        //
+        // Four, not three. "Claimed against measured" is gated inside its own feature module rather than by
+        // the navigation graph, and the first version of this render left it unmarked — which is how the
+        // inconsistency was spotted: a list that marks paid rows tells a buyer an unmarked row is free.
+        val locked = setOf("multi-touch", "radios", "vibration", "claims")
 
         composeRule.setContent {
             PhoneProofTheme(themeMode = ThemeMode.DARK) {

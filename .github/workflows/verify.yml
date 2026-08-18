@@ -64,10 +64,15 @@ jobs:
         # A UI change that does not update its committed PNG means the change was never looked at.
         run: |
           set -euo pipefail
-          if ! git diff --quiet -- screenshots/; then
+          # `git status --porcelain`, not `git diff`. `git diff` only sees files git already tracks, so a
+          # brand-new screen with a brand-new render passed this gate silently — which is the one case the
+          # gate most needs to catch, a screen nobody has ever looked at. Not hypothetical: the "· Premium"
+          # marker on the checks list shipped through a green run of this exact step.
+          drift="$(git status --porcelain --untracked-files=all -- screenshots/)"
+          if [ -n "$drift" ]; then
             echo "::error::Rendered screenshots differ from the committed ones."
             echo "Run './gradlew recordRoborazziDebug', review the PNGs, and commit them."
-            git diff --stat -- screenshots/
+            echo "$drift"
             exit 1
           fi
           echo "Screenshots match the committed renders."
