@@ -46,6 +46,7 @@ import com.phoneproof.core.designsystem.theme.PhoneProofTheme
 import com.phoneproof.core.designsystem.theme.PhoneProofType
 import com.phoneproof.core.designsystem.theme.ThemeMode
 import com.phoneproof.core.preferences.Entitlement
+import com.phoneproof.core.preferences.PaidChecks
 import com.phoneproof.core.reports.ShopBranding
 
 /**
@@ -128,7 +129,7 @@ fun SettingsScreen(
             // uses that. A hardcoded offset would be wrong the moment a row above it changes height.
             modifier = Modifier.onGloballyPositioned { plansOffset = it.positionInParent().y },
         ) {
-            PremiumPlan.entries.forEach { plan ->
+            state.visiblePlans.forEach { plan ->
                 PlanCard(
                     plan = plan,
                     owned = state.ownedPlan == plan,
@@ -320,6 +321,44 @@ private fun ThemeRow(
     }
 }
 
+/**
+ * What the free trial does and does not include, in one list.
+ *
+ * Included and excluded together on purpose. Splitting them into two sections lets a reader skim only the
+ * good half, and the limit is the whole point of this card.
+ *
+ * ## The line that had to go
+ *
+ * This used to promise **"Every check runs in full — nothing is watered down"**, and that stopped being true
+ * the moment three measured checks were left out of the trial. It was the worst possible place for a stale
+ * claim: a sentence on the payment screen that the app then breaks two taps later, which turns a limit a
+ * buyer would have accepted into a small deception they discover on their own.
+ *
+ * The promise worth keeping is the *other* one — that nothing is ever degraded to sell an upgrade. A
+ * measurement is either taken properly or not offered. So that is what it says now, and the three checks the
+ * trial leaves out are named as excluded.
+ *
+ * Named from [PaidChecks] rather than typed here, so this card and the paywalls behind those checks cannot
+ * disagree. Extracted from the composable so it can be tested at all: a claim on a payment screen is worth a
+ * test, and a `listOf` buried inside a `@Composable` is only reachable through a screenshot.
+ */
+internal fun freeTrialLines(): List<Pair<Boolean, String>> {
+    val excludedChecks = PaidChecks.routes
+        .mapNotNull { PaidChecks.copyFor(it)?.title }
+        .joinToString(", ")
+
+    return listOf(
+        true to "${Entitlement.FREE_SCAN_LIMIT} full scans of a phone",
+        true to "Full results — never a watered-down number to sell you an upgrade",
+        true to "Touch grid, dead pixels and burn-in, remote lock, battery",
+        true to "Your last 2 reports, kept on the phone",
+        false to excludedChecks,
+        false to "Claimed against measured",
+        false to MANUAL_CHECKS_TITLE,
+        false to "PDF reports, comparing two phones, unlimited history",
+    )
+}
+
 @Composable
 private fun PlanCard(
     plan: PremiumPlan,
@@ -402,9 +441,10 @@ private fun PlanCard(
                 // Said before "unavailable", because to someone who has just paid by UPI the two look
                 // nothing alike: one is the app waiting, the other is the app refusing.
                 pending -> "Waiting for your payment to clear"
-                // Separated from "unavailable" after looking at the render: with billing working, the
-                // Shop card said "Unavailable", which is not what is happening. It is not on sale, which
-                // is a decision — and one worth stating plainly rather than leaving someone tapping.
+                // A backstop rather than the normal path now. `visiblePlans` only draws what is for sale or
+                // already owned, so this line should be unreachable — it is kept because the alternative
+                // wording for a plan that is shown but cannot be bought is "Unavailable", which sounds like
+                // a fault rather than a decision.
                 !onSale -> "Not on sale yet"
                 !purchasable -> "Unavailable"
                 else -> "Choose ${plan.title}"
@@ -522,17 +562,7 @@ private fun FreeTrialCard(active: Boolean, scansLeft: Int?) {
             )
         }
 
-        // Included and not included, in one list. Splitting them into two sections lets a reader
-        // skim only the good half, and the limit is the whole point of this card.
-        listOf(
-            true to "${Entitlement.FREE_SCAN_LIMIT} full scans of a phone",
-            true to "Every check runs in full — nothing is watered down",
-            true to "Touch grid, dead pixels and burn-in, remote lock, battery",
-            true to "Your last 2 reports, kept on the phone",
-            false to "Claimed against measured",
-            false to MANUAL_CHECKS_TITLE,
-            false to "PDF reports, comparing two phones, unlimited history",
-        ).forEach { (included, text) ->
+        freeTrialLines().forEach { (included, text) ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     text = if (included) "✓" else "✕",
