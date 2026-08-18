@@ -345,8 +345,19 @@ fun PhoneProofNavHost(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE.toLong(),
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
-                // Only a debug build can switch tiers by hand. Read here rather than inside the
-                // feature module so a release build has no code path to the switcher at all.
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        // The same screen, arriving at the plans. Reached from the "tap here to see the plans" line on
+        // Home, which only appears once the trial is used up — at which point being dropped at the top of
+        // Settings means hunting for the thing you were just asked to buy.
+        composable(Routes.SETTINGS_PLANS) {
+            SettingsRoute(
+                versionName = BuildConfig.VERSION_NAME,
+                versionCode = BuildConfig.VERSION_CODE.toLong(),
+                onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                focusPlans = true,
                 modifier = Modifier.fillMaxSize(),
             )
         }
