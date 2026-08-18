@@ -1,6 +1,7 @@
 // Imported rather than written as java.util.Properties, which does not compile in a Kotlin DSL script:
 // the Java plugin contributes an extension accessor called `java`, so `java.util` resolves `java` to that
 // extension and then fails to find `util` on it. A confusing error for an ordinary-looking line.
+import java.io.File
 import java.io.StringReader
 import java.util.Properties
 
@@ -81,6 +82,62 @@ val versionCodeFromFile: Int = run {
     major * 10_000 + minor * 100 + patch
 }
 
+/**
+ * Release signing credentials, supplied by the environment and never by the repository.
+ *
+ * Four values, each read from an environment variable first and then from `keystore.properties` at the repo
+ * root — which is git-ignored, and is the convenient way to do it on your own machine. CI uses the
+ * environment, because that is what a GitHub secret arrives as.
+ *
+ * Read through `providers.environmentVariable` rather than `System.getenv` so the configuration cache
+ * records them as inputs. With `System.getenv` a cached configuration would keep the *first* run's
+ * credentials, and rotating the key would silently keep signing with the old one until someone ran
+ * `--no-configuration-cache`.
+ */
+val releaseSigningValues: Map<String, String?> = run {
+    val fromFile = providers.fileContents(layout.settingsDirectory.file("keystore.properties"))
+        .asText
+        .orNull
+        ?.let { text -> Properties().apply { load(StringReader(text)) } }
+
+    fun value(environmentVariable: String, propertyName: String): String? =
+        providers.environmentVariable(environmentVariable).orNull?.takeIf { it.isNotBlank() }
+            ?: fromFile?.getProperty(propertyName)?.takeIf { it.isNotBlank() }
+
+    mapOf(
+        "storeFile" to value("PHONEPROOF_KEYSTORE_FILE", "storeFile"),
+        "storePassword" to value("PHONEPROOF_KEYSTORE_PASSWORD", "storePassword"),
+        "keyAlias" to value("PHONEPROOF_KEY_ALIAS", "keyAlias"),
+        "keyPassword" to value("PHONEPROOF_KEY_PASSWORD", "keyPassword"),
+    )
+}
+
+/**
+ * Whether there is a complete set of credentials to sign with.
+ *
+ * Absent entirely is a normal, supported state: every push builds the release variant to prove it compiles
+ * and shrinks, and no contributor should need a private key to do that. The build stays unsigned then.
+ *
+ * A *partial* set is not normal, and fails the build rather than falling through to unsigned. That is the
+ * trap worth closing: a mistyped secret name would otherwise produce a green tag build and an unsigned
+ * bundle, and the first sign of trouble would be Play rejecting the upload — long after the point where the
+ * mistake could be understood.
+ */
+val hasReleaseSigning: Boolean = run {
+    val present = releaseSigningValues.filterValues { it != null }.keys
+    when (present.size) {
+        0 -> false
+        releaseSigningValues.size -> true
+        else -> throw GradleException(
+            "Release signing is half-configured. Present: ${present.sorted()}. " +
+                "Missing: ${(releaseSigningValues.keys - present).sorted()}. " +
+                "Supply all four (PHONEPROOF_KEYSTORE_FILE, PHONEPROOF_KEYSTORE_PASSWORD, " +
+                "PHONEPROOF_KEY_ALIAS, PHONEPROOF_KEY_PASSWORD) or none. Signing with an incomplete set is " +
+                "not possible, and quietly producing an unsigned release would only be discovered by Play.",
+        )
+    }
+}
+
 android {
     namespace = "com.phoneproof.app"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -121,6 +178,28 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+
+        // Created only when there is something to put in it. An empty signingConfig that AGP then tries to
+        // use produces "storeFile must not be null" from deep inside the signing task, which says nothing
+        // about the actual problem.
+        if (hasReleaseSigning) {
+            create("release") {
+                val path = releaseSigningValues.getValue("storeFile")!!
+                // Absolute in CI, where the keystore is decoded into a temporary directory. A relative path
+                // is resolved against the repo root rather than against app/, because that is where anyone
+                // typing one into keystore.properties would expect it to start from.
+                storeFile = File(path).takeIf { it.isAbsolute }
+                    ?: layout.settingsDirectory.file(path).asFile
+
+                storePassword = releaseSigningValues.getValue("storePassword")
+                keyAlias = releaseSigningValues.getValue("keyAlias")
+                keyPassword = releaseSigningValues.getValue("keyPassword")
+
+                // Signature scheme versions are left at AGP's defaults, which it picks from minSdk. This is
+                // minSdk 26, so v2 covers every device that can install the app and v1 JAR signing would
+                // only add weight. Play App Signing re-signs for distribution anyway.
+            }
+        }
     }
 
     buildTypes {
@@ -135,7 +214,14 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Signing config is intentionally absent. Keystores never enter this repo.
+            // Signed when credentials are supplied, unsigned otherwise. The keystore itself still never
+            // enters this repo: only the four values above, and only from the environment or from
+            // git-ignored keystore.properties.
+            //
+            // Left unsigned rather than failing, because `assembleRelease` runs on every push purely to
+            // prove the release variant compiles and survives R8. Requiring a private key for that would
+            // mean the shrinker was only ever exercised at release time, which is the opposite of useful.
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else null
         }
     }
 
