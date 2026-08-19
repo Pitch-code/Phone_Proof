@@ -156,6 +156,40 @@ class HomeScreenshotTest {
         render("home-6-landscape")
     }
 
+    /**
+     * Screenshots for the Play listing.
+     *
+     * `w360dp-h640dp-xxhdpi` is not an arbitrary viewport: 360×640 dp at density 3 is **1080×1920 px**,
+     * which is exactly 9:16 and clears the 1080-per-side floor Play sets for promotion eligibility. The
+     * project's ordinary renders are 822×1782, which is neither.
+     *
+     * Rendered from the real screens rather than mocked up in a design tool, so the listing cannot promise
+     * something the app does not look like. That matters more than usual here: a store screenshot is the
+     * only thing most people will ever see of this app before deciding, and a flattering fake would be
+     * found out in the first thirty seconds after install.
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun store_screenshot_of_home() {
+        render("store-1-home")
+    }
+
+    @Test
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun store_screenshot_of_the_checks_on_offer() {
+        // The breadth of the thing, which is the argument for installing it. Shown unlocked: the store
+        // listing is not the place to advertise what a buyer cannot have yet.
+        composeRule.setContent {
+            PhoneProofTheme(themeMode = ThemeMode.DARK) {
+                ChecksScreen(
+                    checks = HomeCatalogue.map { HomeCheck(it.title, it.subtitle) {} },
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/store-2-checks.png")
+    }
+
     @Test
     fun home_in_light_mode() {
         // The header gear is new and light mode has produced two real bugs in this project already.
