@@ -1,0 +1,27 @@
+# The licence server. Deployed by CI, never from a laptop.
+#
+# Free tier throughout: Workers requests and a D1 database. At the volumes this app will see for a long
+# time the running cost is zero, which was a condition of building it at all.
+
+name = "phoneproof-licence"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# Logs, so a failing redeem can be read rather than guessed at. A buyer standing in front of a seller
+# will not send a bug report; the only account of what happened is this.
+[observability]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "phoneproof-licence"
+# Filled in by the deploy workflow from the database it creates or finds, so this file holds no ids that
+# would go stale or differ between accounts.
+database_id = "PLACEHOLDER_SET_BY_CI"
+
+[vars]
+# How many inspections a pack is worth. Here rather than in code so changing the offer is a config edit
+# and shows up in a diff. The product owner's figure.
+PASSES_PER_PACK = "5"
+
+# PLAY_LICENSE_PUBLIC_KEY is a secret, set by the deploy workflow with `wrangler secret put`.

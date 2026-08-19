@@ -1,0 +1,9 @@
+{
+  "name": "phoneproof-licence",
+  "private": true,
+  "type": "module",
+  "description": "Issues and redeems PhoneProof inspection passes. See .kiro/steering/inspection-passes.md for why it exists.",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

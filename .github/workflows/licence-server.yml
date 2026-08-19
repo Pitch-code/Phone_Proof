@@ -1,0 +1,131 @@
+name: Licence server
+
+# Split into two jobs on purpose.
+#
+# The tests need nothing installed — the pass-code logic is dependency-free precisely so its arithmetic can
+# be checked with `node --test` on any branch, in seconds, before anything is deployed anywhere.
+#
+# Deploying is the opposite: it needs credentials, it changes something real, and it must only ever happen
+# from main. Nothing here runs on a pull request from a fork, because secrets are not available there and a
+# job that silently half-works is worse than one that does not run.
+on:
+  push:
+    paths: ["licensing/**", ".github/workflows/licence-server.yml"]
+  pull_request:
+    paths: ["licensing/**", ".github/workflows/licence-server.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: licence-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Check the code logic agrees with the app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Pass-code vectors
+        # The whole point of this job. The checksum exists twice, in Kotlin and here, and the failure it
+        # prevents is a code somebody paid for that the app calls invalid while a seller waits. Both halves
+        # read licensing/code-test-vectors.txt, so a drift between them fails here.
+        #
+        # No `npm ci`: there are no dependencies to install, which is why this takes seconds.
+        #
+        # An explicit glob rather than a directory. `node --test <dir>` tried to resolve the directory as a
+        # module on the version this was written against, and failed with a MODULE_NOT_FOUND that says
+        # nothing about tests. This is the exact command that was run and seen to pass.
+        working-directory: licensing/worker
+        run: node --test test/*.test.js
+
+  deploy:
+    name: Deploy the Worker
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: licence-server
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    defaults:
+      run:
+        working-directory: licensing/worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Stop early if Cloudflare is not configured
+        # A clear sentence now, rather than an authentication error from wrangler forty lines into a log.
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "::error::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID must both be set as repository secrets."
+            exit 1
+          fi
+
+      - name: Find or create the database
+        # The database id is not committed. wrangler.toml carries a placeholder, and it is filled in here
+        # from whatever this account actually has — so the file holds no id that could go stale, and the
+        # same repository works for a different Cloudflare account without an edit.
+        run: |
+          set -euo pipefail
+          name="phoneproof-licence"
+
+          id="$(npx --yes wrangler@3 d1 list --json 2>/dev/null \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+                const list = JSON.parse(s || "[]");
+                const found = list.find(d => d.name === process.argv[1]);
+                process.stdout.write(found ? (found.uuid || found.database_id || "") : "");
+              })' "$name" || true)"
+
+          if [ -z "$id" ]; then
+            echo "No database called $name yet; creating it."
+            npx --yes wrangler@3 d1 create "$name"
+            id="$(npx --yes wrangler@3 d1 list --json \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{
+                  const found = JSON.parse(s).find(d => d.name === process.argv[1]);
+                  process.stdout.write(found ? (found.uuid || found.database_id || "") : "");
+                })' "$name")"
+          fi
+
+          if [ -z "$id" ]; then
+            echo "::error::Could not determine the D1 database id."
+            exit 1
+          fi
+          echo "Using database $id"
+          sed -i "s/PLACEHOLDER_SET_BY_CI/$id/" wrangler.toml
+
+      - name: Apply migrations
+        run: npx --yes wrangler@3 d1 migrations apply phoneproof-licence --remote
+
+      - name: Give the Worker the Play licensing key
+        # A secret rather than a var, even though the key is public: it keeps every credential in one place
+        # and one habit. Piped rather than typed, because wrangler prompts interactively otherwise.
+        env:
+          PLAY_LICENSE_PUBLIC_KEY: ${{ secrets.PLAY_LICENSE_PUBLIC_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PLAY_LICENSE_PUBLIC_KEY:-}" ]; then
+            echo "::warning::No PLAY_LICENSE_PUBLIC_KEY secret. The Worker will deploy, but /issue will refuse every purchase until it is set."
+            exit 0
+          fi
+          printf '%s' "$PLAY_LICENSE_PUBLIC_KEY" | npx --yes wrangler@3 secret put PLAY_LICENSE_PUBLIC_KEY
+
+      - name: Deploy
+        run: npx --yes wrangler@3 deploy
+
+      - name: Say where it landed
+        run: |
+          echo "Deployed. Check the health endpoint on the workers.dev URL printed above:"
+          echo "  curl https://phoneproof-licence.<your-subdomain>.workers.dev/health"
