@@ -1,27 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  A phone with a pulse across it: chosen by the product owner from four candidates rendered side by
-  side at the sizes an icon is actually met at (screenshots/logo-*.png, since deleted).
+  A phone with a pulse across it. Chosen by the product owner from four candidates rendered at the
+  sizes an icon is actually met at, replacing a 3x3 grid whose dead centre cell was invisible at 24dp.
 
-  It replaces a 3x3 grid with one dead cell. That mark stated the app's idea precisely and stated it
-  to nobody: at 24dp, which is the size in a Play search result, it collapsed into a mush of white
-  squares with the red cell all but invisible. Distinctiveness is worth less than legibility for an
-  app nobody has heard of.
+  ## Geometry, and the mistake that shaped the first attempt
 
-  ## Geometry, and why these numbers
+  Body: 42 x 64 at x 33..75, y 22..86, corner 9.
 
-  Body: 32 x 60 at x 38..70, y 24..84, corner 7.
+  A launcher may mask an adaptive icon to a CIRCLE of diameter 72, so anything more than 36 from the
+  centre can be cropped. The first version of this file used a 32 x 60 body because the corner was
+  measured as hypot(w/2, h/2) - the SHARP corner. That is the wrong measurement for a rounded
+  rectangle: the farthest point sits on the corner arc, at hypot(w/2-r, h/2-r) + r. For 42 x 64 with a
+  9 radius that is 34.9, comfortably safe, where the sharp-corner estimate said 38.3 and rejected it.
 
-  Not larger, and this is the constraint that decides the whole composition: a launcher may mask an
-  adaptive icon to a CIRCLE of diameter 72, so anything more than 36 from the centre can be cropped.
-  A 34x64 body puts its corners at 36.2 and a 40x72 body at 41.2 - both would have had their corners
-  shaved off on the phones that use round icons. 32x60 sits at 34.0 and is safe.
+  The cost of that error was visible rather than theoretical: the mark sat small in a sea of
+  background and read as a battery or a domino rather than a phone. It is a third wider now.
 
-  Pulse: stroke 7, inset 5 from each side of the body, spanning x 43..65 about the centre line.
+  Pulse: stroke 8, inset 6 from each side, spanning x 39..69 about the centre line.
 
-  The inset is the fix for the reviewed version, where the line ran edge to edge and read as cramped
-  rather than deliberate. Stroke 7 rather than something finer because 7/108 is about 1.6px at 24dp,
-  and anything thinner disappears at the size that matters most.
+  Inset so the line has room rather than running edge to edge, which read as cramped. Stroke 8 because
+  8/108 is about 1.8px at 24dp, and the pulse is the only part carrying meaning - if it disappears,
+  the icon is a white slab.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -31,13 +30,13 @@
 
     <path
         android:fillColor="#FAFAFA"
-        android:pathData="M45,24h18a7,7 0 0,1 7,7v46a7,7 0 0,1 -7,7h-18a7,7 0 0,1 -7,-7V31a7,7 0 0,1 7,-7z" />
+        android:pathData="M42,22h24a9,9 0 0,1 9,9v46a9,9 0 0,1 -9,9h-24a9,9 0 0,1 -9,-9V31a9,9 0 0,1 9,-9z" />
 
     <path
         android:strokeColor="#22C55E"
-        android:strokeWidth="7"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:fillColor="#00000000"
-        android:pathData="M43,54h4l4,-8l5,15l4,-7h5" />
+        android:pathData="M39,54h4l4,-10l6,20l5,-10h6" />
 </vector>
