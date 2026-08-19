@@ -148,6 +148,40 @@ class IconPreviewTest {
         composeRule.onRoot().captureRoboImage("$outputDir/icon-sizes.png")
     }
 
+    /**
+     * The 512×512 PNG the Play Console asks for, generated rather than drawn by hand.
+     *
+     * Play needs a square bitmap for the store listing, and it is the one icon asset that cannot be a
+     * vector. Producing it here means it is built from **the same drawable that ships in the APK**, so the
+     * listing and the installed app cannot end up showing different marks — which is otherwise an easy
+     * mistake to make, and an embarrassing one, since the two are seen side by side the moment someone
+     * installs.
+     *
+     * `mdpi` is deliberate: at density 1 a 512 dp box is exactly 512 px, which is what the Console wants.
+     * No rounded corners and no transparency — Play applies its own mask, and supplying a pre-rounded icon
+     * gets it rounded twice.
+     */
+    @Test
+    @Config(qualifiers = "w512dp-h512dp-mdpi")
+    fun the_512_pixel_icon_for_the_play_listing() {
+        composeRule.setContent {
+            Box(
+                modifier = Modifier
+                    .size(512.dp)
+                    .background(LAUNCHER_BACKGROUND),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    modifier = Modifier.size(512.dp),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+        }
+        composeRule.onRoot().captureRoboImage("$outputDir/play-store-icon-512.png")
+    }
+
     private companion object {
         /** Mirrors `R.color.ic_launcher_background` (#FF0A0A0B). */
         val LAUNCHER_BACKGROUND = Color(0xFF0A0A0B)
