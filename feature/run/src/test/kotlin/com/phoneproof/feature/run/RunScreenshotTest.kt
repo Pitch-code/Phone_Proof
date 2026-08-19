@@ -171,6 +171,22 @@ class RunScreenshotTest {
         )
     }
 
+    /**
+     * The Play listing's third screenshot: a verdict with real findings on it.
+     *
+     * The most persuasive screen the app has, because it is the only one that shows the *point* — not a
+     * list of tests but an answer, with something to say to the seller. Reusing `negotiableRun()` rather
+     * than inventing a rosier state, so the listing shows a verdict the app genuinely produces.
+     *
+     * `w360dp-h640dp-xxhdpi` is 1080×1920 px, exactly 9:16, which is what Play wants and what the
+     * project's ordinary 822×1782 renders are not.
+     */
+    @Test
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun store_screenshot_of_a_verdict_with_findings() {
+        renderVerdict("store-3-verdict", negotiableRun())
+    }
+
     /** The lower half, which `onRoot` cannot see: the problem cards and the untested list. */
     @Test
     fun the_evidence_below_the_verdict() {
