@@ -129,61 +129,73 @@ class IconCandidatesTest {
     /**
      * One file per candidate, each showing that mark and nothing else.
      *
-     * Added because the comparison sheet did not answer the question a person actually asks first. Five
-     * candidates at five sizes, in colour and again in monochrome, is fifty tiles — and the reviewer's
-     * reaction was reasonable: *there are tons of images, where are the logos?* The sheet is for judging how
-     * a mark survives being shrunk, which is a second question. The first question is simply "what does it
-     * look like", and that deserves one obvious picture each.
+     * Added because the comparison sheet did not answer the question a person asks first. Five candidates at
+     * five sizes, in colour and again in monochrome, is fifty tiles — and the reviewer's reaction was
+     * reasonable: *there are tons of images, where are the logos?* The sheet is for judging how a mark
+     * survives being shrunk, which is a second question. The first is "what does it look like", and that
+     * deserves one obvious picture each.
      *
-     * Named `logo-a` … `logo-now` so they sort together in a file listing and can be opened one after another.
+     * **One test per file, not a loop.** The first attempt iterated the candidates calling `setContent` each
+     * time, which throws: a Compose test rule hosts exactly one content tree for the life of a test. Five
+     * tests is also the honest shape — each produces one artefact, so a failure names the file it broke.
      */
-    @Test
-    @Config(qualifiers = "w320dp-h360dp-xhdpi")
-    fun each_candidate_on_its_own_so_it_can_simply_be_looked_at() {
-        candidates.forEach { candidate ->
-            composeRule.setContent {
-                Box(
-                    modifier = Modifier
-                        .size(320.dp, 360.dp)
-                        .background(Color(0xFF1C1C20)),
-                    contentAlignment = Alignment.Center,
+    @Composable
+    private fun SoloPreview(candidate: Candidate) {
+        Box(
+            modifier = Modifier
+                .size(320.dp, 360.dp)
+                .background(Color(0xFF1C1C20)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                // Big enough to judge the drawing, on the real launcher background.
+                Tile(size = 192.dp, drawable = candidate.drawable, background = LAUNCHER_BACKGROUND)
+                Text(
+                    text = "${candidate.label}  —  ${candidate.pitch}",
+                    style = PhoneProofType.NumericSmall,
+                    color = Color(0xFFFAFAFA),
+                )
+                // The same mark at the size a search result gives it, so the trade-off is visible without
+                // opening a second file.
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp),
-                    ) {
-                        // Big enough to judge the drawing, on the real launcher background.
-                        Tile(
-                            size = 192.dp,
-                            drawable = candidate.drawable,
-                            background = LAUNCHER_BACKGROUND,
-                        )
-                        Text(
-                            text = "${candidate.label}  —  ${candidate.pitch}",
-                            style = PhoneProofType.NumericSmall,
-                            color = Color(0xFFFAFAFA),
-                        )
-                        // The same mark at the size a search result gives it, immediately underneath, so the
-                        // trade-off is visible without opening a second file.
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalAlignment = Alignment.Bottom,
-                        ) {
-                            listOf(24.dp, 36.dp, 48.dp).forEach { small ->
-                                Tile(
-                                    size = small,
-                                    drawable = candidate.drawable,
-                                    background = LAUNCHER_BACKGROUND,
-                                )
-                            }
-                        }
+                    listOf(24.dp, 36.dp, 48.dp).forEach { small ->
+                        Tile(size = small, drawable = candidate.drawable, background = LAUNCHER_BACKGROUND)
                     }
                 }
             }
-            composeRule.onRoot()
-                .captureRoboImage("$outputDir/logo-${candidate.label.lowercase()}.png")
         }
     }
+
+    private fun renderSolo(candidate: Candidate) {
+        composeRule.setContent { SoloPreview(candidate) }
+        composeRule.onRoot().captureRoboImage("$outputDir/logo-${candidate.label.lowercase()}.png")
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-xhdpi")
+    fun logo_a_phone_with_a_verified_badge() = renderSolo(candidates[0])
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-xhdpi")
+    fun logo_b_magnifier_over_a_phone() = renderSolo(candidates[1])
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-xhdpi")
+    fun logo_c_phone_with_a_pulse() = renderSolo(candidates[2])
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-xhdpi")
+    fun logo_d_the_tick_alone() = renderSolo(candidates[3])
+
+    @Test
+    @Config(qualifiers = "w320dp-h360dp-xhdpi")
+    fun logo_now_the_current_grid_for_comparison() = renderSolo(candidates[4])
 
     @Test
     fun every_candidate_in_colour_and_stripped_of_it() {
