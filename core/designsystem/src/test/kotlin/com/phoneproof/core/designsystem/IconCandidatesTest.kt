@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,7 +53,7 @@ import org.robolectric.annotation.GraphicsMode
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [34], qualifiers = "w411dp-h1400dp-xhdpi")
+@Config(sdk = [34], qualifiers = "w520dp-h1600dp-xhdpi")
 class IconCandidatesTest {
 
     @get:Rule
@@ -94,31 +93,36 @@ class IconCandidatesTest {
         }
     }
 
+    /**
+     * Label above, tiles below.
+     *
+     * The first version of this put the description in a third column beside the tiles, and Compose did what
+     * it was asked: with no width left it wrapped the text to one character per line, turning each label into
+     * a vertical ribbon and pushing the monochrome half of the sheet off the bottom. A review sheet that is
+     * itself hard to read is worse than no sheet, because it wastes the reviewer's attention on the wrong
+     * problem.
+     */
     @Composable
     private fun CandidateRow(candidate: Candidate, tint: Color?) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.Bottom,
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                text = candidate.label,
-                style = PhoneProofType.NumericLarge,
-                color = Color(0xFFFAFAFA),
-                modifier = Modifier.width(44.dp),
-            )
-            sizes.forEach { size ->
-                Tile(
-                    size = size,
-                    drawable = candidate.drawable,
-                    background = if (tint == null) LAUNCHER_BACKGROUND else Color.Black,
-                    tint = tint,
-                )
-            }
-            Text(
-                text = candidate.pitch,
+                text = "${candidate.label}  —  ${candidate.pitch}",
                 style = PhoneProofType.NumericSmall,
-                color = Color(0xFF9A9AA2),
+                color = Color(0xFFFAFAFA),
             )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                sizes.forEach { size ->
+                    Tile(
+                        size = size,
+                        drawable = candidate.drawable,
+                        background = if (tint == null) LAUNCHER_BACKGROUND else Color.Black,
+                        tint = tint,
+                    )
+                }
+            }
         }
     }
 
