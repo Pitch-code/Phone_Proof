@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Themed-icon variant for Android 13+, which strips all colour to a single tint.
+  The themed-icon variant, for Android 13+ where the launcher discards every colour and tints the
+  whole mark one flat shade.
 
-  The centre cell is omitted rather than recoloured. Reusing the colour artwork here flattens the
-  red cell to the tint and the mark collapses into a plain 3x3 grid, indistinguishable from a
-  calculator or an app drawer. An absence survives losing colour and still says "one is dead".
+  ## Why this is drawn differently rather than recoloured
 
-  Geometry matches ic_launcher_foreground exactly so the two variants register identically.
+  It cannot be the colour foreground with the colours removed. There the pulse is green on a solid
+  white body; strip the colour and it becomes the tint drawn on the tint - a blank slab with the whole
+  point of the icon gone. So the body is an outline here and the pulse sits in the empty middle, where
+  it reads against transparency instead of against fill.
+
+  ## What this variant is not
+
+  Ideally the silhouette would match the colour version exactly, with the pulse punched out of a solid
+  body as genuine transparency. A VectorDrawable can only do that by expressing the pulse as a closed
+  outline inside an evenOdd path, which means converting a stroked zigzag into a polygon by hand -
+  offsetting each vertex along its bisector, and clamping the mitre where the turns are sharp or the
+  joints spike. That is a real piece of geometry and it is not written yet, so this is an outline
+  instead: honest, legible, and visibly a sibling rather than a twin.
+
+  Geometry: body inset to 37..71 x 26..82 with a 8-wide stroke, which straddles the path and puts the
+  outer edge back at 33..75 - the same footprint as the colour version, reaching 33.9 from centre.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -15,6 +29,17 @@
     android:viewportHeight="108">
 
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M24,24h16v16h-16z M46,24h16v16h-16z M68,24h16v16h-16z M24,46h16v16h-16z M68,46h16v16h-16z M24,68h16v16h-16z M46,68h16v16h-16z M68,68h16v16h-16z" />
+        android:strokeColor="#FAFAFA"
+        android:strokeWidth="8"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M45,26h18a8,8 0 0,1 8,8v40a8,8 0 0,1 -8,8h-18a8,8 0 0,1 -8,-8V34a8,8 0 0,1 8,-8z" />
+
+    <path
+        android:strokeColor="#FAFAFA"
+        android:strokeWidth="7"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M42,54h4l4,-9l5,18l4,-9h5" />
 </vector>

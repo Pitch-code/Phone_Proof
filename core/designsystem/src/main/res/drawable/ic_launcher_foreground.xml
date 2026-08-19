@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  A coverage grid with one cell dead: the app's whole idea in one mark, and nothing else in the
-  category looks like it. Competitors all use a phone outline, a magnifier or a tick, none of which
-  survive being seen small in a crowded search result.
+  A phone with a pulse across it. Chosen by the product owner from four candidates rendered at the
+  sizes an icon is actually met at, replacing a 3x3 grid whose dead centre cell was invisible at 24dp.
 
-  Geometry: 16px cells with 6px gaps at x/y = 24, 46, 68. That spans 24..84 of the 108 viewport,
-  which is centred and sits inside the 66px adaptive-icon safe zone (21..87). An earlier version
-  spanned only 44px and rendered noticeably weak at 24dp.
+  ## Geometry, and the mistake that shaped the first attempt
+
+  Body: 42 x 64 at x 33..75, y 22..86, corner 9.
+
+  A launcher may mask an adaptive icon to a CIRCLE of diameter 72, so anything more than 36 from the
+  centre can be cropped. The first version of this file used a 32 x 60 body because the corner was
+  measured as hypot(w/2, h/2) - the SHARP corner. That is the wrong measurement for a rounded
+  rectangle: the farthest point sits on the corner arc, at hypot(w/2-r, h/2-r) + r. For 42 x 64 with a
+  9 radius that is 34.9, comfortably safe, where the sharp-corner estimate said 38.3 and rejected it.
+
+  The cost of that error was visible rather than theoretical: the mark sat small in a sea of
+  background and read as a battery or a domino rather than a phone. It is a third wider now.
+
+  Pulse: stroke 8, inset 6 from each side, spanning x 39..69 about the centre line.
+
+  Inset so the line has room rather than running edge to edge, which read as cramped. Stroke 8 because
+  8/108 is about 1.8px at 24dp, and the pulse is the only part carrying meaning - if it disappears,
+  the icon is a white slab.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -16,10 +30,13 @@
 
     <path
         android:fillColor="#FAFAFA"
-        android:pathData="M24,24h16v16h-16z M46,24h16v16h-16z M68,24h16v16h-16z M24,46h16v16h-16z M68,46h16v16h-16z M24,68h16v16h-16z M46,68h16v16h-16z M68,68h16v16h-16z" />
+        android:pathData="M42,22h24a9,9 0 0,1 9,9v46a9,9 0 0,1 -9,9h-24a9,9 0 0,1 -9,-9V31a9,9 0 0,1 9,-9z" />
 
-    <!-- The dead cell. -->
     <path
-        android:fillColor="#F43F5E"
-        android:pathData="M46,46h16v16h-16z" />
+        android:strokeColor="#22C55E"
+        android:strokeWidth="8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M39,54h4l4,-10l6,20l5,-10h6" />
 </vector>
