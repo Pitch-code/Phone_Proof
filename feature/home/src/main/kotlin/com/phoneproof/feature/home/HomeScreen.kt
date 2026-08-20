@@ -228,9 +228,18 @@ fun HomeScreen(
         }
 
         Text(
-            // Wording is deliberate and must not be strengthened. The app shows ads, so an
-            // advertising ID does leave the device; claiming "nothing leaves this device" would be
-            // false, and overclaiming privacy is worse than not claiming it.
+            // Wording is deliberate and must not be strengthened, but the reason recorded here was
+            // wrong: it said the app shows ads, so an advertising ID leaves the device. **There is no
+            // advertising code in this app and never has been.** That comment made a false claim into a
+            // rule, and the rule then justified keeping a true statement weaker than it needed to be.
+            //
+            // The sentence still stands as written, for a better reason. It says exactly what it can
+            // guarantee: the *test results* stay here. It does not say "nothing leaves this device",
+            // which would be false the moment a pass code is redeemed against the licence server, and
+            // false today for anyone who taps a purchase — Play Billing talks to Google.
+            //
+            // Naming what stays rather than claiming nothing leaves is the version that survives the app
+            // gaining features. Overclaiming privacy is worse than not claiming it.
             text = "Your test results stay on this device",
             // bodyMedium, up from labelSmall. Left static: a privacy statement that blinks reads as
             // an advertisement for itself, and only one thing on a screen can be the thing moving.

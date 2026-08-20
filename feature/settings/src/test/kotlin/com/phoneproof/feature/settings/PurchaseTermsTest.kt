@@ -15,10 +15,14 @@ import org.junit.Test
  *    policy it has no power to enforce.
  *  - **Play requires accurate disclosures.** Misstating refund terms is a review risk on the one screen
  *    where a rejection costs the most.
- *  - **It would be a false statement where this app can least afford one.** The same reasoning already
- *    weakened the privacy line on Home (ads mean an advertising ID does leave the device) and forced
+ *  - **It would be a false statement where this app can least afford one.** The same reasoning shaped the
+ *    privacy line on Home — which names what stays rather than claiming nothing leaves — and forced
  *    `ADVISORY_TRIAL_EXCLUSION` to name the real reason a screen is locked. A paywall that misstates
  *    its own terms is exactly the pattern those decisions exist to prevent.
+ *
+ *    (This paragraph used to justify that line by saying ads mean an advertising ID leaves the device.
+ *    That was never true — there is no advertising code in this app — and it is corrected here because a
+ *    false premise repeated in two files starts being treated as a fact about the product.)
  *
  * If a future product decision wants this revisited, revisit it deliberately — do not let it arrive as
  * a tightening of some wording.
