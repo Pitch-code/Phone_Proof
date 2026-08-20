@@ -45,6 +45,28 @@ class LicenceClient(private val baseUrl: String = DEFAULT_BASE_URL) {
     }
 
     /**
+     * Exchanges a completed Play purchase for a pass code.
+     *
+     * Called on the buyer's own phone, immediately after paying. Safe to call repeatedly: the server keys on
+     * the purchase token and returns the same code every time, which is what lets the app retry after a
+     * dropped connection without any risk of minting two packs from one payment.
+     *
+     * The signature is Google's, over [purchaseJson], and the server verifies it with the app's public
+     * licensing key. Neither value is logged: one is a receipt and the other is proof of it.
+     */
+    suspend fun issue(purchaseJson: String, signature: String): IssueResult {
+        val response = post(
+            path = "/issue",
+            // Escaped, because the purchase JSON is itself JSON and contains quotes throughout. Without
+            // this the request body would be malformed and every purchase would look like tampering.
+            body = """{"purchaseJson":"${purchaseJson.escapedForJson()}",""" +
+                """"signature":"${signature.escapedForJson()}"}""",
+        ) ?: return IssueResult.Deferred
+
+        return parseIssueResponse(response.first, response.second)
+    }
+
+    /**
      * Sends [body] and returns the status and text, or null if the server could not be reached.
      *
      * Null means *offline*, and nothing else. A 500 comes back as a status, because "the server is broken"
@@ -143,3 +165,53 @@ private fun String.stringField(name: String): String? =
 
 private fun String.longField(name: String): Long? =
     Regex("\"$name\"\\s*:\\s*(-?\\d+)").find(this)?.groupValues?.get(1)?.toLongOrNull()
+
+/**
+ * Turns the server's answer into something the purchase flow can act on.
+ *
+ * Pure and tested, for the same reason the redeem parser is: the buyer has already paid by the time this
+ * runs, so a crash or a wrong reading here is the most expensive mistake this app can make.
+ *
+ * Anything unrecognised becomes [IssueResult.Deferred] rather than a failure. The purchase is complete and
+ * the server is idempotent, so "ask again shortly" is both the safest answer and usually the true one.
+ */
+internal fun parseIssueResponse(status: Int, body: String): IssueResult {
+    if (status in 200..299) {
+        val code = body.stringField("code")
+        if (code.isNullOrBlank()) {
+            Diagnostics.error("LicenceClient", "issue succeeded with no code")
+            return IssueResult.Deferred
+        }
+        return IssueResult.Issued(
+            code = code,
+            // Absent means the server did not say. Zero would be a lie about what was bought, and the code
+            // is what matters here — the count is shown as a detail beside it.
+            passes = body.longField("passes")?.toInt() ?: 0,
+            reissued = body.contains("\"reissued\":true"),
+        )
+    }
+
+    // Only one refusal cannot be retried. Everything else, including 500s, is worth asking about again.
+    return if (body.stringField("reason") == "signature") IssueResult.Rejected else IssueResult.Deferred
+}
+
+/**
+ * Escapes a string for embedding in the JSON bodies above.
+ *
+ * Backslash first, or it would escape the escapes added afterwards. Control characters are stripped rather
+ * than encoded: none belong in a receipt, and passing them through would produce a body the server rejects
+ * for a reason nobody could work out from the app.
+ */
+private fun String.escapedForJson(): String = buildString {
+    this@escapedForJson.forEach { character ->
+        when {
+            character == '\\' -> append("\\\\")
+            character == '"' -> append("\\\"")
+            character == '\n' -> append("\\n")
+            character == '\r' -> append("\\r")
+            character == '\t' -> append("\\t")
+            character < ' ' -> Unit
+            else -> append(character)
+        }
+    }
+}

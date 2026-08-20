@@ -24,6 +24,26 @@ object BillingProducts {
      */
     const val SHOP_YEARLY: String = "phoneproof_shop_yearly"
 
+    /**
+     * Five inspection passes, bought once, used on five different phones.
+     *
+     * **This grants no tier on the phone that buys it**, which is the point and the thing most likely to be
+     * "fixed" by mistake. Paying yields a *code*, and the code unlocks whichever handset it is typed into —
+     * because the phone being inspected belongs to the seller and the buyer's Google account is not on it.
+     * That mismatch is the whole reason passes exist; see `.kiro/steering/inspection-passes.md`.
+     *
+     * So [entitlementFor] deliberately returns null for this id, and a test says why. Mapping it to PREMIUM
+     * would upgrade the buyer's own phone and quietly deliver the opposite of what they paid for.
+     */
+    const val PASSES_5: String = "phoneproof_passes_5"
+
+    /**
+     * Products that yield a code rather than a tier on this device.
+     *
+     * Kept as its own list so the purchase flow can branch on *kind* instead of on a hardcoded id.
+     */
+    val packs: List<String> = listOf(PASSES_5)
+
     /** Products the app actually offers for sale today. */
     val onSale: List<String> = listOf(PREMIUM)
 
