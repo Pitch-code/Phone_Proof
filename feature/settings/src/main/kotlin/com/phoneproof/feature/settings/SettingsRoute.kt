@@ -35,6 +35,7 @@ fun SettingsRoute(
     versionName: String,
     versionCode: Long,
     onOpenDiagnostics: () -> Unit,
+    onOpenRedeem: () -> Unit,
     /** True when the buyer arrived from the "tap here to see the plans" line on Home. */
     focusPlans: Boolean = false,
     modifier: Modifier = Modifier,
@@ -159,6 +160,7 @@ fun SettingsRoute(
         onOpenPrivacyPolicy = { openUrl(context, PRIVACY_POLICY_URL) },
         onShareApp = { shareApp(context) },
         onOpenDiagnostics = onOpenDiagnostics,
+        onOpenRedeem = onOpenRedeem,
         onShopNameChanged = { name ->
             // Local state first and synchronously, so the field redraws from the keystroke rather
             // than from the disk. The write still happens per keystroke, which is cheap enough for

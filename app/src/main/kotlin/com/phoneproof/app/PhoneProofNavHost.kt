@@ -37,6 +37,7 @@ import com.phoneproof.feature.run.RunVerdictRoute
 import com.phoneproof.feature.scan.ScanRoute
 import com.phoneproof.feature.screentest.ScreenTestRoute
 import com.phoneproof.feature.sensortest.SensorTestRoute
+import com.phoneproof.feature.settings.RedeemRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.storagespeed.StorageSpeedRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
@@ -69,6 +70,15 @@ internal object Routes {
      * two as one destination while the intent stays readable at the call site.
      */
     const val SETTINGS_PLANS = "settings?focus=plans"
+
+    /**
+     * Redeeming a pass code, reached from Settings.
+     *
+     * Its own destination rather than a dialog inside Settings: it is the screen a buyer opens while holding
+     * somebody else's phone, and it needs the whole display and a working Back rather than a sheet over a
+     * list of preferences.
+     */
+    const val REDEEM = "redeem"
     const val REPORTS = "reports"
     const val SCREEN_PATTERNS = "screen-patterns"
     const val GUIDE = "guide"
@@ -369,6 +379,7 @@ fun PhoneProofNavHost(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE.toLong(),
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                onOpenRedeem = { navController.navigate(Routes.REDEEM) },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -381,7 +392,18 @@ fun PhoneProofNavHost(
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE.toLong(),
                 onOpenDiagnostics = { navController.navigate(Routes.DIAGNOSTICS) },
+                onOpenRedeem = { navController.navigate(Routes.REDEEM) },
                 focusPlans = true,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+
+        composable(Routes.REDEEM) {
+            RedeemRoute(
+                // Back to wherever they came from rather than to a fixed screen. Someone who redeemed a code
+                // is about to start testing the phone in their hand, and the checks list they were looking
+                // at is the right place to be.
+                onDone = { navController.popBackStack() },
                 modifier = Modifier.fillMaxSize(),
             )
         }

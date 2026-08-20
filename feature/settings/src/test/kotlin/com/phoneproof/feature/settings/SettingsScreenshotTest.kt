@@ -54,6 +54,7 @@ class SettingsScreenshotTest {
                     onShareApp = {},
                     onOpenDiagnostics = {},
                     onChoosePlan = {},
+                        onOpenRedeem = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -111,6 +112,7 @@ class SettingsScreenshotTest {
                     onShareApp = {},
                     onOpenDiagnostics = {},
                     onChoosePlan = {},
+                        onOpenRedeem = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -152,6 +154,7 @@ class SettingsScreenshotTest {
                     onShareApp = {},
                     onOpenDiagnostics = {},
                     onChoosePlan = {},
+                        onOpenRedeem = {},
                     modifier = Modifier.fillMaxSize(),
                 )
             }
