@@ -125,7 +125,7 @@ fun PhoneProofNavHost(
     val runSession = remember { RunSession() }
     val runState by runSession.state.collectAsStateWithLifecycle()
 
-    val entitlement by settings.entitlement.collectAsStateWithLifecycle(Entitlement.FREE)
+    val entitlement by settings.effectiveEntitlement.collectAsStateWithLifecycle(Entitlement.FREE)
     val scansUsed by settings.scansUsed.collectAsStateWithLifecycle(0)
 
     // Every test screen below hands its findings to the session. While no run is in progress the

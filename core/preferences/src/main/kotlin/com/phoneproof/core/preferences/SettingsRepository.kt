@@ -5,15 +5,37 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.phoneproof.core.designsystem.theme.ThemeMode
 import com.phoneproof.core.diagnostics.Diagnostics
+import com.phoneproof.core.preferences.passes.InspectionPass
+import com.phoneproof.core.preferences.passes.effectiveEntitlement
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "phoneproof")
+
+/**
+ * Emits immediately and then once a minute, for as long as anyone is listening.
+ *
+ * Folded into [SettingsRepository.effectiveEntitlement] so that a pass expiring by the clock is actually
+ * noticed. Without it, a screen left open would keep a lapsed pass alive for as long as it stayed open.
+ *
+ * Emits first, before any delay, so the entitlement is available on the first frame rather than a minute
+ * into the screen's life.
+ */
+private fun everyMinute(): Flow<Unit> = flow {
+    while (true) {
+        emit(Unit)
+        delay(60_000L)
+    }
+}
 
 /**
  * The user's choices, on this device only.
@@ -65,6 +87,60 @@ class SettingsRepository(private val context: Context) {
             context.dataStore.edit { it[ENTITLEMENT_KEY] = entitlement.name }
         }.onFailure { Diagnostics.error(TAG, "saving entitlement failed", it) }
     }
+
+    /**
+     * The inspection pass running on this phone, if any.
+     *
+     * Stored as an absolute instant rather than a countdown, so nothing has to be ticking for it to expire.
+     * The app can be killed, the phone rebooted, a week can pass, and the answer is still a comparison.
+     */
+    val inspectionPass: Flow<InspectionPass?> = context.dataStore.data
+        .catch { error ->
+            Diagnostics.error(TAG, "reading the pass failed, treating as none", error)
+            emit(androidx.datastore.preferences.core.emptyPreferences())
+        }
+        .map { preferences ->
+            val code = preferences[PASS_CODE_KEY]
+            val expiresAt = preferences[PASS_EXPIRES_KEY]
+            if (code.isNullOrBlank() || expiresAt == null) null
+            else InspectionPass(code = code, expiresAtEpochMs = expiresAt)
+        }
+
+    /** Records a pass the licence server granted. Replaces any previous one. */
+    suspend fun saveInspectionPass(pass: InspectionPass) {
+        runCatching {
+            context.dataStore.edit { preferences ->
+                preferences[PASS_CODE_KEY] = pass.code
+                preferences[PASS_EXPIRES_KEY] = pass.expiresAtEpochMs
+            }
+        }.onFailure { Diagnostics.error(TAG, "saving the pass failed", it) }
+    }
+
+    /**
+     * What this install can actually do right now: what it owns, **or** a pass that is currently running.
+     *
+     * This is the flow screens should read. [entitlement] alone is what the Google account owns, which is
+     * the wrong question on a phone the buyer does not own — and that phone is the whole point of the app.
+     *
+     * ## Why it re-emits on a timer
+     *
+     * A pass expires by the clock, and a `Flow` built only from stored values would not notice: someone
+     * could leave a screen open past the expiry and keep a paid feature indefinitely. So a minute tick is
+     * folded in, which is frequent enough that nobody keeps a meaningful amount of extra time and rare
+     * enough to cost nothing. It only runs while something is collecting, which with
+     * `collectAsStateWithLifecycle` means only while a screen is on top.
+     *
+     * ## What this deliberately does not decide
+     *
+     * **Report retention.** A pass unlocks *measuring*, not storage promises. If it granted unlimited
+     * history, then the moment it lapsed the next save would prune back to two and delete reports the buyer
+     * made while paid — losing their evidence as a side effect of a clock. Retention therefore stays on
+     * [entitlement], and the two call sites that need it read that instead.
+     */
+    val effectiveEntitlement: Flow<Entitlement> =
+        combine(entitlement, inspectionPass, everyMinute()) { owned, pass, _ ->
+            effectiveEntitlement(owned, pass, System.currentTimeMillis())
+        }
 
     /**
      * How many scans this install has used.
@@ -152,6 +228,10 @@ class SettingsRepository(private val context: Context) {
         val SHOP_CONTACT_KEY = stringPreferencesKey("shop_contact")
         val SHOP_LOGO_KEY = stringPreferencesKey("shop_logo_path")
         val SCANS_USED_KEY = intPreferencesKey("scans_used")
+
+        /** The pass a redeemed code granted, and when it stops. See [inspectionPass]. */
+        val PASS_CODE_KEY = stringPreferencesKey("pass_code")
+        val PASS_EXPIRES_KEY = longPreferencesKey("pass_expires_at")
     }
 }
 

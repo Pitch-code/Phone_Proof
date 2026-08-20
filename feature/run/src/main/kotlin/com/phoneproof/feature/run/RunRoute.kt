@@ -53,7 +53,7 @@ fun RunRoute(
     val retain = rememberRetention()
 
     val settings = remember(context) { SettingsRepository(context) }
-    val entitlement by remember(settings) { settings.entitlement }
+    val entitlement by remember(settings) { settings.effectiveEntitlement }
         .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
 
     // Asked of PaidChecks rather than assembled here, so the marker on a run step, the marker on the same
