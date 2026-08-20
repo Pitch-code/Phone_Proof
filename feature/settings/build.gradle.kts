@@ -52,6 +52,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":core:diagnostics"))
     implementation(project(":core:preferences"))
+    implementation(project(":core:licence"))
     implementation(project(":core:billing"))
     implementation(project(":core:reports"))
 

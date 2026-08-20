@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -63,6 +66,7 @@ fun SettingsScreen(
     onShareApp: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onChoosePlan: (PremiumPlan) -> Unit,
+    onOpenRedeem: () -> Unit,
     /**
      * Scroll the plans into view on arrival.
      *
@@ -150,6 +154,29 @@ fun SettingsScreen(
                     color = PhoneProofTheme.colors.textTertiary,
                 )
             }
+
+            // The way in for a phone that is not the one the buyer paid on, which is most of them.
+            //
+            // Deliberately here, at the bottom of the plans, rather than hidden in a menu. Someone reading
+            // this section has just been told what things cost; if they already bought passes on their own
+            // phone, this is the moment they need to say so. Underlined and 48dp because it is text acting
+            // as a control, and colour alone marks neither.
+            Text(
+                text = "I have a code",
+                style = MaterialTheme.typography.titleSmall,
+                color = PhoneProofTheme.colors.accent,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clickable(onClick = onOpenRedeem)
+                    .wrapContentHeight(),
+            )
+            Text(
+                text = "Bought inspection passes on another phone? Unlock this one for 24 hours.",
+                style = MaterialTheme.typography.labelSmall,
+                color = PhoneProofTheme.colors.textTertiary,
+            )
 
             // Who takes the money, and who can give it back.
             //

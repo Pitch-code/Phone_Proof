@@ -275,6 +275,7 @@ dependencies {
     // Brings :core:run transitively, since RunState and RunSession are in feature:run's public API.
     implementation(project(":feature:run"))
     implementation(project(":core:preferences"))
+    implementation(project(":core:licence"))
     implementation(project(":feature:diagnostics"))
 
     implementation(libs.androidx.core.ktx)
