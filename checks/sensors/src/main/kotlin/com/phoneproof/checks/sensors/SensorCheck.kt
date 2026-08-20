@@ -169,15 +169,17 @@ object SensorCheck {
                 "level, and it is rarely the only thing."
         SensorKind.GYROSCOPE ->
             "If you play games or use AR, walk away — it cannot be fixed for a sensible price. If " +
-                "you do not, get 1,000 off and know what you are buying."
+                "you do not, treat it as permanent, price it into what you offer, and know what " +
+                "you are buying."
         SensorKind.MAGNETOMETER ->
-            "Try Google Maps on the phone before you decide. If it still spins, ask for 500 off."
+            "Try Google Maps on the phone before you decide. If it still spins, treat it as a fault " +
+                "worth haggling over."
         SensorKind.PROXIMITY ->
             "Make a real call before you pay. If the screen stays lit against your ear, get 1,500 " +
                 "off — the part is cheap but the screen has to come off to reach it."
         SensorKind.LIGHT ->
             "Check whether automatic brightness responds in the Settings app before you decide, " +
-                "then ask for 500 off if it does not."
+                "then treat it as a fault worth haggling over if it does not."
     }
 
     /**

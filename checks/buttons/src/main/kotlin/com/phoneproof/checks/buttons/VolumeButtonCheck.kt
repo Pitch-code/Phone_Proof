@@ -98,7 +98,7 @@ object VolumeButtonCheck {
                     "a restart puts many phones into recovery mode, and volume-down with the power " +
                     "key takes a screenshot — so the phone will seem to do these things by itself.",
                 action = "Take any case off and press the key a few times to see if it frees up. If " +
-                    "it stays jammed, it is a repair — worth 1,000 off, and worth checking the phone " +
+                    "it stays jammed, it is a repair — get it quoted and take that off, and check the phone " +
                     "still restarts normally before you pay.",
                 measurements = measurements,
                 falsePositiveCauses = FALSE_POSITIVE_CAUSES,
@@ -172,7 +172,8 @@ object VolumeButtonCheck {
                     "Volume $silent is also part of several shortcuts, such as taking a screenshot " +
                     "and reaching recovery mode.",
                 action = "Take the case off and try once more. If it stays silent it is a worn " +
-                    "button — a repair rather than a setting, so get 800 off or look at another phone.",
+                    "button — a repair rather than a setting, so get it quoted and take that off, or " +
+                    "look at another phone.",
                 measurements = measurements,
                 falsePositiveCauses = FALSE_POSITIVE_CAUSES,
             )

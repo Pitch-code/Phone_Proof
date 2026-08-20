@@ -169,7 +169,8 @@ object EarpieceCheck {
                     "would have to go on speakerphone or headphones, which in public means everyone " +
                     "around you hears it too.",
                 action = "Make a real call before you pay, to be certain. Replacing an earpiece means " +
-                    "opening the phone, so this is worth 1,500 off at least — or walk away.",
+                    "opening the phone. Get that repair quoted locally and take it off the price — or " +
+                    "walk away.",
                 measurements = measurements,
                 falsePositiveCauses = FALSE_POSITIVE_CAUSES,
             )

@@ -62,7 +62,7 @@ data class CheckResult(
     val headline: String,
     /** What it means in real life. "You will fight this every time you type." */
     val consequence: String? = null,
-    /** What the buyer should do. "Get 2,000 off, or walk away." */
+    /** What the buyer should do. "Get the repair quoted and take it off, or walk away." */
     val action: String? = null,
     val measurements: List<Measurement> = emptyList(),
     val retestable: Boolean = true,

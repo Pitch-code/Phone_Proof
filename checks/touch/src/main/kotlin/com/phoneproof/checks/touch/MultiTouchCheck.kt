@@ -154,8 +154,8 @@ object MultiTouchCheck {
                     "four fingers on the glass at overlapping moments. Everyday scrolling will feel " +
                     "fine, which is why this is easy to miss before buying.",
                 action = "Take the case and screen protector off and try once more. If it still " +
-                    "stops short, treat it as a worn digitiser and get 1,000 off — or skip it if you " +
-                    "do not game.",
+                    "stops short, treat it as a worn digitiser: ask a repair shop what a screen costs " +
+                    "for this model and take that off the price — or skip it if you do not game.",
                 measurements = measurements,
                 falsePositiveCauses = FALSE_POSITIVE_CAUSES,
             )
