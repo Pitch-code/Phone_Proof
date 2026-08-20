@@ -126,16 +126,23 @@ object GhostTouchCheck {
         val handsOffCaveat = if (watch.confirmedHandsOff) {
             ""
         } else {
-            " You did not confirm the phone was untouched, so a resting thumb could explain this."
+            " You did not confirm the phone was untouched, so a resting thumb could explain this — " +
+                "watch it again with the phone flat on a table before you judge it."
         }
 
         return CheckResult(
             id = ID,
             title = TITLE,
-            // Always FAIL rather than CAUTION when a real one arrives. A screen that types by itself is not a
-            // thing to negotiate over: it enters PINs, answers calls and taps buttons in a pocket, and no
-            // amount off makes that liveable.
-            outcome = CheckOutcome.FAIL,
+            // FAIL when the buyer confirmed the phone was untouched, because a screen that types by itself
+            // is not a thing to negotiate over: it enters PINs, answers calls and taps buttons in a pocket,
+            // and no amount off makes that liveable.
+            //
+            // CAUTION when they did not confirm it, and this is not a hedge — CheckResult forbids a LOW
+            // confidence FAIL outright, on the grounds that a shaky negative costs the buyer the deal or the
+            // seller the price. That rule is right and it caught this: a resting thumb produces exactly this
+            // evidence, so without the confirmation the app has a finding worth reporting and no business
+            // condemning the phone on it.
+            outcome = if (watch.confirmedHandsOff) CheckOutcome.FAIL else CheckOutcome.CAUTION,
             confidence = if (watch.confirmedHandsOff) Confidence.HIGH else Confidence.LOW,
             headline = if (events.size == 1) {
                 "The screen registered a touch nobody made"

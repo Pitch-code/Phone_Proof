@@ -84,16 +84,37 @@ class GhostTouchCheckTest {
     }
 
     @Test
-    fun an_unconfirmed_watch_still_reports_the_finding_but_trusts_it_less() {
+    fun an_unconfirmed_watch_reports_the_finding_without_condemning_the_phone() {
         // Someone resting a thumb on the edge produces exactly this evidence. Hiding the finding would waste
-        // it; claiming HIGH confidence would risk condemning a good phone.
+        // it, so it is reported — as a CAUTION.
+        //
+        // Not a judgement call: CheckResult forbids a LOW confidence FAIL, because a shaky negative costs the
+        // buyer the deal or the seller the price. My first version tried exactly that and the model's own
+        // invariant rejected it, which is the guardrail working.
         val result = GhostTouchCheck.evaluate(
             watch(contacts = listOf(contact(1_000)), handsOff = false),
         )
 
-        assertThat(result.outcome).isEqualTo(CheckOutcome.FAIL)
+        assertThat(result.outcome).isEqualTo(CheckOutcome.CAUTION)
         assertThat(result.confidence).isEqualTo(Confidence.LOW)
         assertThat(result.consequence).contains("resting thumb")
+        // And it says how to get a trustworthy answer rather than leaving them with a maybe.
+        assertThat(result.consequence).contains("flat on a table")
+    }
+
+    @Test
+    fun a_shaky_finding_is_never_reported_as_a_failure() {
+        // The invariant itself, stated where a future change to this check would break it. Every combination
+        // must satisfy it, not just the one case that happened to be written first.
+        listOf(true, false).forEach { handsOff ->
+            listOf(0L, 4_000L, 12_000L, GhostTouchCheck.FULL_WATCH_MILLIS).forEach { millis ->
+                val result = GhostTouchCheck.evaluate(
+                    watch(millis = millis, contacts = listOf(contact(1_000)), handsOff = handsOff),
+                )
+                assertThat(result.outcome == CheckOutcome.FAIL && result.confidence == Confidence.LOW)
+                    .isFalse()
+            }
+        }
     }
 
     @Test
