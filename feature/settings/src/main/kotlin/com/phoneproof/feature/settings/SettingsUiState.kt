@@ -38,7 +38,16 @@ enum class PremiumPlan(
         billing = "one-time",
         recommended = true,
         benefits = listOf(
-            "No ads, anywhere",
+            // "No ads, anywhere" was here, and it was selling the absence of something that never
+            // existed: there is no advertising code anywhere in this app, and never has been. On the
+            // screen that asks for money, a benefit nobody is actually receiving is the worst possible
+            // place for a stale claim - a buyer could pay partly for it.
+            //
+            // Replaced with a real benefit that was missing from this list entirely: the three measured
+            // checks the free trial leaves out. Named here rather than derived, because this is an enum
+            // constant; PremiumBenefitsTest asserts every locked check appears, so locking a fourth
+            // without mentioning it fails rather than quietly overpromising.
+            "Three more checks: Fingers at once, Vibration, Wi-Fi and Bluetooth",
             "Keep every report instead of only the last two",
             "Save a report as a PDF to send or print",
             "Compare two phones side by side before deciding",
