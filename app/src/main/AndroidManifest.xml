@@ -14,6 +14,28 @@
       Deliberately NOT requested: READ_PHONE_STATE. The IMEI has been privileged since Android 10 on
       every device regardless of target SDK, so asking would gain nothing and look alarming.
     -->
+    <!--
+      The first network permission this app has ever asked for, and worth being precise about why.
+
+      Until now nothing left the device at all: every check reads sensors, every report is written to local
+      storage, and the Wi-Fi checks only ever read connection *state*. That is why the privacy line on Home
+      could be written as plainly as it is.
+
+      It is needed now for exactly two requests, both to the licence server, and both only when a buyer
+      chooses to redeem a pass code:
+
+        POST /redeem   a code, and a hash of this device id salted with that code
+        POST /issue    a Play purchase receipt, to turn it into a code
+
+      Nothing else uses it. No analytics, no crash reporting, no advertising — none of those exist in this
+      project. The device hash is salted with the code precisely so the server cannot recognise a handset
+      across two codes; see DeviceFingerprint for why that is not negotiable.
+
+      **This changes the Play Data safety declaration.** It was truthfully "no data collected" while the app
+      could not reach a network. Once a redeem is possible, the form has to say so.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <!--

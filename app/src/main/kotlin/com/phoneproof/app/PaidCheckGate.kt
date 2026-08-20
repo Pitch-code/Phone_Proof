@@ -32,7 +32,7 @@ fun PaidCheckGate(
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
-    val entitlement by remember(context) { SettingsRepository(context).entitlement }
+    val entitlement by remember(context) { SettingsRepository(context).effectiveEntitlement }
         .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
 
     // Not `isUnlocked`, because the copy lookup is what decides here: a route with no wording written for

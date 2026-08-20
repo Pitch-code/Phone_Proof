@@ -58,12 +58,24 @@ fun ScanRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     val settings = remember(context) { SettingsRepository(context) }
-    val entitlement by remember(settings) { settings.entitlement }
+    // Two different questions, so two different flows, and mixing them up here would cost a buyer their
+    // evidence.
+    //
+    // `entitlement` is what this install may DO right now, which includes a running inspection pass — that
+    // is what decides whether a scan is allowed and whether it spends one of the free two.
+    //
+    // `owned` is what the Google account has actually bought, and it is the only thing allowed to decide
+    // retention. If a pass granted unlimited history, then the moment it lapsed the next save would prune
+    // back to two and delete reports made while paid. A pass unlocks measuring; it must not make a promise
+    // about storage that a clock can withdraw.
+    val entitlement by remember(settings) { settings.effectiveEntitlement }
+        .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
+    val owned by remember(settings) { settings.entitlement }
         .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
     val scansUsed by remember(settings) { settings.scansUsed }
         .collectAsStateWithLifecycle(initialValue = 0)
 
-    val retain = if (entitlement.hasPremiumExtras) {
+    val retain = if (owned.hasPremiumExtras) {
         ReportStore.PREMIUM_RETAIN
     } else {
         ReportStore.FREE_TIER_RETAIN

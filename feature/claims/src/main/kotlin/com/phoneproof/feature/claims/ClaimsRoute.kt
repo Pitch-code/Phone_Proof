@@ -29,7 +29,7 @@ fun ClaimsRoute(
     onResults: (List<CheckResult>) -> Unit = {},
 ) {
     val context = LocalContext.current
-    val entitlement by remember(context) { SettingsRepository(context).entitlement }
+    val entitlement by remember(context) { SettingsRepository(context).effectiveEntitlement }
         .collectAsStateWithLifecycle(initialValue = Entitlement.FREE)
 
     if (!entitlement.hasAdvisoryTools) {
