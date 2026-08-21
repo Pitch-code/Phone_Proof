@@ -28,6 +28,7 @@
 
 import { format, isWellFormed, normalise } from './passcode.js';
 import { generate } from './passcode.js';
+import { purgeExpired } from './purge.js';
 
 /** A pass lasts a day. Must match InspectionPass.DURATION_MILLIS in the app. */
 const PASS_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -45,29 +46,65 @@ const json = (body, status = 200) =>
  * left" and "we cannot reach the licence server" call for completely different behaviour on screen, and a
  * bare 400 would leave the app guessing.
  */
-const fail = (reason, message, status) => json({ ok: false, reason, message }, status);
+const fail = (reason, message, status, headers = {}) =>
+  new Response(JSON.stringify({ ok: false, reason, message }), {
+    status,
+    headers: { 'content-type': 'application/json; charset=utf-8', ...headers },
+  });
+
+/**
+ * The whole surface of this server, in one table.
+ *
+ * Written as data because the alternative was a chain of `if`s where the method was checked before the
+ * path — which answered `GET /` with "use POST" instead of "no such endpoint", a small lie that would send
+ * anyone debugging a typo'd URL looking in the wrong place entirely. A table cannot get that order wrong.
+ *
+ * HEAD is allowed on /health because uptime monitors use it, and a monitor that reports 405 on the one
+ * endpoint whose job is to say "I am fine" is worse than no monitor.
+ */
+const ROUTES = {
+  '/health': { GET: () => json({ ok: true }), HEAD: () => json({ ok: true }) },
+  '/issue': { POST: issue },
+  '/redeem': { POST: redeem },
+};
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (request.method === 'GET' && url.pathname === '/health') {
-      return json({ ok: true });
+    const methods = ROUTES[url.pathname];
+    if (!methods) {
+      return fail('route', 'No such endpoint.', 404);
     }
-    if (request.method !== 'POST') {
-      return fail('method', 'Use POST.', 405);
+
+    const handler = methods[request.method];
+    if (!handler) {
+      const allowed = Object.keys(methods).join(', ');
+      // The Allow header is what the status code means; sending 405 without it is a half-answer.
+      return fail('method', `Use ${allowed} on this endpoint.`, 405, { allow: allowed });
     }
 
     try {
-      if (url.pathname === '/issue') return await issue(request, env);
-      if (url.pathname === '/redeem') return await redeem(request, env);
+      return await handler(request, env);
     } catch (error) {
       // Logged rather than returned. An internal message helps an attacker and means nothing to a buyer.
       console.error('unhandled', { path: url.pathname, error: String(error) });
       return fail('server', 'Something went wrong at our end. Please try again.', 500);
     }
+  },
 
-    return fail('route', 'No such endpoint.', 404);
+  /**
+   * The nightly forgetting. See src/purge.js for why it matters more than it looks.
+   *
+   * Failures are left to throw: a cron run that fails is visible in the Cloudflare dashboard, and a swept
+   * error here would mean quietly keeping device hashes forever while the Data safety form said otherwise.
+   */
+  async scheduled(event, env) {
+    const { deleted, complete } = await purgeExpired(env.DB, Date.now());
+    console.log('purged expired activations', { deleted, complete });
+    if (!complete) {
+      console.warn('purge hit its batch cap; more rows remain and tomorrow will take them');
+    }
   },
 };
 
