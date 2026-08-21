@@ -79,6 +79,15 @@ server can therefore never build a picture of which phones a person inspected, o
 across two buyers. This is a deliberate privacy limit, not an accident of implementation: the phones
 being identified belong to third parties who never agreed to anything.
 
+**The server forgets an activation when the pass expires.** A `activations` row answers exactly one
+question — "does this phone already have a live pass under this code?" — and once `expires_at` has
+passed, that question has only one possible answer. What is left is a note about a stranger's phone
+that no longer does any work, so a nightly sweep deletes it. This is what makes "kept until the pass
+expires" a true sentence rather than a hopeful one, and it must stay true: nothing may be built that
+reads expired activations, because the sweep will take them. Passes spent are counted on
+`packs.passes_used`, never derived from this table, so forgetting cannot hand anyone their
+inspections back.
+
 **Redeeming needs the network; measuring must not.** Once a pass is granted it is held locally and
 the checks run offline. A shop with no signal is a known weakness of the redeem step only.
 
@@ -90,6 +99,13 @@ disagrees with.
 
 ## What is still unbuilt
 
-The server, the Play product, and the redeem screen. Until they exist, `Entitlement` remains
-account-tied and the app behaves exactly as it did. The pure logic landed first on purpose: it is the
-part that can be verified without a Play Console, a server, or a phone.
+The server is live, the pass-code logic exists on both sides against one set of vectors, and the
+redeem screen takes a code and grants a pass. What remains is the buying half: calling `/issue` with
+the receipt once a pack is purchased, showing the buyer their code, and adding `PASSES_5` to
+`BillingProducts.onSale`.
+
+That last line is the whole gate, and it is deliberately not crossed yet: the pack cannot be created
+in the Play Console until the payments profile issue is resolved, and putting an unsellable product on
+the shop would show a price that nobody can pay. `onSale` stays as it is until there is something real
+behind it. When the purchase path does land, **purchase history joins the Data safety declaration** —
+the receipt goes to our server, which is a collection, and the form must say so.

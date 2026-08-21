@@ -12,6 +12,14 @@ compatibility_date = "2026-08-01"
 [observability]
 enabled = true
 
+# Forget expired activations once a day. See src/purge.js: after a pass expires its device hash records
+# nothing useful and is only a note about a stranger's phone.
+#
+# 03:17 UTC is deliberately not on the hour — every naive cron in the world fires at :00, and there is no
+# reason to queue behind them for a job nobody is waiting on.
+[triggers]
+crons = ["17 3 * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "phoneproof-licence"

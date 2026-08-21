@@ -4,9 +4,11 @@
 
     <!--
       Privacy copy. This wording is deliberate and must not be strengthened.
-      The app shows ads, which means an advertising ID leaves the device, so any claim
-      that "nothing leaves this device" would be false. Say what is actually true:
-      the test results themselves stay local.
+
+      There are no ads. It is still not true that "nothing leaves this device": redeeming an
+      inspection pass sends a code and a salted device hash to the licence server, so the absolute
+      claim would be a lie the first time somebody typed a code. Say the narrower thing that is
+      actually true and is what a buyer cares about — the measurements themselves never leave.
     -->
     <string name="privacy_tagline">Your test results stay on this device</string>
 </resources>
