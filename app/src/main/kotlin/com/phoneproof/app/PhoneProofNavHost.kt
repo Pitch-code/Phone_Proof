@@ -42,6 +42,7 @@ import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.storagespeed.StorageSpeedRoute
 import com.phoneproof.feature.touchgrid.GhostTouchRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
+import com.phoneproof.feature.touchgrid.TouchWhileChargingRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 import com.phoneproof.feature.vibration.VibrationRoute
 
@@ -59,6 +60,7 @@ internal object Routes {
     const val TOUCH = "touch"
     const val MULTI_TOUCH = "multi-touch"
     const val GHOST_TOUCH = "ghost-touch"
+    const val TOUCH_WHILE_CHARGING = "touch-while-charging"
     const val LOCK = "lock"
     const val SCAN = "scan"
     const val STORAGE_SPEED = "storage-speed"
@@ -368,6 +370,15 @@ fun PhoneProofNavHost(
                 onResults = { runSession.record(Routes.GHOST_TOUCH, it) },
                 modifier = Modifier.fillMaxSize(),
             )
+        }
+
+        // A standalone check, offered on Home but not part of the guided run — the same shape as remote
+        // lock. It needs a charger connected, which may not be in the room, and its watch wants an
+        // undisturbed screen that would break the run's single contiguous "quiet" block if slotted in. So
+        // it is reached on demand rather than folded into the checklist. No gate: a screen that taps itself
+        // while charging is a fault that protects the buyer to know about, and those stay free.
+        composable(Routes.TOUCH_WHILE_CHARGING) {
+            TouchWhileChargingRoute(modifier = Modifier.fillMaxSize())
         }
 
         composable(Routes.SCAN) {

@@ -89,6 +89,7 @@ class HomeCatalogueRoutesTest {
             Routes.TOUCH,
             Routes.MULTI_TOUCH,
             Routes.GHOST_TOUCH,
+            Routes.TOUCH_WHILE_CHARGING,
             Routes.SCREEN_PATTERNS,
             Routes.AUDIO,
             Routes.CAMERA,
