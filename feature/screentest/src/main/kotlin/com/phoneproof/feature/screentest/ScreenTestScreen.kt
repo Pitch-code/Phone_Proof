@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -212,7 +214,11 @@ private fun PatternLayout(
                 textDecoration = TextDecoration.Underline,
                 modifier = Modifier
                     .clickable(onClick = onStopEarly)
-                    .padding(top = 8.dp, start = 16.dp, end = 16.dp, bottom = 4.dp),
+                    // 48dp tall, so the one way out of the colour test is a full touch target rather than
+                    // a thin line of text. wrapContentHeight centres the label within it.
+                    .heightIn(min = 48.dp)
+                    .wrapContentHeight()
+                    .padding(horizontal = 16.dp),
             )
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -257,7 +258,10 @@ private fun PressedQuestion(missing: VolumeKey?, onAnswer: (Boolean) -> Unit) {
                     Text("I pressed it", style = MaterialTheme.typography.titleMedium)
                 }
             }
-            TextButton(onClick = { onAnswer(false) }, modifier = Modifier.fillMaxWidth()) {
+            TextButton(
+                onClick = { onAnswer(false) },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            ) {
                 Text(
                     text = "I am not sure",
                     style = MaterialTheme.typography.bodyMedium,

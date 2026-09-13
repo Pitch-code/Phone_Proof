@@ -121,8 +121,10 @@ fun HomeScreen(
             }
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(22.dp))
+                    // 48dp, Android's minimum touch target — the gear is the smallest control in the app
+                    // and was a shade under. The icon inside stays 24dp; only the tappable area grows.
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
                     .clickable(onClick = onOpenSettings),
                 contentAlignment = Alignment.Center,
             ) {
