@@ -31,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -86,6 +87,12 @@ fun SettingsScreen(
     // Where the plans section ended up, reported by the layout rather than guessed. A hardcoded offset
     // would be wrong the moment a row above it changes height, or the text scales for accessibility.
     var plansOffset by remember { mutableStateOf<Float?>(null) }
+
+    // The explainer window. rememberSaveable so a rotation while it is open does not snap it shut.
+    var showHowThisWorks by rememberSaveable { mutableStateOf(false) }
+    if (showHowThisWorks) {
+        HowThisWorks(onDismiss = { showHowThisWorks = false })
+    }
 
     LaunchedEffect(focusPlans, plansOffset) {
         val target = plansOffset
@@ -159,19 +166,37 @@ fun SettingsScreen(
             //
             // Deliberately here, at the bottom of the plans, rather than hidden in a menu. Someone reading
             // this section has just been told what things cost; if they already bought passes on their own
-            // phone, this is the moment they need to say so. Underlined and 48dp because it is text acting
-            // as a control, and colour alone marks neither.
-            Text(
-                text = "I have a code",
-                style = MaterialTheme.typography.titleSmall,
-                color = PhoneProofTheme.colors.accent,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .clickable(onClick = onOpenRedeem)
-                    .wrapContentHeight(),
-            )
+            // phone, this is the moment they need to say so. Underlined and 48dp because these are text
+            // acting as controls, and colour alone marks neither.
+            //
+            // "How this works" sits beside it because the two paid paths look alike and are not: the moment
+            // someone hesitates over a code is the moment to offer the explanation, not three screens away.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "I have a code",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = PhoneProofTheme.colors.accent,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .clickable(onClick = onOpenRedeem)
+                        .wrapContentHeight(),
+                )
+                Text(
+                    text = "How this works",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = PhoneProofTheme.colors.accent,
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .heightIn(min = 48.dp)
+                        .clickable { showHowThisWorks = true }
+                        .wrapContentHeight(),
+                )
+            }
             Text(
                 text = "Bought inspection passes on another phone? Unlock this one for 24 hours.",
                 style = MaterialTheme.typography.labelSmall,
