@@ -20,8 +20,17 @@ lifecycle = "2.10.0"
 navigationCompose = "2.9.8"
 coroutines = "1.11.0"
 datastore = "1.2.1"
-# Play Billing 7 is the minimum Play accepts for new releases from 2025 onwards.
-billing = "7.1.1"
+# Play now rejects new releases built against Billing Library 7 or lower: from 1 Nov 2026 an update on
+# 7.x cannot be published at all (the Console flagged this app, extension granted to that date). 8.x is
+# the floor. Staying on the 8 line rather than jumping to 9 on purpose — the only call this app makes
+# that 8 deprecated is ProductDetails.oneTimePurchaseOfferDetails, which 8 still ships and 9 removes, so
+# 8 is the version where the existing code compiles untouched. None of the APIs 8 *removed*
+# (querySkuDetailsAsync, the no-arg enablePendingPurchases, the String queryPurchasesAsync overload,
+# queryPurchaseHistoryAsync) are used here — checked before bumping.
+#
+# Version not verifiable against Google Maven from this sandbox (no outbound network to it), so CI is the
+# check: dependency resolution fails fast in the PR build if this string is wrong.
+billing = "8.0.0"
 kotlinxSerialization = "1.9.0"
 
 junit = "4.13.2"
