@@ -283,17 +283,17 @@ private fun PhotoRow(
     ) {
         OutlinedButton(
             onClick = onTakePhoto,
-            modifier = Modifier.weight(1f).height(44.dp),
+            modifier = Modifier.weight(1f).height(48.dp),
             shape = RoundedCornerShape(12.dp),
         ) { Text("Retake") }
         OutlinedButton(
             onClick = onSharePhoto,
-            modifier = Modifier.weight(1f).height(44.dp),
+            modifier = Modifier.weight(1f).height(48.dp),
             shape = RoundedCornerShape(12.dp),
         ) { Text("Share") }
         OutlinedButton(
             onClick = onDeletePhoto,
-            modifier = Modifier.weight(1f).height(44.dp),
+            modifier = Modifier.weight(1f).height(48.dp),
             shape = RoundedCornerShape(12.dp),
         ) { Text("Delete") }
     }

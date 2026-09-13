@@ -101,7 +101,7 @@ fun ReportDetailScreen(
         ) {
             OutlinedButton(
                 onClick = onShare,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Text(stringResource(R.string.report_detail_share))
@@ -109,7 +109,7 @@ fun ReportDetailScreen(
             OutlinedButton(
                 onClick = onExportPdf,
                 enabled = canExportPdf,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Text(

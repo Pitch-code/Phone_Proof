@@ -121,7 +121,7 @@ fun ClaimsScreen(
             CheckResultCard(result)
             OutlinedButton(
                 onClick = onReset,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
             ) {
                 Text("Change what you were told")
