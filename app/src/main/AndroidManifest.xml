@@ -91,6 +91,24 @@
         android:maxSdkVersion="30" />
 
     <!--
+      Reading the fingerprint / face reader's state for the biometric check, folded into the instant scan.
+
+      Both are install-time permissions: granted on install, never prompted for, and not treated as
+      sensitive by Play. Declared explicitly rather than left to merge in from androidx.biometric, so this
+      file stays the honest, complete account of what the app can touch.
+
+      The app only ever calls canAuthenticate — it asks the platform whether a reader exists and is set up.
+      It never authenticates: that would need the seller's finger and USE_BIOMETRIC would then be exercised,
+      but the app pointedly does not, because it runs on someone else's phone. USE_FINGERPRINT is the legacy
+      call path the support library uses below API 29 only, so it is capped there rather than left looking
+      broader than it is on modern phones.
+    -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission
+        android:name="android.permission.USE_FINGERPRINT"
+        android:maxSdkVersion="28" />
+
+    <!--
       Declared as not required, so the app still installs on a handset without one. A phone with no
       microphone is not a phone, but a tablet is a plausible device for a shop to run this on, and the
       microphone screen degrades to saying it cannot record rather than the app being uninstallable.
