@@ -30,6 +30,7 @@ dependencies {
     api(project(":checks:radios"))
     implementation(project(":core:diagnostics"))
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.biometric)
     // The storage speed test does blocking file IO, so it needs a dispatcher to get off the main thread.
     implementation(libs.kotlinx.coroutines.core)
 }

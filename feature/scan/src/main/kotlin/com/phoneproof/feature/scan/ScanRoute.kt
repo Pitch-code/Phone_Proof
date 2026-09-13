@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.phoneproof.checks.device.BatteryCheck
+import com.phoneproof.checks.device.BiometricSensorCheck
 import com.phoneproof.checks.device.BuildIntegrityCheck
 import com.phoneproof.checks.device.DeviceFacts
 import com.phoneproof.checks.device.DisplayCheck
@@ -19,6 +20,7 @@ import com.phoneproof.checks.device.SensorInventoryCheck
 import com.phoneproof.checks.device.StorageCheck
 import com.phoneproof.checks.emilock.EmiLockEvaluator
 import com.phoneproof.core.device.BatteryFactsReader
+import com.phoneproof.core.device.BiometricProbe
 import com.phoneproof.core.device.DeviceAdminInspector
 import com.phoneproof.core.device.DeviceFactsReader
 import com.phoneproof.core.device.RootSignalsReader
@@ -222,6 +224,14 @@ private fun tasks(context: Context, facts: DeviceFacts?): List<ScanTask> {
     // depend on DeviceFactsReader having succeeded.
     tasks += ScanTask(BatteryCheck.CHECK_ID, "Measuring the battery") {
         BatteryCheck.evaluate(BatteryFactsReader(context, diagnostics).read())
+    }
+
+    // A capability read, not a live scan: the app cannot authenticate as the seller, so it reports what
+    // the platform already knows about the fingerprint/face reader. Folded into the scan like remote lock,
+    // because it needs no gesture and returns instantly. See BiometricSensorCheck for why it never fails a
+    // phone on the buyer's inability to unlock it.
+    tasks += ScanTask(BiometricSensorCheck.CHECK_ID, "Checking fingerprint and face unlock") {
+        BiometricSensorCheck.evaluate(BiometricProbe(context).read())
     }
 
     return tasks

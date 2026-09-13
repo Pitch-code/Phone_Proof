@@ -31,6 +31,10 @@ datastore = "1.2.1"
 # Version not verifiable against Google Maven from this sandbox (no outbound network to it), so CI is the
 # check: dependency resolution fails fast in the PR build if this string is wrong.
 billing = "8.0.0"
+# AndroidX Biometric. 1.1.0 is the long-standing stable release; it wraps canAuthenticate across every API
+# level this app supports (26+), so the fingerprint/face capability read works without version branching.
+# Not verifiable against Google Maven from this sandbox — CI resolves it and fails fast if the string is wrong.
+biometric = "1.1.0"
 kotlinxSerialization = "1.9.0"
 
 junit = "4.13.2"
@@ -41,6 +45,7 @@ roborazzi = "1.71.0"
 [libraries]
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
