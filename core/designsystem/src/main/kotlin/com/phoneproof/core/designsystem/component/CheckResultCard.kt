@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.phoneproof.core.designsystem.theme.PhoneProofTheme
@@ -96,7 +98,17 @@ fun CheckResultCard(
             .fillMaxWidth()
             .background(fill, RoundedCornerShape(14.dp))
             .border(borderWidth, borderColour, RoundedCornerShape(14.dp))
-            .padding(16.dp),
+            .padding(16.dp)
+            // One node for the whole verdict, not eight.
+            //
+            // Every Text below is a separate stop for a screen reader, so a card read verbatim was: title,
+            // then the badge glyph as "multiplication sign", then "PROBLEM", then "HARDWARE", then the
+            // headline, the consequence, the action, each measurement label and value on its own, and the
+            // caveat — a dozen swipes to hear one verdict, with the outcome buried in the middle as a
+            // punctuation mark. clearAndSetSemantics collapses all of that into a single focusable element
+            // whose spoken form is composed in reading order, outcome first, and free of the decorative
+            // glyphs that were being read aloud as symbols.
+            .clearAndSetSemantics { contentDescription = result.spokenSummary() },
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(
@@ -201,3 +213,40 @@ fun CheckResultCard(
         }
     }
 }
+
+/**
+ * The outcome as a word a screen reader can say, rather than the badge's SHOUTING label or its glyph.
+ *
+ * "Can't tell" rather than "unknown" for the same reason the badge uses it: it names a limit of Android,
+ * not a fault in the phone, and a buyer must not hear it as a defect.
+ */
+private fun CheckOutcome.spoken(): String = when (this) {
+    CheckOutcome.PASS -> "Pass"
+    CheckOutcome.CAUTION -> "Check again"
+    CheckOutcome.FAIL -> "Problem"
+    CheckOutcome.UNKNOWN -> "Can't tell"
+}
+
+/**
+ * The whole card as one sentence, in reading order, for a single screen-reader stop.
+ *
+ * Outcome comes second, right after the check's name, because that is the one thing a buyer swiping through
+ * a dozen verdicts is listening for — not left to fall out of a glyph halfway down. Measurements are read as
+ * "label, value" so a figure is tied to what it measures rather than floating free. Only the first
+ * false-positive cause is spoken, matching what the card shows.
+ */
+internal fun CheckResult.spokenSummary(): String = buildString {
+    fun appendSentence(text: String) {
+        append(text.trim())
+        if (!endsWith(".") && !endsWith("!") && !endsWith("?")) append(".")
+        append(" ")
+    }
+
+    appendSentence(title)
+    appendSentence(outcome.spoken())
+    appendSentence(headline)
+    consequence?.let(::appendSentence)
+    action?.let(::appendSentence)
+    measurements.forEach { append("${it.label}, ${it.display}. ") }
+    falsePositiveCauses.firstOrNull()?.let { append("Could this be wrong? $it") }
+}.trim()
