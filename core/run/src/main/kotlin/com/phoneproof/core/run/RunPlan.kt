@@ -63,6 +63,24 @@ object RunPlan {
             needs = setOf(RunCondition.NO_INTERRUPTIONS),
             typicalSeconds = 30,
         ),
+        // Between the hands-on touch tests and the colour pages, and inside the same undisturbed-screen
+        // block, because it is the third thing done to the glass and the last that needs the buyer to stop
+        // touching it. It watches an untouched screen, so the buyer waits rather than acts — AUTOMATIC —
+        // and NO_INTERRUPTIONS earns its place literally: a heads-up banner landing during the watch would
+        // register as the very fault being looked for.
+        //
+        // Not essential. Its own verdict admits a quiet spell proves little, so a buyer who skips it must
+        // still be able to reach a clean result rather than be told the inspection is incomplete for want
+        // of thirty idle seconds. A fault it *does* find still shows, skipped or not.
+        RunStep(
+            id = "ghost-touch",
+            title = "Touches nobody made",
+            why = "A screen that taps itself opens apps and answers calls in a pocket",
+            effort = StepEffort.AUTOMATIC,
+            needs = setOf(RunCondition.NO_INTERRUPTIONS),
+            typicalSeconds = 30,
+            essential = false,
+        ),
         RunStep(
             id = "screen-patterns",
             title = "Dead pixels and burn-in",

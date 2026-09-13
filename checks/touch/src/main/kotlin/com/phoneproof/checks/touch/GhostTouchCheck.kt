@@ -167,7 +167,7 @@ object GhostTouchCheck {
      * turn one fault into "eleven touches nobody made", which is the number the buyer would repeat — and
      * being caught exaggerating costs more than the finding is worth.
      */
-    internal fun distinctEvents(contacts: List<Contact>): List<Contact> {
+fun distinctEvents(contacts: List<Contact>): List<Contact> {
         if (contacts.isEmpty()) return emptyList()
 
         val ordered = contacts.sortedBy { it.atMillis }
