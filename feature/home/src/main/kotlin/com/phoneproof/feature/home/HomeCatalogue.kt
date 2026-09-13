@@ -65,6 +65,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Watch for a screen that taps itself with nobody near it",
     ),
     HomeCheckEntry(
+        route = "touch-while-charging",
+        title = "Touches while charging",
+        subtitle = "Some screens only tap themselves once a charger is plugged in",
+    ),
+    HomeCheckEntry(
         route = "audio",
         title = "Microphone, earpiece and speaker",
         subtitle = "Three separate parts, measured with a test tone",

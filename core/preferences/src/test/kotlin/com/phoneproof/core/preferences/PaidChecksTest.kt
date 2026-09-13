@@ -105,6 +105,7 @@ class PaidChecksTest {
             "imei",           // whether it is stolen
             "touch",          // dead strips on the glass
             "ghost-touch",    // a screen that taps itself — intermittent, and the fault a seller can hide
+            "touch-while-charging", // the same fault, but only under charge — a charger away from unnoticed
             "screen-patterns", // dead pixels and burn-in
             "audio",          // a phone that cannot take a call
             "camera",         // among the first three reasons anyone buys a phone
