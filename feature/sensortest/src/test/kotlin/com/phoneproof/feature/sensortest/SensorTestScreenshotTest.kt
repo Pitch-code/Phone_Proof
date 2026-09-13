@@ -2,8 +2,10 @@ package com.phoneproof.feature.sensortest
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNode
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -255,7 +257,13 @@ class SensorTestScreenshotTest {
         }
         // onRoot captures only what is on screen, so anything below the fold goes unreviewed unless it
         // is scrolled into view first.
-        scrollTo?.let { composeRule.onNodeWithText(it).performScrollTo() }
+        //
+        // Matched by text OR by accessible label: a result card is now a single node whose only text is its
+        // spoken contentDescription, so scrolling to a card by its title ("Light sensor") has to look there,
+        // while a plain control like "Test again" is still found by its text.
+        scrollTo?.let {
+            composeRule.onNode(hasText(it) or hasContentDescription(it, substring = true)).performScrollTo()
+        }
         composeRule.onRoot().captureRoboImage("$outputDir/$name.png")
     }
 
