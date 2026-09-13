@@ -30,29 +30,56 @@
 <body>
 
 <h1>PhoneProof — Privacy Policy</h1>
-<p class="updated">Last updated 11 August 2026 · applies to version 0.1.0</p>
+<p class="updated">Last updated 13 August 2026 · applies to version 0.10.0</p>
 
 <div class="box">
-  <strong>The short version.</strong> PhoneProof has no account, no server and no analytics. It
-  inspects the phone it is installed on and keeps the results on that phone. Nothing you test is
-  sent anywhere.
+  <strong>The short version.</strong> PhoneProof has no account and no analytics. It inspects the phone
+  it is installed on and keeps the results on that phone. The only time anything leaves the phone is when
+  you <em>redeem an inspection-pass code</em>: the code and a one-way, scrambled fingerprint of the device
+  are sent to our licence server so a code cannot be used more times than it was paid for. That is the
+  whole of it — no name, no number, no account, and nothing about the phone you are testing.
 </div>
 
-<h2>What the app collects</h2>
-<p>Nothing is collected by us, because there is nowhere for it to go. The app has no backend.</p>
-<p>What it <em>reads</em> from the phone, in order to inspect it:</p>
+<h2>What the app reads from the phone</h2>
+<p>To inspect a handset, the app reads:</p>
 <ul>
   <li>Model, manufacturer, chipset, Android version and security patch date</li>
-  <li>Storage size and free space</li>
-  <li>The list of sensors present</li>
+  <li>Storage size and free space, and storage read/write speed</li>
+  <li>Battery level, voltage, current and temperature while charging</li>
+  <li>The list of sensors present, and their live readings while you tilt and cover the phone</li>
   <li>Display resolution and supported refresh rates</li>
-  <li>Whether any app holds device-administrator control</li>
-  <li>Whether the phone shows signs of root or an unlocked bootloader</li>
-  <li>Which parts of the screen respond to touch during the touch test</li>
+  <li>Whether Wi-Fi and Bluetooth are switched on and whether the network is actually passing traffic</li>
+  <li>Whether a fingerprint reader or face unlock exists and is set up — never <em>who</em> is enrolled,
+      and the app never authenticates</li>
+  <li>Whether any app holds device-administrator control, and whether the phone shows signs of root or an
+      unlocked bootloader</li>
+  <li>Which parts of the screen respond to touch, and whether the screen registers touches on its own</li>
 </ul>
 <p>
-  All of it stays in the app's private storage on the device. It is not transmitted, and it is
-  deleted when you uninstall the app.
+  All of it stays in the app's private storage on the device. None of it is transmitted anywhere, and it
+  is deleted when you uninstall the app.
+</p>
+
+<h2>What leaves the device, and when</h2>
+<p>
+  <strong>Only two things ever leave, and only if you choose them:</strong>
+</p>
+<ul>
+  <li>
+    <strong>Redeeming an inspection-pass code.</strong> When you type a code to unlock a phone you did not
+    buy the pass on, the app sends that code and a one-way hash of the device identifier — <em>salted with
+    the code itself</em> — to our licence server. The salt means the server cannot recognise the same phone
+    under a different code, so it can never build a picture of which phones you inspected. It exists only to
+    count how many times a code has been used and to honour the 24-hour window. The record is kept only
+    until the pass expires, then deleted.
+  </li>
+  <li>
+    <strong>Buying Premium or a pass.</strong> Payment is handled entirely by Google Play. The app never
+    sees your card, and Google is the only party that can take or refund money.
+  </li>
+</ul>
+<p>
+  There is no analytics, no crash reporting to us, and no advertising anywhere in the app.
 </p>
 
 <h2>What the app cannot read</h2>
@@ -60,24 +87,39 @@
   Some things are worth naming because people reasonably assume an inspection app reads them.
   It does not, and on modern Android it cannot: your <strong>IMEI or serial number</strong>
   (restricted to system apps since Android 10), your contacts, your messages, your call log, your
-  photos, your location, and your accounts.
+  photos, your location, and your accounts. The radio test proves Wi-Fi by joining a network rather than
+  scanning for nearby ones, precisely so it never needs your location.
 </p>
 
 <h2>Permissions</h2>
-<p>
-  Version 0.1.0 requests <strong>no runtime permissions at all</strong> and has no internet
-  permission. If a future version adds the camera — for reading an IMEI from a box label, for
-  example — it will be requested at the moment it is used, with the reason on screen, and this
-  page will be updated first.
-</p>
+<p>Two permissions are requested <strong>at the moment you use the test that needs them</strong>, with the
+  reason shown on screen:</p>
+<ul>
+  <li><strong>Camera</strong> — the camera test opens each lens for about a second to check it produces a
+    live image. A few frames are read into memory and measured, then discarded. No photo is taken and
+    nothing is written to storage.</li>
+  <li><strong>Microphone</strong> — the audio test plays a tone and measures it to check the microphone,
+    earpiece and speaker. Nothing is recorded or saved.</li>
+</ul>
+<p>The rest are install-time permissions: granted when the app is installed, never prompted for, and not
+  treated as sensitive by Google Play.</p>
+<ul>
+  <li><strong>Internet</strong> — used only to check an inspection-pass code with the licence server when
+    you redeem one. Every measurement itself runs offline.</li>
+  <li><strong>Vibrate</strong> — the vibration test runs the motor.</li>
+  <li><strong>Wi-Fi state and network state</strong> — the radio test reads whether Wi-Fi is on and whether
+    the live network is carrying traffic. No scanning, no location.</li>
+  <li><strong>Bluetooth</strong> (up to Android 11 only) — reads whether the adapter is switched on.</li>
+  <li><strong>Use biometric, and legacy fingerprint</strong> (the latter up to Android 9 only) — the
+    fingerprint and face-unlock check reads whether a reader is present and set up. The app only ever asks
+    the system this question; it never authenticates, so you are never prompted for a fingerprint.</li>
+</ul>
 
 <h2>Advertising</h2>
 <p>
-  This version contains <strong>no advertising and no advertising SDK</strong>. When ads are
-  introduced, Google's advertising identifier will leave the device as part of serving them, this
-  page will be updated to say so before that version ships, and the app's own wording will change
-  from "nothing leaves this device" to "your test results stay on this device". We would rather
-  under-claim privacy than overstate it.
+  This app contains <strong>no advertising and no advertising SDK</strong>, and no advertising identifier
+  leaves the device. If that ever changes, this page will be updated to say so before that version ships.
+  We would rather under-claim privacy than overstate it.
 </p>
 
 <h2>Backups</h2>
