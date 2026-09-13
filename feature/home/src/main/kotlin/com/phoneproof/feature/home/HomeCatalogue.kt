@@ -60,6 +60,11 @@ val HomeCatalogue: List<HomeCheckEntry> = listOf(
         subtitle = "Plain colours that make screen faults obvious",
     ),
     HomeCheckEntry(
+        route = "ghost-touch",
+        title = "Touches nobody made",
+        subtitle = "Watch for a screen that taps itself with nobody near it",
+    ),
+    HomeCheckEntry(
         route = "audio",
         title = "Microphone, earpiece and speaker",
         subtitle = "Three separate parts, measured with a test tone",

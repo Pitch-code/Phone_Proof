@@ -104,6 +104,7 @@ class PaidChecksTest {
             "lock",           // a lender who can brick the phone after you have paid
             "imei",           // whether it is stolen
             "touch",          // dead strips on the glass
+            "ghost-touch",    // a screen that taps itself — intermittent, and the fault a seller can hide
             "screen-patterns", // dead pixels and burn-in
             "audio",          // a phone that cannot take a call
             "camera",         // among the first three reasons anyone buys a phone

@@ -40,6 +40,7 @@ import com.phoneproof.feature.sensortest.SensorTestRoute
 import com.phoneproof.feature.settings.RedeemRoute
 import com.phoneproof.feature.settings.SettingsRoute
 import com.phoneproof.feature.storagespeed.StorageSpeedRoute
+import com.phoneproof.feature.touchgrid.GhostTouchRoute
 import com.phoneproof.feature.touchgrid.MultiTouchRoute
 import com.phoneproof.feature.touchgrid.TouchGridRoute
 import com.phoneproof.feature.vibration.VibrationRoute
@@ -57,6 +58,7 @@ internal object Routes {
     const val CHECKS = "checks"
     const val TOUCH = "touch"
     const val MULTI_TOUCH = "multi-touch"
+    const val GHOST_TOUCH = "ghost-touch"
     const val LOCK = "lock"
     const val SCAN = "scan"
     const val STORAGE_SPEED = "storage-speed"
@@ -356,6 +358,16 @@ fun PhoneProofNavHost(
                     modifier = Modifier.fillMaxSize(),
                 )
             }
+        }
+
+        // No entitlement gate, deliberately. A screen that taps itself is a fault that protects the
+        // buyer to know about, and monetisation.md forbids locking those — see PaidChecks. It watches
+        // the handset in front of the buyer and needs no permission, so it stands beside the free checks.
+        composable(Routes.GHOST_TOUCH) {
+            GhostTouchRoute(
+                onResults = { runSession.record(Routes.GHOST_TOUCH, it) },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
 
         composable(Routes.SCAN) {
